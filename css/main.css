@@ -1122,7 +1122,10 @@ body {
 }
 
 .header {
-    padding: 23px 40px;
+    position: fixed;
+    width: 100%;
+    padding: 0 40px;
+    height: 90px;
     border-bottom: 5px solid #ee3d40;
     display: -webkit-box;
     display: -webkit-flex;
@@ -1136,7 +1139,7 @@ body {
     -webkit-align-items: center;
     -ms-flex-align: center;
     align-items: center;
-    position: relative;
+    background-color: #ffffff;
     z-index: 5;
 }
 
@@ -1301,6 +1304,19 @@ body {
     position: relative;
 }
 
+.fullpage-wrapper {
+    margin-top: 90px;
+}
+
+.fp-tableCell {
+    height: 100% !important;
+}
+
+.section {
+    height: auto !important;
+    overflow: hidden;
+}
+
 .section-1 {
     background-image: url("../img/sec1-fon.png");
     -webkit-background-size: cover;
@@ -1309,10 +1325,12 @@ body {
     color: #ffffff;
     position: relative;
     margin: -1px;
+    height: -webkit-calc(100vh - 90px) !important;
+    height: calc(100vh - 90px) !important;
 }
 
 .section-1 .text-block {
-    margin-top: 88px;
+    margin-top: 70px;
     border-left: 5px solid #ee3d40;
     padding-left: 88px;
     margin-left: -3px;
@@ -1330,7 +1348,7 @@ body {
     font-size: 18px;
     font-family: "Proxima Nova";
     font-weight: 600;
-    margin-bottom: 125px;
+    margin-bottom: 200px;
     -webkit-transition: 0.1s;
     -o-transition: 0.1s;
     transition: 0.1s;
@@ -1417,7 +1435,15 @@ body {
 }
 
 .section-1-top {
-    height: 130px;
+    height: 20%;
+}
+
+.section-1-mid {
+    height: 60%;
+}
+
+.section-1-bot {
+    height: 20%;
 }
 
 .section1-mid-back {
@@ -1437,7 +1463,7 @@ body {
 }
 
 .section-1-bottom {
-    height: 145px;
+    height: 100%;
     display: -webkit-box;
     display: -webkit-flex;
     display: -ms-flexbox;
@@ -1506,6 +1532,7 @@ body {
 }
 
 .section-2 {
+    height: 100vh !important;
     -webkit-background-size: cover;
     background-size: cover;
     background-image: url("../img/sec2-fon.png");
@@ -1528,7 +1555,7 @@ body {
 }
 
 .sec2-top {
-    padding: 60px;
+    padding: 30px 60px;
 }
 
 .sec2-top .title {
@@ -1548,7 +1575,7 @@ body {
 }
 
 .acordeon-item {
-    padding: 40px 50px;
+    padding: 32px 50px;
 }
 
 .acordeon-item-title {
@@ -1609,7 +1636,7 @@ body {
 }
 
 .acordeon-item.active {
-    background-image: none;
+    background-image: none !important;
     background-color: #ffffff;
 }
 
@@ -1707,6 +1734,7 @@ body {
 }
 
 .section-3 {
+    height: 100vh !important;
     background-image: url("../img/sec3-fon.png");
     -webkit-background-size: cover;
     background-size: cover;

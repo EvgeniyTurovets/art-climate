@@ -1122,7 +1122,10 @@ body {
 }
 
 .header {
-    padding: 23px 40px;
+    position: fixed;
+    width: 100%;
+    padding: 0 40px;
+    height: 90px;
     border-bottom: 5px solid #ee3d40;
     display: -webkit-box;
     display: -webkit-flex;
@@ -1136,7 +1139,7 @@ body {
     -webkit-align-items: center;
     -ms-flex-align: center;
     align-items: center;
-    position: relative;
+    background-color: #ffffff;
     z-index: 5;
 }
 
