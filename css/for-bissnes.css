@@ -1219,6 +1219,14 @@ body {
     color: #ee3d40;
 }
 
+.fullpage-wrapper .footer {
+    height: 80px;
+    position: absolute;
+    bottom: 80px;
+    width: 100%;
+    z-index: 2;
+}
+
 .footer {
     border-top: 5px solid #ee3d40;
     background-color: #ffffff;
