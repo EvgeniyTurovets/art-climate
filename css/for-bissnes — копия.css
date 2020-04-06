@@ -1290,13 +1290,6 @@ body {
     text-transform: uppercase;
     font-size: 14px;
     letter-spacing: 2px;
-    -webkit-flex-wrap: wrap;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-}
-
-.breadcrum ul li {
-    margin-bottom: 10px;
 }
 
 .breadcrum ul li a {
@@ -1612,16 +1605,9 @@ body {
     -ms-flex-direction: column;
     flex-direction: column;
     margin-top: 90px;
-}
-
-.slider-section.for-bissnes {
     background-image: url("../img/for-b-fon.png");
     -webkit-background-size: cover;
     background-size: cover;
-}
-
-.slider-section.for-client {
-    background-image: url("../img/for-client-fon.png");
 }
 
 .slider-top {
