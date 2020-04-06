@@ -1639,7 +1639,7 @@ body {
     padding: 3px 12px;
     pointer-events: none;
     font-weight: 700;
-    z-index: 10;
+    z-index: 2;
 }
 
 .jqvmap-pin {
@@ -1810,6 +1810,9 @@ body {
 .section-1 .text-block .button {
     margin-top: 50px;
     font-size: 18px;
+    width: -webkit-max-content;
+    width: -moz-max-content;
+    width: max-content;
     font-family: "Proxima Nova";
     font-weight: 600;
     margin-bottom: 125px;
@@ -1950,6 +1953,8 @@ body {
 }
 
 .bg {
+    -webkit-background-size: 130% 130%;
+    background-size: 130%;
     background-repeat: no-repeat;
     background-position: 50% 0%;
 }
@@ -2068,12 +2073,63 @@ body {
     color: #333333;
 }
 
-.acordeon-item.active .acordeon-item-title img {
-    display: none;
+.acordeon-item:hover {
+    cursor: pointer;
 }
 
-.black-arrow {
-    display: none;
+.acordeon-item .acordeon-item-title span {
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.acordeon-item:hover .acordeon-item-title span {
+    margin-left: 20px;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.acordeon-item.active:hover .acordeon-item-title span {
+    margin-left: 0px;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.acordeon-item .arrow-img div {
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+    margin-left: 0;
+    margin-top: -2px;
+}
+
+.acordeon-item:hover .arrow-img {
+    border-color: #ee3d40;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.acordeon-item.active:hover .arrow-img {
+    border-color: #333333;
+}
+
+.acordeon-item.active .arrow-img {
+    border-color: #333333;
+}
+
+.acordeon-item:hover .arrow-img div {
+    border-color: #ee3d40;
+}
+
+.acordeon-item.active .arrow-img div {
+    border-color: #333333;
+    -webkit-transform: rotate(-135deg);
+    -ms-transform: rotate(-135deg);
+    transform: rotate(-135deg);
+    margin-top: 2px;
 }
 
 .acordeon-item.active .acordeon-item-title .black-arrow {
@@ -2265,10 +2321,8 @@ body {
     border-right: 0;
 }
 
-.section-4 {
+.bg-3 {
     background-image: url("../img/sec4-fon.png");
-    -webkit-background-size: cover;
-    background-size: cover;
 }
 
 .sec4-top {
@@ -2322,7 +2376,7 @@ body {
     top: 0;
     bottom: 0;
     left: 0;
-    right: 0;
+    right: -1px;
     position: absolute;
     border-top: 1px solid rgba(126, 131, 128, 0.6);
     border-right: 1px solid rgba(126, 131, 128, 0.6);
@@ -2342,7 +2396,7 @@ body {
     top: 0;
     left: 0;
     right: -1px;
-    bottom: -1px;
+    bottom: -2px;
     position: absolute;
     border-right: 1px solid rgba(126, 131, 128, 0.6);
     border-bottom: 1px solid rgba(126, 131, 128, 0.6);
@@ -2372,10 +2426,8 @@ body {
     border-left: 1px solid rgba(126, 131, 128, 0.6);
 }
 
-.section-5 {
+.bg-4 {
     background-image: url("../img/sec5-fon.png");
-    -webkit-background-size: cover;
-    background-size: cover;
 }
 
 .section-5 .sec2-top {
@@ -2419,6 +2471,9 @@ body {
 .sec5-bot .sect-bot-img .sec5-white {
     font-size: 20px;
     color: #ffffff;
+    -webkit-transition: 0.3;
+    -o-transition: 0.3;
+    transition: 0.3;
 }
 
 .sec5-grey {
@@ -2435,6 +2490,18 @@ body {
     color: #ffffff;
     padding-bottom: 10px;
     border-bottom: 2px solid rgba(126, 131, 128, 0.6);
+    text-decoration: none;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.sec5-bot .link-on-map:hover {
+    color: #ee3d40;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+    border-bottom-color: #ee3d40;
 }
 
 .sec5-white {
@@ -2442,16 +2509,19 @@ body {
 }
 
 .sec5-bot a.sec5-white:hover {
-    color: #ffffff;
+    color: #ee3d40;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
 }
 
-#contact-form {
+.contact-form {
     height: 100%;
     background-color: #ee3d40;
     padding: 70px;
 }
 
-#contact-form form {
+.contact-form form {
     display: -webkit-box;
     display: -webkit-flex;
     display: -ms-flexbox;
@@ -2463,14 +2533,14 @@ body {
     flex-direction: column;
 }
 
-#contact-form .title {
+.contact-form .title {
     font-weight: bold;
     font-size: 36px;
     color: #ffffff;
     margin-bottom: 55px;
 }
 
-#contact-form input {
+.contact-form input {
     border: 4px solid #f15a5c;
     background-color: #ee3d40;
     padding: 25px 25px;
@@ -2482,13 +2552,13 @@ body {
     z-index: 1;
 }
 
-#contact-form .form-input {
+.contact-form .form-input {
     width: 100%;
     position: relative;
     z-index: 2;
 }
 
-#contact-form .form-input::after {
+.contact-form .form-input::after {
     z-index: 1;
     content: "";
     display: block;
@@ -2502,32 +2572,32 @@ body {
     background-color: #ffffff;
 }
 
-#contact-form input::-webkit-input-placeholder {
+.contact-form input::-webkit-input-placeholder {
     font-size: 16px;
     color: #ffffff;
 }
 
-#contact-form input::-moz-placeholder {
+.contact-form input::-moz-placeholder {
     font-size: 16px;
     color: #ffffff;
 }
 
-#contact-form input::-ms-input-placeholder {
+.contact-form input::-ms-input-placeholder {
     font-size: 16px;
     color: #ffffff;
 }
 
-#contact-form input::placeholder {
+.contact-form input::placeholder {
     font-size: 16px;
     color: #ffffff;
 }
 
-#contact-form input:focus {
+.contact-form input:focus {
     z-index: 3;
     border: 4px solid #ffffff;
 }
 
-#contact-form button {
+.contact-form button {
     font-weight: 700;
     background-color: #ffffff;
     height: 80px;
@@ -2536,9 +2606,21 @@ body {
     -webkit-border-radius: 4px;
     border-radius: 4px;
     margin-bottom: 25px;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+    border: 4px solid #ffffff;
 }
 
-#contact-form p {
+.contact-form button:hover {
+    background-color: transparent;
+    color: #ffffff;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.contact-form p {
     font-size: 13px;
     color: #ffffff;
     line-height: 20px;
@@ -2553,6 +2635,110 @@ body {
     bottom: 0px;
     position: absolute;
     border-top: 1px solid rgba(126, 131, 128, 0.6);
+}
+
+#myModal {
+    width: 400px;
+    height: 500px;
+    margin: 0 auto;
+    padding: 18px 9px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    background: #ee3d40;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    display: none;
+    opacity: 0;
+    z-index: 38;
+    text-align: center;
+}
+
+#myModal-map {
+    width: 800px;
+    height: 570px;
+    margin: 0 auto;
+    padding: 30px 30px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    background: #ee3d40;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    display: none;
+    opacity: 0;
+    z-index: 38;
+    text-align: center;
+}
+
+#myModal .contact-form .title {
+    font-size: 25px;
+    margin-bottom: 25px;
+}
+
+#myModal .contact-form {
+    padding: 20px;
+}
+
+#myModal .contact-form button {
+    width: 100%;
+}
+
+#myModal-map #myModal__close {
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    cursor: pointer;
+    display: block;
+    font-size: 29px;
+}
+
+#myModal #myModal__close {
+    width: 25px;
+    height: 25px;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    cursor: pointer;
+    display: block;
+    font-size: 29px;
+}
+
+#myModal__close div {
+    width: 15px;
+    height: 2px;
+    background-color: #ffffff;
+    position: absolute;
+    top: 15px;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+#myModal__close div:last-child {
+    -webkit-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+#myOverlay {
+    z-index: 37;
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.7);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+    display: none;
 }
 
 @media (max-width: 1199px) {
@@ -2578,12 +2764,17 @@ body {
         margin-bottom: 35px;
     }
 
-    #contact-form {
+    .contact-form {
         padding: 40px;
     }
 }
 
 @media (max-width: 991px) {
+    .bg {
+        -webkit-background-size: 130% 130%;
+        background-size: 130% 130%;
+    }
+
     .map #vmap {
         margin-bottom: 40px;
     }
@@ -2662,12 +2853,12 @@ body {
         width: 100%;
     }
 
-    #contact-form .title {
+    .contact-form .title {
         font-size: 24px;
         text-align: center;
     }
 
-    #contact-form {
+    .contact-form {
         padding: 30px;
     }
 
@@ -2680,22 +2871,45 @@ body {
         width: 40px;
     }
 
-    #contact-form button {
+    .contact-form button {
         width: 100%;
     }
 
-    #contact-form p {
+    .contact-form p {
         max-width: 100%;
     }
 
     .footer .wrap {
         padding: 30px;
     }
+
+    #myModal-map {
+        width: 700px;
+        height: 500px;
+    }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+    .header {
+        height: 70px;
+    }
+
+    .section-1 {
+        padding-top: 61px;
+    }
+
+    .bg {
+        -webkit-background-size: cover;
+        background-size: cover;
+    }
+
     .map #vmap {
         height: 400px;
+    }
+
+    #myModal-map {
+        width: 400px;
+        height: 500px;
     }
 
     .section-1 .section-1-top {
@@ -2874,6 +3088,16 @@ body {
 }
 
 @media (max-width: 424px) {
+    #myModal-map {
+        width: 350px;
+        height: 500px;
+    }
+
+    #myModal {
+        width: 350px;
+        height: 530px;
+    }
+
     .map #vmap {
         height: 300px;
     }
@@ -2925,8 +3149,43 @@ body {
         font-size: 12px;
     }
 
-    #contact-form .title {
+    .contact-form .title {
         font-size: 20px;
         margin-bottom: 35px;
+    }
+}
+
+@media (max-width: 360px) {
+    #myModal-map {
+        max-width: 300px;
+        max-height: 500px;
+        padding: 20px;
+    }
+
+    #myModal-map #myModal__close {
+        top: -5px;
+        right: -6px;
+    }
+
+    #myModal {
+        width: 300px;
+        height: 450px;
+    }
+
+    #myModal .contact-form .title {
+        font-size: 18px;
+    }
+
+    .contact-form input {
+        padding: 15px 25px;
+    }
+
+    .contact-form button {
+        height: 55px;
+    }
+
+    .contact-form .form-input::after {
+        top: 25px;
+        right: 25px;
     }
 }

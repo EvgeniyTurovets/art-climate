@@ -3012,4208 +3012,6 @@
 
 }));
 
-/*!
- * fullPage 3.0.8
- * https://github.com/alvarotrigo/fullPage.js
- *
- * @license GPLv3 for open source use only
- * or Fullpage Commercial License for commercial use
- * http://alvarotrigo.com/fullPage/pricing/
- *
- * Copyright (C) 2018 http://alvarotrigo.com/fullPage - A project by Alvaro Trigo
- */
-(function( root, window, document, factory, undefined) {
-    if( typeof define === 'function' && define.amd ) {
-        // AMD. Register as an anonymous module.
-        define( function() {
-            root.fullpage = factory(window, document);
-            return root.fullpage;
-        } );
-    } else if( typeof exports === 'object' ) {
-        // Node. Does not work with strict CommonJS.
-        module.exports = factory(window, document);
-    } else {
-        // Browser globals.
-        window.fullpage = factory(window, document);
-    }
-}(this, window, document, function(window, document){
-    'use strict';
-
-    // keeping central set of classnames and selectors
-    var WRAPPER =               'fullpage-wrapper';
-    var WRAPPER_SEL =           '.' + WRAPPER;
-
-    // slimscroll
-    var SCROLLABLE =            'fp-scrollable';
-    var SCROLLABLE_SEL =        '.' + SCROLLABLE;
-
-    // util
-    var RESPONSIVE =            'fp-responsive';
-    var NO_TRANSITION =         'fp-notransition';
-    var DESTROYED =             'fp-destroyed';
-    var ENABLED =               'fp-enabled';
-    var VIEWING_PREFIX =        'fp-viewing';
-    var ACTIVE =                'active';
-    var ACTIVE_SEL =            '.' + ACTIVE;
-    var COMPLETELY =            'fp-completely';
-    var COMPLETELY_SEL =        '.' + COMPLETELY;
-
-    // section
-    var SECTION_DEFAULT_SEL =   '.section';
-    var SECTION =               'fp-section';
-    var SECTION_SEL =           '.' + SECTION;
-    var SECTION_ACTIVE_SEL =    SECTION_SEL + ACTIVE_SEL;
-    var TABLE_CELL =            'fp-tableCell';
-    var TABLE_CELL_SEL =        '.' + TABLE_CELL;
-    var AUTO_HEIGHT =           'fp-auto-height';
-    var AUTO_HEIGHT_SEL =       '.' + AUTO_HEIGHT;
-    var AUTO_HEIGHT_RESPONSIVE = 'fp-auto-height-responsive';
-    var AUTO_HEIGHT_RESPONSIVE_SEL = '.' + AUTO_HEIGHT_RESPONSIVE;
-    var NORMAL_SCROLL =         'fp-normal-scroll';
-    var NORMAL_SCROLL_SEL =     '.' + NORMAL_SCROLL;
-
-    // section nav
-    var SECTION_NAV =           'fp-nav';
-    var SECTION_NAV_SEL =       '#' + SECTION_NAV;
-    var SECTION_NAV_TOOLTIP =   'fp-tooltip';
-    var SECTION_NAV_TOOLTIP_SEL='.'+SECTION_NAV_TOOLTIP;
-    var SHOW_ACTIVE_TOOLTIP =   'fp-show-active';
-
-    // slide
-    var SLIDE_DEFAULT_SEL =     '.slide';
-    var SLIDE =                 'fp-slide';
-    var SLIDE_SEL =             '.' + SLIDE;
-    var SLIDE_ACTIVE_SEL =      SLIDE_SEL + ACTIVE_SEL;
-    var SLIDES_WRAPPER =        'fp-slides';
-    var SLIDES_WRAPPER_SEL =    '.' + SLIDES_WRAPPER;
-    var SLIDES_CONTAINER =      'fp-slidesContainer';
-    var SLIDES_CONTAINER_SEL =  '.' + SLIDES_CONTAINER;
-    var TABLE =                 'fp-table';
-
-    // slide nav
-    var SLIDES_NAV =            'fp-slidesNav';
-    var SLIDES_NAV_SEL =        '.' + SLIDES_NAV;
-    var SLIDES_NAV_LINK_SEL =   SLIDES_NAV_SEL + ' a';
-    var SLIDES_ARROW =          'fp-controlArrow';
-    var SLIDES_ARROW_SEL =      '.' + SLIDES_ARROW;
-    var SLIDES_PREV =           'fp-prev';
-    var SLIDES_PREV_SEL =       '.' + SLIDES_PREV;
-    var SLIDES_ARROW_PREV =     SLIDES_ARROW + ' ' + SLIDES_PREV;
-    var SLIDES_ARROW_PREV_SEL = SLIDES_ARROW_SEL + SLIDES_PREV_SEL;
-    var SLIDES_NEXT =           'fp-next';
-    var SLIDES_NEXT_SEL =       '.' + SLIDES_NEXT;
-    var SLIDES_ARROW_NEXT =     SLIDES_ARROW + ' ' + SLIDES_NEXT;
-    var SLIDES_ARROW_NEXT_SEL = SLIDES_ARROW_SEL + SLIDES_NEXT_SEL;
-
-    function initialise(containerSelector, options) {
-        var isOK = options && new RegExp('([\\d\\w]{8}-){3}[\\d\\w]{8}|^(?=.*?[A-Y])(?=.*?[a-y])(?=.*?[0-8])(?=.*?[#?!@$%^&*-]).{8,}$').test(options['li'+'cen'+'seK' + 'e' + 'y']) || document.domain.indexOf('al'+'varotri' +'go' + '.' + 'com') > -1;
-
-        // cache common elements
-        var $htmlBody = $('html, body');
-        var $html = $('html')[0];
-        var $body = $('body')[0];
-
-        //only once my friend!
-        if(hasClass($html, ENABLED)){ displayWarnings(); return; }
-
-        var FP = {};
-
-        // Creating some defaults, extending them with any options that were provided
-        options = deepExtend({
-            //navigation
-            menu: false,
-            anchors:[],
-            lockAnchors: false,
-            navigation: false,
-            navigationPosition: 'right',
-            navigationTooltips: [],
-            showActiveTooltip: false,
-            slidesNavigation: false,
-            slidesNavPosition: 'bottom',
-            scrollBar: false,
-            hybrid: false,
-
-            //scrolling
-            css3: true,
-            scrollingSpeed: 700,
-            autoScrolling: true,
-            fitToSection: true,
-            fitToSectionDelay: 1000,
-            easing: 'easeInOutCubic',
-            easingcss3: 'ease',
-            loopBottom: false,
-            loopTop: false,
-            loopHorizontal: true,
-            continuousVertical: false,
-            continuousHorizontal: false,
-            scrollHorizontally: false,
-            interlockedSlides: false,
-            dragAndMove: false,
-            offsetSections: false,
-            resetSliders: false,
-            fadingEffect: false,
-            normalScrollElements: null,
-            scrollOverflow: false,
-            scrollOverflowReset: false,
-            scrollOverflowHandler: window.fp_scrolloverflow ? window.fp_scrolloverflow.iscrollHandler : null,
-            scrollOverflowOptions: null,
-            touchSensitivity: 5,
-            touchWrapper: typeof containerSelector === 'string' ? $(containerSelector)[0] : containerSelector,
-            bigSectionsDestination: null,
-
-            //Accessibility
-            keyboardScrolling: true,
-            animateAnchor: true,
-            recordHistory: true,
-
-            //design
-            controlArrows: true,
-            controlArrowColor: '#fff',
-            verticalCentered: true,
-            sectionsColor : [],
-            paddingTop: 0,
-            paddingBottom: 0,
-            fixedElements: null,
-            responsive: 0, //backwards compabitility with responsiveWiddth
-            responsiveWidth: 0,
-            responsiveHeight: 0,
-            responsiveSlides: false,
-            parallax: false,
-            parallaxOptions: {
-                type: 'reveal',
-                percentage: 62,
-                property: 'translate'
-            },
-            cards: false,
-            cardsOptions: {
-                perspective: 100,
-                fadeContent: true,
-                fadeBackground: true
-            },
-
-            //Custom selectors
-            sectionSelector: SECTION_DEFAULT_SEL,
-            slideSelector: SLIDE_DEFAULT_SEL,
-
-            //events
-            v2compatible: false,
-            afterLoad: null,
-            onLeave: null,
-            afterRender: null,
-            afterResize: null,
-            afterReBuild: null,
-            afterSlideLoad: null,
-            onSlideLeave: null,
-            afterResponsive: null,
-
-            lazyLoading: true
-        }, options);
-
-        //flag to avoid very fast sliding for landscape sliders
-        var slideMoving = false;
-
-        var isTouchDevice = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|playbook|silk|BlackBerry|BB10|Windows Phone|Tizen|Bada|webOS|IEMobile|Opera Mini)/);
-        var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints));
-        var container = typeof containerSelector === 'string' ? $(containerSelector)[0] : containerSelector;
-        var windowsHeight = getWindowHeight();
-        var windowsWidth = getWindowWidth();
-        var isResizing = false;
-        var isWindowFocused = true;
-        var lastScrolledDestiny;
-        var lastScrolledSlide;
-        var canScroll = true;
-        var scrollings = [];
-        var controlPressed;
-        var startingSection;
-        var isScrollAllowed = {};
-        isScrollAllowed.m = {  'up':true, 'down':true, 'left':true, 'right':true };
-        isScrollAllowed.k = deepExtend({}, isScrollAllowed.m);
-        var MSPointer = getMSPointer();
-        var events = {
-            touchmove: 'ontouchmove' in window ? 'touchmove' :  MSPointer.move,
-            touchstart: 'ontouchstart' in window ? 'touchstart' :  MSPointer.down
-        };
-        var scrollBarHandler;
-
-        // taken from https://github.com/udacity/ud891/blob/gh-pages/lesson2-focus/07-modals-and-keyboard-traps/solution/modal.js
-        var focusableElementsString = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]';
-
-        //cheks for passive event support
-        var g_supportsPassive = false;
-        try {
-          var opts = Object.defineProperty({}, 'passive', {
-            get: function() {
-              g_supportsPassive = true;
-            }
-          });
-          window.addEventListener("testPassive", null, opts);
-          window.removeEventListener("testPassive", null, opts);
-        } catch (e) {}
-
-        //timeouts
-        var resizeId;
-        var resizeHandlerId;
-        var afterSectionLoadsId;
-        var afterSlideLoadsId;
-        var scrollId;
-        var scrollId2;
-        var keydownId;
-        var g_doubleCheckHeightId;
-        var originals = deepExtend({}, options); //deep copy
-        var activeAnimation;
-        var g_initialAnchorsInDom = false;
-        var g_canFireMouseEnterNormalScroll = true;
-        var g_mediaLoadedId;
-        var extensions = [
-            'parallax',
-            'scrollOverflowReset',
-            'dragAndMove',
-            'offsetSections',
-            'fadingEffect',
-            'responsiveSlides',
-            'continuousHorizontal',
-            'interlockedSlides',
-            'scrollHorizontally',
-            'resetSliders',
-            'cards'
-        ];
-
-        displayWarnings();
-
-        //easeInOutCubic animation included in the plugin
-        window.fp_easings = deepExtend(window.fp_easings, {
-            easeInOutCubic: function (t, b, c, d) {
-                if ((t/=d/2) < 1) return c/2*t*t*t + b;return c/2*((t-=2)*t*t + 2) + b;
-            }
-        });
-
-        /**
-        * Sets the autoScroll option.
-        * It changes the scroll bar visibility and the history of the site as a result.
-        */
-        function setAutoScrolling(value, type){
-            //removing the transformation
-            if(!value){
-                silentScroll(0);
-            }
-
-            setVariableState('autoScrolling', value, type);
-
-            var element = $(SECTION_ACTIVE_SEL)[0];
-
-            if(options.autoScrolling && !options.scrollBar){
-                css($htmlBody, {
-                    'overflow': 'hidden',
-                    'height': '100%'
-                });
-
-                setRecordHistory(originals.recordHistory, 'internal');
-
-                //for IE touch devices
-                css(container, {
-                    '-ms-touch-action': 'none',
-                    'touch-action': 'none'
-                });
-
-                if(element != null){
-                    //moving the container up
-                    silentScroll(element.offsetTop);
-                }
-            }else{
-                css($htmlBody, {
-                    'overflow' : 'visible',
-                    'height' : 'initial'
-                });
-
-                var recordHistory = !options.autoScrolling ? false : originals.recordHistory;
-                setRecordHistory(recordHistory, 'internal');
-
-                //for IE touch devices
-                css(container, {
-                    '-ms-touch-action': '',
-                    'touch-action': ''
-                });
-
-                //scrolling the page to the section with no animation
-                if (element != null) {
-                    var scrollSettings = getScrollSettings(element.offsetTop);
-                    scrollSettings.element.scrollTo(0, scrollSettings.options);
-                }
-            }
-        }
-
-        /**
-        * Defines wheter to record the history for each hash change in the URL.
-        */
-        function setRecordHistory(value, type){
-            setVariableState('recordHistory', value, type);
-        }
-
-        /**
-        * Defines the scrolling speed
-        */
-        function setScrollingSpeed(value, type){
-            setVariableState('scrollingSpeed', value, type);
-        }
-
-        /**
-        * Sets fitToSection
-        */
-        function setFitToSection(value, type){
-            setVariableState('fitToSection', value, type);
-        }
-
-        /**
-        * Sets lockAnchors
-        */
-        function setLockAnchors(value){
-            options.lockAnchors = value;
-        }
-
-        /**
-        * Adds or remove the possibility of scrolling through sections by using the mouse wheel or the trackpad.
-        */
-        function setMouseWheelScrolling(value){
-            if(value){
-                addMouseWheelHandler();
-                addMiddleWheelHandler();
-            }else{
-                removeMouseWheelHandler();
-                removeMiddleWheelHandler();
-            }
-        }
-
-        /**
-        * Adds or remove the possibility of scrolling through sections by using the mouse wheel/trackpad or touch gestures.
-        * Optionally a second parameter can be used to specify the direction for which the action will be applied.
-        *
-        * @param directions string containing the direction or directions separated by comma.
-        */
-        function setAllowScrolling(value, directions){
-            if(typeof directions !== 'undefined'){
-                directions = directions.replace(/ /g,'').split(',');
-
-                directions.forEach(function (direction){
-                    setIsScrollAllowed(value, direction, 'm');
-                });
-            }
-            else{
-                setIsScrollAllowed(value, 'all', 'm');
-            }
-        }
-
-        /**
-        * Adds or remove the mouse wheel hijacking
-        */
-        function setMouseHijack(value){
-            if(value){
-                setMouseWheelScrolling(true);
-                addTouchHandler();
-            }else{
-                setMouseWheelScrolling(false);
-                removeTouchHandler();
-            }
-        }
-
-        /**
-        * Adds or remove the possibility of scrolling through sections by using the keyboard arrow keys
-        */
-        function setKeyboardScrolling(value, directions){
-            if(typeof directions !== 'undefined'){
-                directions = directions.replace(/ /g,'').split(',');
-
-                directions.forEach(function(direction){
-                    setIsScrollAllowed(value, direction, 'k');
-                });
-            }else{
-                setIsScrollAllowed(value, 'all', 'k');
-                options.keyboardScrolling = value;
-            }
-        }
-
-        /**
-        * Moves the page up one section.
-        */
-        function moveSectionUp(){
-            var prev = prevUntil($(SECTION_ACTIVE_SEL)[0], SECTION_SEL);
-
-            //looping to the bottom if there's no more sections above
-            if (!prev && (options.loopTop || options.continuousVertical)) {
-                prev = last($(SECTION_SEL));
-            }
-
-            if (prev != null) {
-                scrollPage(prev, null, true);
-            }
-        }
-
-        /**
-        * Moves the page down one section.
-        */
-        function moveSectionDown(){
-            var next = nextUntil($(SECTION_ACTIVE_SEL)[0], SECTION_SEL);
-
-            //looping to the top if there's no more sections below
-            if(!next &&
-                (options.loopBottom || options.continuousVertical)){
-                next = $(SECTION_SEL)[0];
-            }
-
-            if(next != null){
-                scrollPage(next, null, false);
-            }
-        }
-
-        /**
-        * Moves the page to the given section and slide with no animation.
-        * Anchors or index positions can be used as params.
-        */
-        function silentMoveTo(sectionAnchor, slideAnchor){
-            setScrollingSpeed (0, 'internal');
-            moveTo(sectionAnchor, slideAnchor);
-            setScrollingSpeed (originals.scrollingSpeed, 'internal');
-        }
-
-        /**
-        * Moves the page to the given section and slide.
-        * Anchors or index positions can be used as params.
-        */
-        function moveTo(sectionAnchor, slideAnchor){
-            var destiny = getSectionByAnchor(sectionAnchor);
-
-            if (typeof slideAnchor !== 'undefined'){
-                scrollPageAndSlide(sectionAnchor, slideAnchor);
-            }else if(destiny != null){
-                scrollPage(destiny);
-            }
-        }
-
-        /**
-        * Slides right the slider of the active section.
-        * Optional `section` param.
-        */
-        function moveSlideRight(section){
-            moveSlide('right', section);
-        }
-
-        /**
-        * Slides left the slider of the active section.
-        * Optional `section` param.
-        */
-        function moveSlideLeft(section){
-            moveSlide('left', section);
-        }
-
-        /**
-         * When resizing is finished, we adjust the slides sizes and positions
-         */
-        function reBuild(resizing){
-            if(hasClass(container, DESTROYED)){ return; }  //nothing to do if the plugin was destroyed
-
-            isResizing = true;
-
-            //updating global vars
-            windowsHeight = getWindowHeight();
-            windowsWidth = getWindowWidth();
-
-            var sections = $(SECTION_SEL);
-            for (var i = 0; i < sections.length; ++i) {
-                var section = sections[i];
-                var slidesWrap = $(SLIDES_WRAPPER_SEL, section)[0];
-                var slides = $(SLIDE_SEL, section);
-
-                //adjusting the height of the table-cell for IE and Firefox
-                if(options.verticalCentered){
-                    css($(TABLE_CELL_SEL, section), {'height': getTableHeight(section) + 'px'});
-                }
-
-                css(section, {'height': windowsHeight + 'px'});
-
-                //adjusting the position fo the FULL WIDTH slides...
-                if (slides.length > 1) {
-                    landscapeScroll(slidesWrap, $(SLIDE_ACTIVE_SEL, slidesWrap)[0]);
-                }
-            }
-
-            if(options.scrollOverflow){
-                scrollBarHandler.createScrollBarForAll();
-            }
-
-            var activeSection = $(SECTION_ACTIVE_SEL)[0];
-            var sectionIndex = index(activeSection, SECTION_SEL);
-
-            //isn't it the first section?
-            if(sectionIndex){
-                //adjusting the position for the current section
-                silentMoveTo(sectionIndex + 1);
-            }
-
-            isResizing = false;
-            if(isFunction( options.afterResize ) && resizing){
-                options.afterResize.call(container, window.innerWidth, window.innerHeight);
-            }
-            if(isFunction( options.afterReBuild ) && !resizing){
-                options.afterReBuild.call(container);
-            }
-        }
-
-        /**
-        * Determines whether fullpage.js is in responsive mode or not.
-        */
-        function isResponsiveMode(){
-           return hasClass($body, RESPONSIVE);
-        }
-
-        /**
-        * Turns fullPage.js to normal scrolling mode when the viewport `width` or `height`
-        * are smaller than the set limit values.
-        */
-        function setResponsive(active){
-            var isResponsive = isResponsiveMode();
-
-            if(active){
-                if(!isResponsive){
-                    setAutoScrolling(false, 'internal');
-                    setFitToSection(false, 'internal');
-                    hide($(SECTION_NAV_SEL));
-                    addClass($body, RESPONSIVE);
-                    if(isFunction( options.afterResponsive )){
-                        options.afterResponsive.call( container, active);
-                    }
-
-                    //when on page load, we will remove scrolloverflow if necessary
-                    if(options.scrollOverflow){
-                        scrollBarHandler.createScrollBarForAll();
-                    }
-                }
-            }
-            else if(isResponsive){
-                setAutoScrolling(originals.autoScrolling, 'internal');
-                setFitToSection(originals.autoScrolling, 'internal');
-                show($(SECTION_NAV_SEL));
-                removeClass($body, RESPONSIVE);
-                if(isFunction( options.afterResponsive )){
-                    options.afterResponsive.call( container, active);
-                }
-            }
-        }
-
-        if(container){
-            //public functions
-            FP.version = '3.0.8';
-            FP.setAutoScrolling = setAutoScrolling;
-            FP.setRecordHistory = setRecordHistory;
-            FP.setScrollingSpeed = setScrollingSpeed;
-            FP.setFitToSection = setFitToSection;
-            FP.setLockAnchors = setLockAnchors;
-            FP.setMouseWheelScrolling = setMouseWheelScrolling;
-            FP.setAllowScrolling = setAllowScrolling;
-            FP.setKeyboardScrolling = setKeyboardScrolling;
-            FP.moveSectionUp = moveSectionUp;
-            FP.moveSectionDown = moveSectionDown;
-            FP.silentMoveTo = silentMoveTo;
-            FP.moveTo = moveTo;
-            FP.moveSlideRight = moveSlideRight;
-            FP.moveSlideLeft = moveSlideLeft;
-            FP.fitToSection = fitToSection;
-            FP.reBuild = reBuild;
-            FP.setResponsive = setResponsive;
-            FP.getFullpageData = function(){ return options; };
-            FP.destroy = destroy;
-            FP.getActiveSection = getActiveSection;
-            FP.getActiveSlide = getActiveSlide;
-
-            FP.test = {
-                top: '0px',
-                translate3d: 'translate3d(0px, 0px, 0px)',
-                translate3dH: (function(){
-                    var a = [];
-                    for(var i = 0; i < $(options.sectionSelector, container).length; i++){
-                        a.push('translate3d(0px, 0px, 0px)');
-                    }
-                    return a;
-                })(),
-                left: (function(){
-                    var a = [];
-                    for(var i = 0; i < $(options.sectionSelector, container).length; i++){
-                        a.push(0);
-                    }
-                    return a;
-                })(),
-                options: options,
-                setAutoScrolling: setAutoScrolling
-            };
-
-            //functions we want to share across files but which are not
-            //mean to be used on their own by developers
-            FP.shared = {
-                afterRenderActions: afterRenderActions,
-                isNormalScrollElement: false
-            };
-
-            window.fullpage_api = FP;
-
-            //using jQuery initialization? Creating the $.fn.fullpage object
-            if(options.$){
-                Object.keys(FP).forEach(function (key) {    
-                    options.$.fn.fullpage[key] = FP[key];   
-                });
-            }
-
-            init();
-
-            bindEvents();
-        }
-
-        function init(){
-            //if css3 is not supported, it will use jQuery animations
-            if(options.css3){
-                options.css3 = support3d();
-            }
-
-            options.scrollBar = options.scrollBar || options.hybrid;
-
-            setOptionsFromDOM();
-            prepareDom();
-            setAllowScrolling(true);
-            setMouseHijack(true);
-            setAutoScrolling(options.autoScrolling, 'internal');
-            responsive();
-
-            //setting the class for the body element
-            setBodyClass();
-
-            if(document.readyState === 'complete'){
-                scrollToAnchor();
-            }
-            window.addEventListener('load', scrollToAnchor);
-
-            //if we use scrollOverflow we'll fire afterRender in the scrolloverflow file
-            if(!options.scrollOverflow){
-                afterRenderActions();
-            }
-
-            doubleCheckHeight();
-        }
-
-        function bindEvents(){
-
-            //when scrolling...
-            window.addEventListener('scroll', scrollHandler);
-
-            //detecting any change on the URL to scroll to the given anchor link
-            //(a way to detect back history button as we play with the hashes on the URL)
-            window.addEventListener('hashchange', hashChangeHandler);
-
-            //when opening a new tab (ctrl + t), `control` won't be pressed when coming back.
-            window.addEventListener('blur', blurHandler);
-
-            //when resizing the site, we adjust the heights of the sections, slimScroll...
-            window.addEventListener('resize', resizeHandler);
-
-            //Sliding with arrow keys, both, vertical and horizontal
-            document.addEventListener('keydown', keydownHandler);
-
-            //to prevent scrolling while zooming
-            document.addEventListener('keyup', keyUpHandler);
-
-            //Scrolls to the section when clicking the navigation bullet
-            //simulating the jQuery .on('click') event using delegation
-            ['click', 'touchstart'].forEach(function(eventName){
-                document.addEventListener(eventName, delegatedEvents);
-            });
-
-            /**
-            * Applying normalScroll elements.
-            * Ignoring the scrolls over the specified selectors.
-            */
-            if(options.normalScrollElements){
-                ['mouseenter', 'touchstart'].forEach(function(eventName){
-                    forMouseLeaveOrTouch(eventName, false);
-                });
-
-                ['mouseleave', 'touchend'].forEach(function(eventName){
-                   forMouseLeaveOrTouch(eventName, true);
-                });
-            }
-        }
-
-        function delegatedEvents(e){
-            var target = e.target;
-
-            if(target && closest(target, SECTION_NAV_SEL + ' a')){
-                sectionBulletHandler.call(target, e);
-            }
-            else if(matches(target, SECTION_NAV_TOOLTIP_SEL)){
-                tooltipTextHandler.call(target);
-            }
-            else if(matches(target, SLIDES_ARROW_SEL)){
-                slideArrowHandler.call(target, e);
-            }
-            else if(matches(target, SLIDES_NAV_LINK_SEL) || closest(target, SLIDES_NAV_LINK_SEL) != null){
-                slideBulletHandler.call(target, e);
-            }
-            else if(closest(target, options.menu + ' [data-menuanchor]')){
-                menuItemsHandler.call(target, e);
-            }
-        }
-
-        function forMouseLeaveOrTouch(eventName, allowScrolling){
-            //a way to pass arguments to the onMouseEnterOrLeave function
-            document['fp_' + eventName] = allowScrolling;
-            document.addEventListener(eventName, onMouseEnterOrLeave, true); //capturing phase
-        }
-
-        function onMouseEnterOrLeave(e) {
-            var type = e.type;
-            var isInsideOneNormalScroll = false;
-            var isUsingScrollOverflow = options.scrollOverflow;
-
-            //onMouseLeave will use the destination target, not the one we are moving away from
-            var target = type === 'mouseleave' ? e.toElement || e.relatedTarget : e.target;
-
-            //coming from closing a normalScrollElements modal or moving outside viewport?
-            if(target == document || !target){
-                setMouseHijack(true);
-
-                if(isUsingScrollOverflow){
-                    options.scrollOverflowHandler.setIscroll(target, true);
-                }
-                return;
-            }
-
-            if(type === 'touchend'){
-                g_canFireMouseEnterNormalScroll = false;
-                setTimeout(function(){
-                    g_canFireMouseEnterNormalScroll = true;
-                }, 800);
-            }
-
-            //preventing mouseenter event to do anything when coming from a touchEnd event
-            //fixing issue #3576
-            if(type === 'mouseenter' && !g_canFireMouseEnterNormalScroll){
-                return;
-            }
-
-            var normalSelectors = options.normalScrollElements.split(',');
-
-            normalSelectors.forEach(function(normalSelector){
-                if(!isInsideOneNormalScroll){
-                    var isNormalScrollTarget = matches(target, normalSelector);
-
-                    //leaving a child inside the normalScoll element is not leaving the normalScroll #3661
-                    var isNormalScrollChildFocused = closest(target, normalSelector);
-
-                    if(isNormalScrollTarget || isNormalScrollChildFocused){
-                        if(!FP.shared.isNormalScrollElement){
-                            setMouseHijack(false);
-
-                            if(isUsingScrollOverflow){
-                                options.scrollOverflowHandler.setIscroll(target, false);
-                            }
-                        }
-                        FP.shared.isNormalScrollElement = true;
-                        isInsideOneNormalScroll = true;
-                    }
-                }
-            });
-
-            //not inside a single normal scroll element anymore?
-            if(!isInsideOneNormalScroll && FP.shared.isNormalScrollElement){
-                setMouseHijack(true);
-                
-                if(isUsingScrollOverflow){
-                    options.scrollOverflowHandler.setIscroll(target, true);
-                }
-
-                FP.shared.isNormalScrollElement = false;
-            }
-        }
-
-        /**
-        * Checks the viewport a few times on a define interval of time to 
-        * see if it has changed in any of those. If that's the case, it resizes.
-        */
-        function doubleCheckHeight(){
-            for(var i = 1; i < 4; i++){
-                g_doubleCheckHeightId = setTimeout(adjustToNewViewport, 350 * i);
-            }
-        }
-
-        /**
-        * Adjusts a section to the viewport if it has changed.
-        */
-        function adjustToNewViewport(){
-            var newWindowHeight = getWindowHeight();
-            var newWindowWidth = getWindowWidth();
-
-            if(windowsHeight !== newWindowHeight || windowsWidth !== newWindowWidth){
-                windowsHeight = newWindowHeight;
-                windowsWidth = newWindowWidth;
-                reBuild(true);
-            }
-        }
-
-        /**
-        * Setting options from DOM elements if they are not provided.
-        */
-        function setOptionsFromDOM(){
-
-            //no anchors option? Checking for them in the DOM attributes
-            if(!options.anchors.length){
-                var anchorsAttribute = '[data-anchor]';
-                var anchors = $(options.sectionSelector.split(',').join(anchorsAttribute + ',') + anchorsAttribute, container);
-                if(anchors.length){
-                    g_initialAnchorsInDom = true;
-                    anchors.forEach(function(item){
-                        options.anchors.push(item.getAttribute('data-anchor').toString());
-                    });
-                }
-            }
-
-            //no tooltips option? Checking for them in the DOM attributes
-            if(!options.navigationTooltips.length){
-                var tooltipsAttribute = '[data-tooltip]';
-                var tooltips = $(options.sectionSelector.split(',').join(tooltipsAttribute + ',') + tooltipsAttribute, container);
-                if(tooltips.length){
-                    tooltips.forEach(function(item){
-                        options.navigationTooltips.push(item.getAttribute('data-tooltip').toString());
-                    });
-                }
-            }
-        }
-
-        /**
-        * Works over the DOM structure to set it up for the current fullpage options.
-        */
-        function prepareDom(){
-            css(container, {
-                'height': '100%',
-                'position': 'relative'
-            });
-
-            //adding a class to recognize the container internally in the code
-            addClass(container, WRAPPER);
-            addClass($html, ENABLED);
-
-            //due to https://github.com/alvarotrigo/fullPage.js/issues/1502
-            windowsHeight = getWindowHeight();
-
-            removeClass(container, DESTROYED); //in case it was destroyed before initializing it again
-
-            addInternalSelectors();
-
-            var sections = $(SECTION_SEL);
-
-            //styling the sections / slides / menu
-            for(var i = 0; i<sections.length; i++){
-                var sectionIndex = i;
-                var section = sections[i];
-                var slides = $(SLIDE_SEL, section);
-                var numSlides = slides.length;
-
-                //caching the original styles to add them back on destroy('all')
-                section.setAttribute('data-fp-styles', section.getAttribute('style'));
-
-                styleSection(section, sectionIndex);
-                styleMenu(section, sectionIndex);
-
-                // if there's any slide
-                if (numSlides > 0) {
-                    styleSlides(section, slides, numSlides);
-                }else{
-                    if(options.verticalCentered){
-                        addTableClass(section);
-                    }
-                }
-            }
-
-            //fixed elements need to be moved out of the plugin container due to problems with CSS3.
-            if(options.fixedElements && options.css3){
-                $(options.fixedElements).forEach(function(item){
-                    $body.appendChild(item);
-                });
-            }
-
-            //vertical centered of the navigation + active bullet
-            if(options.navigation){
-                addVerticalNavigation();
-            }
-
-            enableYoutubeAPI();
-
-            if(options.scrollOverflow){
-                scrollBarHandler = options.scrollOverflowHandler.init(options);
-            }
-        }
-
-        /**
-        * Styles the horizontal slides for a section.
-        */
-        function styleSlides(section, slides, numSlides){
-            var sliderWidth = numSlides * 100;
-            var slideWidth = 100 / numSlides;
-
-            var slidesWrapper = document.createElement('div');
-            slidesWrapper.className = SLIDES_WRAPPER; //fp-slides
-            wrapAll(slides, slidesWrapper);
-
-            var slidesContainer = document.createElement('div');
-            slidesContainer.className = SLIDES_CONTAINER; //fp-slidesContainer
-            wrapAll(slides, slidesContainer);
-
-            css($(SLIDES_CONTAINER_SEL, section), {'width': sliderWidth + '%'});
-
-            if(numSlides > 1){
-                if(options.controlArrows){
-                    createSlideArrows(section);
-                }
-
-                if(options.slidesNavigation){
-                    addSlidesNavigation(section, numSlides);
-                }
-            }
-
-            slides.forEach(function(slide) {
-                css(slide, {'width': slideWidth + '%'});
-
-                if(options.verticalCentered){
-                    addTableClass(slide);
-                }
-            });
-
-            var startingSlide = $(SLIDE_ACTIVE_SEL, section)[0];
-
-            //if the slide won't be an starting point, the default will be the first one
-            //the active section isn't the first one? Is not the first slide of the first section? Then we load that section/slide by default.
-            if( startingSlide != null && (index($(SECTION_ACTIVE_SEL), SECTION_SEL) !== 0 || (index($(SECTION_ACTIVE_SEL), SECTION_SEL) === 0 && index(startingSlide) !== 0))){
-                silentLandscapeScroll(startingSlide, 'internal');
-            }else{
-                addClass(slides[0], ACTIVE);
-            }
-        }
-
-        /**
-        * Styling vertical sections
-        */
-        function styleSection(section, index){
-            //if no active section is defined, the 1st one will be the default one
-            if(!index && $(SECTION_ACTIVE_SEL)[0] == null) {
-                addClass(section, ACTIVE);
-            }
-            startingSection = $(SECTION_ACTIVE_SEL)[0];
-
-            css(section, {'height': windowsHeight + 'px'});
-
-            if(options.paddingTop){
-                css(section, {'padding-top': options.paddingTop});
-            }
-
-            if(options.paddingBottom){
-                css(section, {'padding-bottom': options.paddingBottom});
-            }
-
-            if (typeof options.sectionsColor[index] !==  'undefined') {
-                css(section, {'background-color': options.sectionsColor[index]});
-            }
-
-            if (typeof options.anchors[index] !== 'undefined') {
-                section.setAttribute('data-anchor', options.anchors[index]);
-            }
-        }
-
-        /**
-        * Sets the data-anchor attributes to the menu elements and activates the current one.
-        */
-        function styleMenu(section, index){
-            if (typeof options.anchors[index] !== 'undefined') {
-                //activating the menu / nav element on load
-                if(hasClass(section, ACTIVE)){
-                    activateMenuAndNav(options.anchors[index], index);
-                }
-            }
-
-            //moving the menu outside the main container if it is inside (avoid problems with fixed positions when using CSS3 tranforms)
-            if(options.menu && options.css3 && closest($(options.menu)[0], WRAPPER_SEL) != null){
-                $(options.menu).forEach(function(menu) {
-                    $body.appendChild(menu);
-                });
-            }
-        }
-
-        /**
-        * Adds internal classes to be able to provide customizable selectors
-        * keeping the link with the style sheet.
-        */
-        function addInternalSelectors(){
-            addClass($(options.sectionSelector, container), SECTION);
-            addClass($(options.slideSelector, container), SLIDE);
-        }
-
-        /**
-        * Creates the control arrows for the given section
-        */
-        function createSlideArrows(section){
-            var arrows = [createElementFromHTML('<div class="' + SLIDES_ARROW_PREV + '"></div>'), createElementFromHTML('<div class="' + SLIDES_ARROW_NEXT + '"></div>')];
-            after($(SLIDES_WRAPPER_SEL, section)[0], arrows);
-
-            if(options.controlArrowColor !== '#fff'){
-                css($(SLIDES_ARROW_NEXT_SEL, section), {'border-color': 'transparent transparent transparent '+options.controlArrowColor});
-                css($(SLIDES_ARROW_PREV_SEL, section), {'border-color': 'transparent '+ options.controlArrowColor + ' transparent transparent'});
-            }
-
-            if(!options.loopHorizontal){
-                hide($(SLIDES_ARROW_PREV_SEL, section));
-            }
-        }
-
-        /**
-        * Creates a vertical navigation bar.
-        */
-        function addVerticalNavigation(){
-            var navigation = document.createElement('div');
-            navigation.setAttribute('id', SECTION_NAV);
-
-            var divUl = document.createElement('ul');
-            navigation.appendChild(divUl);
-
-            appendTo(navigation, $body);
-            var nav = $(SECTION_NAV_SEL)[0];
-
-            addClass(nav, 'fp-' + options.navigationPosition);
-
-            if(options.showActiveTooltip){
-                addClass(nav, SHOW_ACTIVE_TOOLTIP);
-            }
-
-            var li = '';
-
-            for (var i = 0; i < $(SECTION_SEL).length; i++) {
-                var link = '';
-                if (options.anchors.length) {
-                    link = options.anchors[i];
-                }
-
-                li += '<li><a href="#' + link + '"><span class="fp-sr-only">' + getBulletLinkName(i, 'Section') + '</span><span></span></a>';
-
-                // Only add tooltip if needed (defined by user)
-                var tooltip = options.navigationTooltips[i];
-
-                if (typeof tooltip !== 'undefined' && tooltip !== '') {
-                    li += '<div class="' + SECTION_NAV_TOOLTIP + ' fp-' + options.navigationPosition + '">' + tooltip + '</div>';
-                }
-
-                li += '</li>';
-            }
-            $('ul', nav)[0].innerHTML = li;
-
-            //centering it vertically
-            css($(SECTION_NAV_SEL), {'margin-top': '-' + ($(SECTION_NAV_SEL)[0].offsetHeight/2) + 'px'});
-
-            //activating the current active section
-
-            var bullet = $('li', $(SECTION_NAV_SEL)[0])[index($(SECTION_ACTIVE_SEL)[0], SECTION_SEL)];
-            addClass($('a', bullet), ACTIVE);
-        }
-
-        /**
-        * Gets the name for screen readers for a section/slide navigation bullet.
-        */
-        function getBulletLinkName(i, defaultName){
-            return options.navigationTooltips[i]
-                || options.anchors[i]
-                || defaultName + ' ' + (i+1);
-        }
-
-        /*
-        * Enables the Youtube videos API so we can control their flow if necessary.
-        */
-        function enableYoutubeAPI(){
-            $('iframe[src*="youtube.com/embed/"]', container).forEach(function(item){
-                addURLParam(item, 'enablejsapi=1');
-            });
-        }
-
-        /**
-        * Adds a new parameter and its value to the `src` of a given element
-        */
-        function addURLParam(element, newParam){
-            var originalSrc = element.getAttribute('src');
-            element.setAttribute('src', originalSrc + getUrlParamSign(originalSrc) + newParam);
-        }
-
-        /*
-        * Returns the prefix sign to use for a new parameter in an existen URL.
-        *
-        * @return {String}  ? | &
-        */
-        function getUrlParamSign(url){
-            return ( !/\?/.test( url ) ) ? '?' : '&';
-        }
-
-        /**
-        * Actions and callbacks to fire afterRender
-        */
-        function afterRenderActions(){
-            var section = $(SECTION_ACTIVE_SEL)[0];
-
-            addClass(section, COMPLETELY);
-
-            lazyLoad(section);
-            lazyLoadOthers();
-            playMedia(section);
-
-            if(options.scrollOverflow){
-                options.scrollOverflowHandler.afterLoad();
-            }
-
-            if(isDestinyTheStartingSection() && isFunction(options.afterLoad) ){
-                fireCallback('afterLoad', {
-                    activeSection: section,
-                    element: section,
-                    direction: null,
-
-                    //for backwards compatibility callback (to be removed in a future!)
-                    anchorLink: section.getAttribute('data-anchor'),
-                    sectionIndex: index(section, SECTION_SEL)
-                });
-            }
-
-            if(isFunction(options.afterRender)){
-                fireCallback('afterRender');
-            }
-        }
-
-        /**
-        * Determines if the URL anchor destiny is the starting section (the one using 'active' class before initialization)
-        */
-        function isDestinyTheStartingSection(){
-            var anchor = getAnchorsURL();
-            var destinationSection = getSectionByAnchor(anchor.section);
-            return !anchor.section || !destinationSection || typeof destinationSection !=='undefined' && index(destinationSection) === index(startingSection);
-        }
-
-        var isScrolling = false;
-        var lastScroll = 0;
-
-        //when scrolling...
-        function scrollHandler(){
-            var currentSection;
-
-            if(!options.autoScrolling || options.scrollBar){
-                var currentScroll = getScrollTop();
-                var scrollDirection = getScrollDirection(currentScroll);
-                var visibleSectionIndex = 0;
-                var screen_mid = currentScroll + (getWindowHeight() / 2.0);
-                var isAtBottom = $body.offsetHeight - getWindowHeight() === currentScroll;
-                var sections =  $(SECTION_SEL);
-
-                //when using `auto-height` for a small last section it won't be centered in the viewport
-                if(isAtBottom){
-                    visibleSectionIndex = sections.length - 1;
-                }
-                //is at top? when using `auto-height` for a small first section it won't be centered in the viewport
-                else if(!currentScroll){
-                    visibleSectionIndex = 0;
-                }
-
-                //taking the section which is showing more content in the viewport
-                else{
-                    for (var i = 0; i < sections.length; ++i) {
-                        var section = sections[i];
-
-                        // Pick the the last section which passes the middle line of the screen.
-                        if (section.offsetTop <= screen_mid)
-                        {
-                            visibleSectionIndex = i;
-                        }
-                    }
-                }
-
-                if(isCompletelyInViewPort(scrollDirection)){
-                    if(!hasClass($(SECTION_ACTIVE_SEL)[0], COMPLETELY)){
-                        addClass($(SECTION_ACTIVE_SEL)[0], COMPLETELY);
-                        removeClass(siblings($(SECTION_ACTIVE_SEL)[0]), COMPLETELY);
-                    }
-                }
-
-                //geting the last one, the current one on the screen
-                currentSection = sections[visibleSectionIndex];
-
-                //setting the visible section as active when manually scrolling
-                //executing only once the first time we reach the section
-                if(!hasClass(currentSection, ACTIVE)){
-                    isScrolling = true;
-                    var leavingSection = $(SECTION_ACTIVE_SEL)[0];
-                    var leavingSectionIndex = index(leavingSection, SECTION_SEL) + 1;
-                    var yMovement = getYmovement(currentSection);
-                    var anchorLink  = currentSection.getAttribute('data-anchor');
-                    var sectionIndex = index(currentSection, SECTION_SEL) + 1;
-                    var activeSlide = $(SLIDE_ACTIVE_SEL, currentSection)[0];
-                    var slideIndex;
-                    var slideAnchorLink;
-                    var callbacksParams = {
-                        activeSection: leavingSection,
-                        sectionIndex: sectionIndex -1,
-                        anchorLink: anchorLink,
-                        element: currentSection,
-                        leavingSection: leavingSectionIndex,
-                        direction: yMovement
-                    };
-
-                    if(activeSlide){
-                        slideAnchorLink = activeSlide.getAttribute('data-anchor');
-                        slideIndex = index(activeSlide);
-                    }
-
-                    if(canScroll){
-                        addClass(currentSection, ACTIVE);
-                        removeClass(siblings(currentSection), ACTIVE);
-
-                        if(isFunction( options.onLeave )){
-                            fireCallback('onLeave', callbacksParams);
-                        }
-                        if(isFunction( options.afterLoad )){
-                            fireCallback('afterLoad', callbacksParams);
-                        }
-
-                        stopMedia(leavingSection);
-                        lazyLoad(currentSection);
-                        playMedia(currentSection);
-
-                        activateMenuAndNav(anchorLink, sectionIndex - 1);
-
-                        if(options.anchors.length){
-                            //needed to enter in hashChange event when using the menu with anchor links
-                            lastScrolledDestiny = anchorLink;
-                        }
-                        setState(slideIndex, slideAnchorLink, anchorLink, sectionIndex);
-                    }
-
-                    //small timeout in order to avoid entering in hashChange event when scrolling is not finished yet
-                    clearTimeout(scrollId);
-                    scrollId = setTimeout(function(){
-                        isScrolling = false;
-                    }, 100);
-                }
-
-                if(options.fitToSection){
-                    //for the auto adjust of the viewport to fit a whole section
-                    clearTimeout(scrollId2);
-
-                    scrollId2 = setTimeout(function(){
-                        //checking it again in case it changed during the delay
-                        if(options.fitToSection &&
-
-                            //is the destination element bigger than the viewport?
-                            $(SECTION_ACTIVE_SEL)[0].offsetHeight <= windowsHeight
-                        ){
-                            fitToSection();
-                        }
-                    }, options.fitToSectionDelay);
-                }
-            }
-        }
-
-        /**
-        * Fits the site to the nearest active section
-        */
-        function fitToSection(){
-            //checking fitToSection again in case it was set to false before the timeout delay
-            if(canScroll){
-                //allows to scroll to an active section and
-                //if the section is already active, we prevent firing callbacks
-                isResizing = true;
-
-                scrollPage($(SECTION_ACTIVE_SEL)[0]);
-                isResizing = false;
-            }
-        }
-
-        /**
-        * Determines whether the active section has seen in its whole or not.
-        */
-        function isCompletelyInViewPort(movement){
-            var top = $(SECTION_ACTIVE_SEL)[0].offsetTop;
-            var bottom = top + getWindowHeight();
-
-            if(movement == 'up'){
-                return bottom >= (getScrollTop() + getWindowHeight());
-            }
-            return top <= getScrollTop();
-        }
-
-        /**
-        * Determines whether a section is in the viewport or not.
-        */
-        function isSectionInViewport (el) {
-            var rect = el.getBoundingClientRect();
-            var top = rect.top;
-            var bottom = rect.bottom;
-
-            //sometimes there's a 1px offset on the bottom of the screen even when the 
-            //section's height is the window.innerHeight one. I guess because pixels won't allow decimals.
-            //using this prevents from lazyLoading the section that is not yet visible 
-            //(only 1 pixel offset is)
-            var pixelOffset = 2;
-            
-            var isTopInView = top + pixelOffset < windowsHeight && top > 0;
-            var isBottomInView = bottom > pixelOffset && bottom < windowsHeight;
-
-            return isTopInView || isBottomInView;
-        }
-
-        /**
-        * Gets the directon of the the scrolling fired by the scroll event.
-        */
-        function getScrollDirection(currentScroll){
-            var direction = currentScroll > lastScroll ? 'down' : 'up';
-
-            lastScroll = currentScroll;
-
-            //needed for auto-height sections to determine if we want to scroll to the top or bottom of the destination
-            previousDestTop = currentScroll;
-
-            return direction;
-        }
-
-        /**
-        * Determines the way of scrolling up or down:
-        * by 'automatically' scrolling a section or by using the default and normal scrolling.
-        */
-        function scrolling(type){
-            if (!isScrollAllowed.m[type]){
-                return;
-            }
-
-            var scrollSection = (type === 'down') ? moveSectionDown : moveSectionUp;
-
-            if(options.scrollOverflow){
-                var scrollable = options.scrollOverflowHandler.scrollable($(SECTION_ACTIVE_SEL)[0]);
-                var check = (type === 'down') ? 'bottom' : 'top';
-
-                if(scrollable != null ){
-                    //is the scrollbar at the start/end of the scroll?
-                    if(options.scrollOverflowHandler.isScrolled(check, scrollable)){
-                        scrollSection();
-                    }else{
-                        return true;
-                    }
-                }else{
-                    // moved up/down
-                    scrollSection();
-                }
-            }else{
-                // moved up/down
-                scrollSection();
-            }
-        }
-
-        /*
-        * Preventing bouncing in iOS #2285
-        */
-        function preventBouncing(e){
-            if(options.autoScrolling && isReallyTouch(e) && isScrollAllowed.m.up){
-                //preventing the easing on iOS devices
-                preventDefault(e);
-            }
-        }
-
-        var touchStartY = 0;
-        var touchStartX = 0;
-        var touchEndY = 0;
-        var touchEndX = 0;
-
-        /* Detecting touch events
-
-        * As we are changing the top property of the page on scrolling, we can not use the traditional way to detect it.
-        * This way, the touchstart and the touch moves shows an small difference between them which is the
-        * used one to determine the direction.
-        */
-        function touchMoveHandler(e){
-            var activeSection = closest(e.target, SECTION_SEL) || $(SECTION_ACTIVE_SEL)[0];
-
-            if (isReallyTouch(e) ) {
-
-                if(options.autoScrolling){
-                    //preventing the easing on iOS devices
-                    preventDefault(e);
-                }
-
-                var touchEvents = getEventsPage(e);
-
-                touchEndY = touchEvents.y;
-                touchEndX = touchEvents.x;
-
-                //if movement in the X axys is greater than in the Y and the currect section has slides...
-                if ($(SLIDES_WRAPPER_SEL, activeSection).length && Math.abs(touchStartX - touchEndX) > (Math.abs(touchStartY - touchEndY))) {
-
-                    //is the movement greater than the minimum resistance to scroll?
-                    if (!slideMoving && Math.abs(touchStartX - touchEndX) > (getWindowWidth() / 100 * options.touchSensitivity)) {
-                        if (touchStartX > touchEndX) {
-                            if(isScrollAllowed.m.right){
-                                moveSlideRight(activeSection); //next
-                            }
-                        } else {
-                            if(isScrollAllowed.m.left){
-                                moveSlideLeft(activeSection); //prev
-                            }
-                        }
-                    }
-                }
-
-                //vertical scrolling (only when autoScrolling is enabled)
-                else if(options.autoScrolling && canScroll){
-
-                    //is the movement greater than the minimum resistance to scroll?
-                    if (Math.abs(touchStartY - touchEndY) > (window.innerHeight / 100 * options.touchSensitivity)) {
-                        if (touchStartY > touchEndY) {
-                            scrolling('down');
-                        } else if (touchEndY > touchStartY) {
-                            scrolling('up');
-                        }
-                    }
-                }
-            }
-        }
-
-        /**
-        * As IE >= 10 fires both touch and mouse events when using a mouse in a touchscreen
-        * this way we make sure that is really a touch event what IE is detecting.
-        */
-        function isReallyTouch(e){
-            //if is not IE   ||  IE is detecting `touch` or `pen`
-            return typeof e.pointerType === 'undefined' || e.pointerType != 'mouse';
-        }
-
-        /**
-        * Handler for the touch start event.
-        */
-        function touchStartHandler(e){
-
-            //stopping the auto scroll to adjust to a section
-            if(options.fitToSection){
-                activeAnimation = false;
-            }
-
-            if(isReallyTouch(e)){
-                var touchEvents = getEventsPage(e);
-                touchStartY = touchEvents.y;
-                touchStartX = touchEvents.x;
-            }
-        }
-
-        /**
-        * Gets the average of the last `number` elements of the given array.
-        */
-        function getAverage(elements, number){
-            var sum = 0;
-
-            //taking `number` elements from the end to make the average, if there are not enought, 1
-            var lastElements = elements.slice(Math.max(elements.length - number, 1));
-
-            for(var i = 0; i < lastElements.length; i++){
-                sum = sum + lastElements[i];
-            }
-
-            return Math.ceil(sum/number);
-        }
-
-        /**
-         * Detecting mousewheel scrolling
-         *
-         * http://blogs.sitepointstatic.com/examples/tech/mouse-wheel/index.html
-         * http://www.sitepoint.com/html5-javascript-mouse-wheel/
-         */
-        var prevTime = new Date().getTime();
-
-        function MouseWheelHandler(e) {
-            var curTime = new Date().getTime();
-            var isNormalScroll = hasClass($(COMPLETELY_SEL)[0], NORMAL_SCROLL);
-
-            //is scroll allowed?
-            if (!isScrollAllowed.m.down && !isScrollAllowed.m.up) {
-                preventDefault(e);
-                return false;
-            }
-
-            //autoscrolling and not zooming?
-            if(options.autoScrolling && !controlPressed && !isNormalScroll){
-                // cross-browser wheel delta
-                e = e || window.event;
-                var value = e.wheelDelta || -e.deltaY || -e.detail;
-                var delta = Math.max(-1, Math.min(1, value));
-
-                var horizontalDetection = typeof e.wheelDeltaX !== 'undefined' || typeof e.deltaX !== 'undefined';
-                var isScrollingVertically = (Math.abs(e.wheelDeltaX) < Math.abs(e.wheelDelta)) || (Math.abs(e.deltaX ) < Math.abs(e.deltaY) || !horizontalDetection);
-
-                //Limiting the array to 150 (lets not waste memory!)
-                if(scrollings.length > 149){
-                    scrollings.shift();
-                }
-
-                //keeping record of the previous scrollings
-                scrollings.push(Math.abs(value));
-
-                //preventing to scroll the site on mouse wheel when scrollbar is present
-                if(options.scrollBar){
-                    preventDefault(e);
-                }
-
-                //time difference between the last scroll and the current one
-                var timeDiff = curTime-prevTime;
-                prevTime = curTime;
-
-                //haven't they scrolled in a while?
-                //(enough to be consider a different scrolling action to scroll another section)
-                if(timeDiff > 200){
-                    //emptying the array, we dont care about old scrollings for our averages
-                    scrollings = [];
-                }
-
-                if(canScroll){
-                    var averageEnd = getAverage(scrollings, 10);
-                    var averageMiddle = getAverage(scrollings, 70);
-                    var isAccelerating = averageEnd >= averageMiddle;
-
-                    //to avoid double swipes...
-                    if(isAccelerating && isScrollingVertically){
-                        //scrolling down?
-                        if (delta < 0) {
-                            scrolling('down');
-
-                        //scrolling up?
-                        }else {
-                            scrolling('up');
-                        }
-                    }
-                }
-
-                return false;
-            }
-
-            if(options.fitToSection){
-                //stopping the auto scroll to adjust to a section
-                activeAnimation = false;
-            }
-        }
-
-        /**
-        * Slides a slider to the given direction.
-        * Optional `section` param.
-        */
-        function moveSlide(direction, section){
-            var activeSection = section == null ? $(SECTION_ACTIVE_SEL)[0] : section;
-            var slides = $(SLIDES_WRAPPER_SEL, activeSection)[0];
-
-            // more than one slide needed and nothing should be sliding
-            if (slides == null || slideMoving || $(SLIDE_SEL, slides).length < 2) {
-                return;
-            }
-
-            var currentSlide = $(SLIDE_ACTIVE_SEL, slides)[0];
-            var destiny = null;
-
-            if(direction === 'left'){
-                destiny = prevUntil(currentSlide, SLIDE_SEL);
-            }else{
-                destiny = nextUntil(currentSlide, SLIDE_SEL);
-            }
-
-            //isn't there a next slide in the secuence?
-            if(destiny == null){
-                //respect loopHorizontal settin
-                if (!options.loopHorizontal) return;
-
-                var slideSiblings = siblings(currentSlide);
-                if(direction === 'left'){
-                    destiny = slideSiblings[slideSiblings.length - 1]; //last
-                }else{
-                    destiny = slideSiblings[0]; //first
-                }
-            }
-
-            slideMoving = true && !FP.test.isTesting;
-            landscapeScroll(slides, destiny, direction);
-        }
-
-        /**
-        * Maintains the active slides in the viewport
-        * (Because the `scroll` animation might get lost with some actions, such as when using continuousVertical)
-        */
-        function keepSlidesPosition(){
-            var activeSlides = $(SLIDE_ACTIVE_SEL);
-            for( var i =0; i<activeSlides.length; i++){
-                silentLandscapeScroll(activeSlides[i], 'internal');
-            }
-        }
-
-        var previousDestTop = 0;
-        /**
-        * Returns the destination Y position based on the scrolling direction and
-        * the height of the section.
-        */
-        function getDestinationPosition(element){
-            var elementHeight = element.offsetHeight;
-            var elementTop = element.offsetTop;
-
-            //top of the desination will be at the top of the viewport
-            var position = elementTop;
-            var isScrollingDown =  elementTop > previousDestTop;
-            var sectionBottom = position - windowsHeight + elementHeight;
-            var bigSectionsDestination = options.bigSectionsDestination;
-
-            //is the destination element bigger than the viewport?
-            if(elementHeight > windowsHeight){
-                //scrolling up?
-                if(!isScrollingDown && !bigSectionsDestination || bigSectionsDestination === 'bottom' ){
-                    position = sectionBottom;
-                }
-            }
-
-            //sections equal or smaller than the viewport height && scrolling down? ||  is resizing and its in the last section
-            else if(isScrollingDown || (isResizing && next(element) == null) ){
-                //The bottom of the destination will be at the bottom of the viewport
-                position = sectionBottom;
-            }
-
-            /*
-            Keeping record of the last scrolled position to determine the scrolling direction.
-            No conventional methods can be used as the scroll bar might not be present
-            AND the section might not be active if it is auto-height and didnt reach the middle
-            of the viewport.
-            */
-            previousDestTop = position;
-            return position;
-        }
-
-        /**
-        * Scrolls the site to the given element and scrolls to the slide if a callback is given.
-        */
-        function scrollPage(element, callback, isMovementUp){
-            if(element == null){ return; } //there's no element to scroll, leaving the function
-
-            var dtop = getDestinationPosition(element);
-            var slideAnchorLink;
-            var slideIndex;
-
-            //local variables
-            var v = {
-                element: element,
-                callback: callback,
-                isMovementUp: isMovementUp,
-                dtop: dtop,
-                yMovement: getYmovement(element),
-                anchorLink: element.getAttribute('data-anchor'),
-                sectionIndex: index(element, SECTION_SEL),
-                activeSlide: $(SLIDE_ACTIVE_SEL, element)[0],
-                activeSection: $(SECTION_ACTIVE_SEL)[0],
-                leavingSection: index($(SECTION_ACTIVE_SEL), SECTION_SEL) + 1,
-
-                //caching the value of isResizing at the momment the function is called
-                //because it will be checked later inside a setTimeout and the value might change
-                localIsResizing: isResizing
-            };
-
-            //quiting when destination scroll is the same as the current one
-            if((v.activeSection == element && !isResizing) || (options.scrollBar && getScrollTop() === v.dtop && !hasClass(element, AUTO_HEIGHT) )){ return; }
-
-            if(v.activeSlide != null){
-                slideAnchorLink = v.activeSlide.getAttribute('data-anchor');
-                slideIndex = index(v.activeSlide);
-            }
-
-            //callback (onLeave) if the site is not just resizing and readjusting the slides
-            if(!v.localIsResizing){
-                var direction = v.yMovement;
-
-                //required for continousVertical
-                if(typeof isMovementUp !== 'undefined'){
-                    direction = isMovementUp ? 'up' : 'down';
-                }
-
-                //for the callback
-                v.direction = direction;
-
-                if(isFunction(options.onLeave)){
-                    if(fireCallback('onLeave', v) === false){
-                        return;
-                    }
-                }
-            }
-
-            // If continuousVertical && we need to wrap around
-            if (options.autoScrolling && options.continuousVertical && typeof (v.isMovementUp) !== "undefined" &&
-                ((!v.isMovementUp && v.yMovement == 'up') || // Intending to scroll down but about to go up or
-                (v.isMovementUp && v.yMovement == 'down'))) { // intending to scroll up but about to go down
-
-                v = createInfiniteSections(v);
-            }
-
-            //pausing media of the leaving section (if we are not just resizing, as destinatino will be the same one)
-            if(!v.localIsResizing){
-                stopMedia(v.activeSection);
-            }
-
-            if(options.scrollOverflow){
-                options.scrollOverflowHandler.beforeLeave();
-            }
-
-            addClass(element, ACTIVE);
-            removeClass(siblings(element), ACTIVE);
-            lazyLoad(element);
-
-            if(options.scrollOverflow){
-                options.scrollOverflowHandler.onLeave();
-            }
-
-            //preventing from activating the MouseWheelHandler event
-            //more than once if the page is scrolling
-            canScroll = false || FP.test.isTesting;
-
-            setState(slideIndex, slideAnchorLink, v.anchorLink, v.sectionIndex);
-
-            performMovement(v);
-
-            //flag to avoid callingn `scrollPage()` twice in case of using anchor links
-            lastScrolledDestiny = v.anchorLink;
-
-            //avoid firing it twice (as it does also on scroll)
-            activateMenuAndNav(v.anchorLink, v.sectionIndex);
-        }
-
-        /**
-        * Dispatch events & callbacks making sure it does it on the right format, depending on
-        * whether v2compatible is being used or not.
-        */
-        function fireCallback(eventName, v){
-            var eventData = getEventData(eventName, v);
-
-            if(!options.v2compatible){
-                trigger(container, eventName, eventData);
-
-                if(options[eventName].apply(eventData[Object.keys(eventData)[0]], toArray(eventData)) === false){
-                    return false;
-                }
-            }
-            else{
-                if(options[eventName].apply(eventData[0], eventData.slice(1)) === false){
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /**
-        * Makes sure to only create a Panel object if the element exist
-        */
-        function nullOrSection(el){
-            return el ? new Section(el) : null;
-        }
-
-        function nullOrSlide(el){
-            return el ? new Slide(el) : null;
-        }
-
-        /**
-        * Gets the event's data for the given event on the right format. Depending on whether
-        * v2compatible is being used or not.
-        */
-        function getEventData(eventName, v){
-            var paramsPerEvent;
-
-            if(!options.v2compatible){
-
-                //using functions to run only the necessary bits within the object
-                paramsPerEvent = {
-                    afterRender: function(){
-                        return {
-                            section: nullOrSection($(SECTION_ACTIVE_SEL)[0]),
-                            slide: nullOrSlide($(SLIDE_ACTIVE_SEL, $(SECTION_ACTIVE_SEL)[0])[0])
-                        };
-                    },
-                    onLeave: function(){
-                        return {
-                            origin: nullOrSection(v.activeSection),
-                            destination: nullOrSection(v.element),
-                            direction: v.direction
-                        };
-                    },
-
-                    afterLoad: function(){
-                        return paramsPerEvent.onLeave();
-                    },
-
-                    afterSlideLoad: function(){
-                        return {
-                            section: nullOrSection(v.section),
-                            origin: nullOrSlide(v.prevSlide),
-                            destination: nullOrSlide(v.destiny),
-                            direction: v.direction
-                        };
-                    },
-
-                    onSlideLeave: function(){
-                        return paramsPerEvent.afterSlideLoad();
-                    }
-                };
-            }
-            else{
-                paramsPerEvent = {
-                    afterRender: function(){ return [container]; },
-                    onLeave: function(){ return [v.activeSection, v.leavingSection, (v.sectionIndex + 1), v.direction]; },
-                    afterLoad: function(){ return [v.element, v.anchorLink, (v.sectionIndex + 1)]; },
-                    afterSlideLoad: function(){ return [v.destiny, v.anchorLink, (v.sectionIndex + 1), v.slideAnchor, v.slideIndex]; },
-                    onSlideLeave: function(){ return [v.prevSlide, v.anchorLink, (v.sectionIndex + 1), v.prevSlideIndex, v.direction, v.slideIndex]; },
-                };
-            }
-
-            return paramsPerEvent[eventName]();
-        }
-
-        /**
-        * Performs the vertical movement (by CSS3 or by jQuery)
-        */
-        function performMovement(v){
-            // using CSS3 translate functionality
-            if (options.css3 && options.autoScrolling && !options.scrollBar) {
-
-                // The first section can have a negative value in iOS 10. Not quite sure why: -0.0142822265625
-                // that's why we round it to 0.
-                var translate3d = 'translate3d(0px, -' + Math.round(v.dtop) + 'px, 0px)';
-                transformContainer(translate3d, true);
-
-                //even when the scrollingSpeed is 0 there's a little delay, which might cause the
-                //scrollingSpeed to change in case of using silentMoveTo();
-                if(options.scrollingSpeed){
-                    clearTimeout(afterSectionLoadsId);
-                    afterSectionLoadsId = setTimeout(function () {
-                        afterSectionLoads(v);
-                    }, options.scrollingSpeed);
-                }else{
-                    afterSectionLoads(v);
-                }
-            }
-
-            // using JS to animate
-            else{
-                var scrollSettings = getScrollSettings(v.dtop);
-                FP.test.top = -v.dtop + 'px';
-
-                scrollTo(scrollSettings.element, scrollSettings.options, options.scrollingSpeed, function(){
-                    if(options.scrollBar){
-
-                        /* Hack!
-                        The timeout prevents setting the most dominant section in the viewport as "active" when the user
-                        scrolled to a smaller section by using the mousewheel (auto scrolling) rather than draging the scroll bar.
-
-                        When using scrollBar:true It seems like the scroll events still getting propagated even after the scrolling animation has finished.
-                        */
-                        setTimeout(function(){
-                            afterSectionLoads(v);
-                        },30);
-                    }else{
-                        afterSectionLoads(v);
-                    }
-                });
-            }
-        }
-
-        /**
-        * Gets the scrolling settings depending on the plugin autoScrolling option
-        */
-        function getScrollSettings(top){
-            var scroll = {};
-
-            //top property animation
-            if(options.autoScrolling && !options.scrollBar){
-                scroll.options = -top;
-                scroll.element = $(WRAPPER_SEL)[0];
-            }
-
-            //window real scrolling
-            else{
-                scroll.options = top;
-                scroll.element = window;
-            }
-
-            return scroll;
-        }
-
-        /**
-        * Adds sections before or after the current one to create the infinite effect.
-        */
-        function createInfiniteSections(v){
-            // Scrolling down
-            if (!v.isMovementUp) {
-                // Move all previous sections to after the active section
-                after($(SECTION_ACTIVE_SEL)[0], prevAll(v.activeSection, SECTION_SEL).reverse());
-            }
-            else { // Scrolling up
-                // Move all next sections to before the active section
-                before($(SECTION_ACTIVE_SEL)[0], nextAll(v.activeSection, SECTION_SEL));
-            }
-
-            // Maintain the displayed position (now that we changed the element order)
-            silentScroll($(SECTION_ACTIVE_SEL)[0].offsetTop);
-
-            // Maintain the active slides visible in the viewport
-            keepSlidesPosition();
-
-            // save for later the elements that still need to be reordered
-            v.wrapAroundElements = v.activeSection;
-
-            // Recalculate animation variables
-            v.dtop = v.element.offsetTop;
-            v.yMovement = getYmovement(v.element);
-
-            return v;
-        }
-
-        /**
-        * Fix section order after continuousVertical changes have been animated
-        */
-        function continuousVerticalFixSectionOrder (v) {
-            // If continuousVertical is in effect (and autoScrolling would also be in effect then),
-            // finish moving the elements around so the direct navigation will function more simply
-            if (v.wrapAroundElements == null) {
-                return;
-            }
-
-            if (v.isMovementUp) {
-                before($(SECTION_SEL)[0], v.wrapAroundElements);
-            }
-            else {
-                after($(SECTION_SEL)[$(SECTION_SEL).length-1], v.wrapAroundElements);
-            }
-
-            silentScroll($(SECTION_ACTIVE_SEL)[0].offsetTop);
-
-            // Maintain the active slides visible in the viewport
-            keepSlidesPosition();
-        }
-
-        /**
-        * Actions to do once the section is loaded.
-        */
-        function afterSectionLoads (v){
-            continuousVerticalFixSectionOrder(v);
-
-            //callback (afterLoad) if the site is not just resizing and readjusting the slides
-            if(isFunction(options.afterLoad) && !v.localIsResizing){
-                fireCallback('afterLoad', v);
-            }
-
-            if(options.scrollOverflow){
-                options.scrollOverflowHandler.afterLoad();
-            }
-
-            if(!v.localIsResizing){
-                playMedia(v.element);
-            }
-
-            addClass(v.element, COMPLETELY);
-            removeClass(siblings(v.element), COMPLETELY);
-            lazyLoadOthers();
-
-            canScroll = true;
-
-            if(isFunction(v.callback)){
-                v.callback();
-            }
-        }
-
-        /**
-        * Sets the value for the given attribute from the `data-` attribute with the same suffix
-        * ie: data-srcset ==> srcset  |  data-src ==> src
-        */
-        function setSrc(element, attribute){
-            element.setAttribute(attribute, element.getAttribute('data-' + attribute));
-            element.removeAttribute('data-' + attribute);
-        }
-
-        /**
-        * Makes sure lazyload is done for other sections in the viewport that are not the
-        * active one. 
-        */
-        function lazyLoadOthers(){
-            var hasAutoHeightSections = $(AUTO_HEIGHT_SEL)[0] || isResponsiveMode() && $(AUTO_HEIGHT_RESPONSIVE_SEL)[0];
-
-            //quitting when it doesn't apply
-            if (!options.lazyLoading || !hasAutoHeightSections){
-                return;
-            }
-
-            //making sure to lazy load auto-height sections that are in the viewport
-            $(SECTION_SEL + ':not(' + ACTIVE_SEL + ')').forEach(function(section){
-                if(isSectionInViewport(section)){
-                    lazyLoad(section);
-                }
-            });
-        }
-
-        /**
-        * Lazy loads image, video and audio elements.
-        */
-        function lazyLoad(destiny){
-            if (!options.lazyLoading){
-                return;
-            }
-
-            var panel = getSlideOrSection(destiny);
-
-            $('img[data-src], img[data-srcset], source[data-src], source[data-srcset], video[data-src], audio[data-src], iframe[data-src]', panel).forEach(function(element){
-                ['src', 'srcset'].forEach(function(type){
-                    var attribute = element.getAttribute('data-' + type);
-                    if(attribute != null && attribute){
-                        setSrc(element, type);
-                        element.addEventListener('load', function(){
-                            onMediaLoad(destiny);
-                        });
-                    }
-                });
-
-                if(matches(element, 'source')){
-                    var elementToPlay =  closest(element, 'video, audio');
-                    if(elementToPlay){
-                        elementToPlay.load();
-                        elementToPlay.onloadeddata = function(){
-                            onMediaLoad(destiny);
-                        };
-                    }
-                }
-            });
-        }
-
-        /**
-        * Callback firing when a lazy load media element has loaded.
-        * Making sure it only fires one per section in normal conditions (if load time is not huge)
-        */
-        function onMediaLoad(section){
-            if(options.scrollOverflow){
-                clearTimeout(g_mediaLoadedId);
-                g_mediaLoadedId = setTimeout(function(){
-                    scrollBarHandler.createScrollBar(section);
-                }, 200);
-            }
-        }
-
-        /**
-        * Plays video and audio elements.
-        */
-        function playMedia(destiny){
-            var panel = getSlideOrSection(destiny);
-
-            //playing HTML5 media elements
-            $('video, audio', panel).forEach(function(element){
-                if( element.hasAttribute('data-autoplay') && typeof element.play === 'function' ) {
-                    element.play();
-                }
-            });
-
-            //youtube videos
-            $('iframe[src*="youtube.com/embed/"]', panel).forEach(function(element){
-                if ( element.hasAttribute('data-autoplay') ){
-                    playYoutube(element);
-                }
-
-                //in case the URL was not loaded yet. On page load we need time for the new URL (with the API string) to load.
-                element.onload = function() {
-                    if ( element.hasAttribute('data-autoplay') ){
-                        playYoutube(element);
-                    }
-                };
-            });
-        }
-
-        /**
-        * Plays a youtube video
-        */
-        function playYoutube(element){
-            element.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        }
-
-        /**
-        * Stops video and audio elements.
-        */
-        function stopMedia(destiny){
-            var panel = getSlideOrSection(destiny);
-
-            //stopping HTML5 media elements
-            $('video, audio', panel).forEach(function(element){
-                if( !element.hasAttribute('data-keepplaying') && typeof element.pause === 'function' ) {
-                    element.pause();
-                }
-            });
-
-            //youtube videos
-            $('iframe[src*="youtube.com/embed/"]', panel).forEach(function(element){
-                if( /youtube\.com\/embed\//.test(element.getAttribute('src')) && !element.hasAttribute('data-keepplaying')){
-                    element.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*');
-                }
-            });
-        }
-
-        /**
-        * Gets the active slide (or section) for the given section
-        */
-        function getSlideOrSection(destiny){
-            var slide = $(SLIDE_ACTIVE_SEL, destiny);
-            if( slide.length ) {
-                destiny = slide[0];
-            }
-
-            return destiny;
-        }
-
-        /**
-        * Scrolls to the anchor in the URL when loading the site
-        */
-        function scrollToAnchor(){
-            var anchors =  getAnchorsURL();
-            var sectionAnchor = anchors.section;
-            var slideAnchor = anchors.slide;
-
-            if(sectionAnchor){  //if theres any #
-                if(options.animateAnchor){
-                    scrollPageAndSlide(sectionAnchor, slideAnchor);
-                }else{
-                    silentMoveTo(sectionAnchor, slideAnchor);
-                }
-            }
-        }
-
-        /**
-        * Detecting any change on the URL to scroll to the given anchor link
-        * (a way to detect back history button as we play with the hashes on the URL)
-        */
-        function hashChangeHandler(){
-            if(!isScrolling && !options.lockAnchors){
-                var anchors = getAnchorsURL();
-                var sectionAnchor = anchors.section;
-                var slideAnchor = anchors.slide;
-
-                //when moving to a slide in the first section for the first time (first time to add an anchor to the URL)
-                var isFirstSlideMove =  (typeof lastScrolledDestiny === 'undefined');
-                var isFirstScrollMove = (typeof lastScrolledDestiny === 'undefined' && typeof slideAnchor === 'undefined' && !slideMoving);
-
-                if(sectionAnchor && sectionAnchor.length){
-                    /*in order to call scrollpage() only once for each destination at a time
-                    It is called twice for each scroll otherwise, as in case of using anchorlinks `hashChange`
-                    event is fired on every scroll too.*/
-                    if ((sectionAnchor && sectionAnchor !== lastScrolledDestiny) && !isFirstSlideMove
-                        || isFirstScrollMove
-                        || (!slideMoving && lastScrolledSlide != slideAnchor )){
-
-                        scrollPageAndSlide(sectionAnchor, slideAnchor);
-                    }
-                }
-            }
-        }
-
-        //gets the URL anchors (section and slide)
-        function getAnchorsURL(){
-            var section;
-            var slide;
-            var hash = window.location.hash;
-
-            if(hash.length){
-                //getting the anchor link in the URL and deleting the `#`
-                var anchorsParts =  hash.replace('#', '').split('/');
-
-                //using / for visual reasons and not as a section/slide separator #2803
-                var isFunkyAnchor = hash.indexOf('#/') > -1;
-
-                section = isFunkyAnchor ? '/' + anchorsParts[1] : decodeURIComponent(anchorsParts[0]);
-
-                var slideAnchor = isFunkyAnchor ? anchorsParts[2] : anchorsParts[1];
-                if(slideAnchor && slideAnchor.length){
-                    slide = decodeURIComponent(slideAnchor);
-                }
-            }
-
-            return {
-                section: section,
-                slide: slide
-            };
-        }
-
-        //Sliding with arrow keys, both, vertical and horizontal
-        function keydownHandler(e) {
-            clearTimeout(keydownId);
-
-            var activeElement = document.activeElement;
-            var keyCode = e.keyCode;
-
-            //tab?
-            if(keyCode === 9){
-                onTab(e);
-            }
-
-            else if(!matches(activeElement, 'textarea') && !matches(activeElement, 'input') && !matches(activeElement, 'select') &&
-                activeElement.getAttribute('contentEditable') !== "true" && activeElement.getAttribute('contentEditable') !== '' &&
-                options.keyboardScrolling && options.autoScrolling){
-
-                //preventing the scroll with arrow keys & spacebar & Page Up & Down keys
-                var keyControls = [40, 38, 32, 33, 34];
-                if(keyControls.indexOf(keyCode) > -1){
-                    preventDefault(e);
-                }
-
-                controlPressed = e.ctrlKey;
-
-                keydownId = setTimeout(function(){
-                    onkeydown(e);
-                },150);
-            }
-        }
-
-        function tooltipTextHandler(){
-            /*jshint validthis:true */
-            trigger(prev(this), 'click');
-        }
-
-        //to prevent scrolling while zooming
-        function keyUpHandler(e){
-            if(isWindowFocused){ //the keyup gets fired on new tab ctrl + t in Firefox
-                controlPressed = e.ctrlKey;
-            }
-        }
-
-        //binding the mousemove when the mouse's middle button is released
-        function mouseDownHandler(e){
-            //middle button
-            if (e.which == 2){
-                oldPageY = e.pageY;
-                container.addEventListener('mousemove', mouseMoveHandler);
-            }
-        }
-
-        //unbinding the mousemove when the mouse's middle button is released
-        function mouseUpHandler(e){
-            //middle button
-            if (e.which == 2){
-                container.removeEventListener('mousemove', mouseMoveHandler);
-            }
-        }
-
-        /**
-        * Makes sure the tab key will only focus elements within the current section/slide
-        * preventing this way from breaking the page.
-        * Based on "Modals and keyboard traps"
-        * from https://developers.google.com/web/fundamentals/accessibility/focus/using-tabindex
-        */
-        function onTab(e){
-            var isShiftPressed = e.shiftKey;
-            var activeElement = document.activeElement;
-            var focusableElements = getFocusables(getSlideOrSection($(SECTION_ACTIVE_SEL)[0]));
-
-            function preventAndFocusFirst(e){
-                preventDefault(e);
-                return focusableElements[0] ? focusableElements[0].focus() : null;
-            }
-
-            //outside any section or slide? Let's not hijack the tab!
-            if(isFocusOutside(e)){
-                return;
-            }
-
-            //is there an element with focus?
-            if(activeElement){
-                if(closest(activeElement, SECTION_ACTIVE_SEL + ',' + SECTION_ACTIVE_SEL + ' ' + SLIDE_ACTIVE_SEL) == null){
-                    activeElement = preventAndFocusFirst(e);
-                }
-            }
-
-            //no element if focused? Let's focus the first one of the section/slide
-            else{
-                preventAndFocusFirst(e);
-            }
-
-            //when reached the first or last focusable element of the section/slide
-            //we prevent the tab action to keep it in the last focusable element
-            if(!isShiftPressed && activeElement == focusableElements[focusableElements.length - 1] ||
-                isShiftPressed && activeElement == focusableElements[0]
-            ){
-                preventDefault(e);
-            }
-        }
-
-        /**
-        * Gets all the focusable elements inside the passed element.
-        */
-        function getFocusables(el){
-            return [].slice.call($(focusableElementsString, el)).filter(function(item) {
-                    return item.getAttribute('tabindex') !== '-1'
-                    //are also not hidden elements (or with hidden parents)
-                    && item.offsetParent !== null;
-            });
-        }
-
-        /**
-        * Determines whether the focus is outside fullpage.js sections/slides or not.
-        */
-        function isFocusOutside(e){
-            var allFocusables = getFocusables(document);
-            var currentFocusIndex = allFocusables.indexOf(document.activeElement);
-            var focusDestinationIndex = e.shiftKey ? currentFocusIndex - 1 : currentFocusIndex + 1;
-            var focusDestination = allFocusables[focusDestinationIndex];
-            var destinationItemSlide = nullOrSlide(closest(focusDestination, SLIDE_SEL));
-            var destinationItemSection = nullOrSection(closest(focusDestination, SECTION_SEL));
-
-            return !destinationItemSlide && !destinationItemSection;
-        }
-
-        //Scrolling horizontally when clicking on the slider controls.
-        function slideArrowHandler(){
-            /*jshint validthis:true */
-            var section = closest(this, SECTION_SEL);
-
-            /*jshint validthis:true */
-            if (hasClass(this, SLIDES_PREV)) {
-                if(isScrollAllowed.m.left){
-                    moveSlideLeft(section);
-                }
-            } else {
-                if(isScrollAllowed.m.right){
-                    moveSlideRight(section);
-                }
-            }
-        }
-
-        //when opening a new tab (ctrl + t), `control` won't be pressed when coming back.
-        function blurHandler(){
-            isWindowFocused = false;
-            controlPressed = false;
-        }
-
-        //Scrolls to the section when clicking the navigation bullet
-        function sectionBulletHandler(e){
-            preventDefault(e);
-
-            /*jshint validthis:true */
-            var indexBullet = index(closest(this, SECTION_NAV_SEL + ' li'));
-            scrollPage($(SECTION_SEL)[indexBullet]);
-        }
-
-        //Scrolls the slider to the given slide destination for the given section
-        function slideBulletHandler(e){
-            preventDefault(e);
-
-            /*jshint validthis:true */
-            var slides = $(SLIDES_WRAPPER_SEL, closest(this, SECTION_SEL))[0];
-            var destiny = $(SLIDE_SEL, slides)[index(closest(this, 'li'))];
-
-            landscapeScroll(slides, destiny);
-        }
-
-        //Menu item handler when not using anchors or using lockAnchors:true
-        function menuItemsHandler(e){
-            if($(options.menu)[0] && (options.lockAnchors || !options.anchors.length)){
-                preventDefault(e);
-                /*jshint validthis:true */
-                moveTo(this.getAttribute('data-menuanchor'));
-            }
-        }
-
-        /**
-        * Keydown event
-        */
-        function onkeydown(e){
-            var shiftPressed = e.shiftKey;
-            var activeElement = document.activeElement;
-            var isMediaFocused = matches(activeElement, 'video') || matches(activeElement, 'audio');
-
-            //do nothing if we can not scroll or we are not using horizotnal key arrows.
-            if(!canScroll && [37,39].indexOf(e.keyCode) < 0){
-                return;
-            }
-
-            switch (e.keyCode) {
-                //up
-                case 38:
-                case 33:
-                    if(isScrollAllowed.k.up){
-                        moveSectionUp();
-                    }
-                    break;
-
-                //down
-                case 32: //spacebar
-
-                    if(shiftPressed && isScrollAllowed.k.up && !isMediaFocused){
-                        moveSectionUp();
-                        break;
-                    }
-                /* falls through */
-                case 40:
-                case 34:
-                    if(isScrollAllowed.k.down){
-                        // space bar?
-                        if(e.keyCode !== 32 || !isMediaFocused){
-                            moveSectionDown();
-                        }
-                    }
-                    break;
-
-                //Home
-                case 36:
-                    if(isScrollAllowed.k.up){
-                        moveTo(1);
-                    }
-                    break;
-
-                //End
-                case 35:
-                     if(isScrollAllowed.k.down){
-                        moveTo( $(SECTION_SEL).length );
-                    }
-                    break;
-
-                //left
-                case 37:
-                    if(isScrollAllowed.k.left){
-                        moveSlideLeft();
-                    }
-                    break;
-
-                //right
-                case 39:
-                    if(isScrollAllowed.k.right){
-                        moveSlideRight();
-                    }
-                    break;
-
-                default:
-                    return; // exit this handler for other keys
-            }
-        }
-
-        /**
-        * Detecting the direction of the mouse movement.
-        * Used only for the middle button of the mouse.
-        */
-        var oldPageY = 0;
-        function mouseMoveHandler(e){
-            if(!options.autoScrolling){
-                return;
-            }
-            if(canScroll){
-                // moving up
-                if (e.pageY < oldPageY && isScrollAllowed.m.up){
-                    moveSectionUp();
-                }
-
-                // moving down
-                else if(e.pageY > oldPageY && isScrollAllowed.m.down){
-                    moveSectionDown();
-                }
-            }
-            oldPageY = e.pageY;
-        }
-
-        /**
-        * Scrolls horizontal sliders.
-        */
-        function landscapeScroll(slides, destiny, direction){
-            var section = closest(slides, SECTION_SEL);
-            var v = {
-                slides: slides,
-                destiny: destiny,
-                direction: direction,
-                destinyPos: {left: destiny.offsetLeft},
-                slideIndex: index(destiny),
-                section: section,
-                sectionIndex: index(section, SECTION_SEL),
-                anchorLink: section.getAttribute('data-anchor'),
-                slidesNav: $(SLIDES_NAV_SEL, section)[0],
-                slideAnchor: getAnchor(destiny),
-                prevSlide: $(SLIDE_ACTIVE_SEL, section)[0],
-                prevSlideIndex: index($(SLIDE_ACTIVE_SEL, section)[0]),
-
-                //caching the value of isResizing at the momment the function is called
-                //because it will be checked later inside a setTimeout and the value might change
-                localIsResizing: isResizing
-            };
-            v.xMovement = getXmovement(v.prevSlideIndex, v.slideIndex);
-            v.direction = v.direction ? v.direction : v.xMovement;
-
-            //important!! Only do it when not resizing
-            if(!v.localIsResizing){
-                //preventing from scrolling to the next/prev section when using scrollHorizontally
-                canScroll = false;
-            }
-
-            if(options.onSlideLeave){
-
-                //if the site is not just resizing and readjusting the slides
-                if(!v.localIsResizing && v.xMovement!=='none'){
-                    if(isFunction( options.onSlideLeave )){
-                        if( fireCallback('onSlideLeave', v) === false){
-                            slideMoving = false;
-                            return;
-                        }
-                    }
-                }
-            }
-
-            addClass(destiny, ACTIVE);
-            removeClass(siblings(destiny), ACTIVE);
-
-            if(!v.localIsResizing){
-                stopMedia(v.prevSlide);
-                lazyLoad(destiny);
-            }
-
-            if(!options.loopHorizontal && options.controlArrows){
-                //hidding it for the fist slide, showing for the rest
-                toggle($(SLIDES_ARROW_PREV_SEL, section), v.slideIndex!==0);
-
-                //hidding it for the last slide, showing for the rest
-                toggle($(SLIDES_ARROW_NEXT_SEL, section), next(destiny) != null);
-            }
-
-            //only changing the URL if the slides are in the current section (not for resize re-adjusting)
-            if(hasClass(section, ACTIVE) && !v.localIsResizing){
-                setState(v.slideIndex, v.slideAnchor, v.anchorLink, v.sectionIndex);
-            }
-
-            performHorizontalMove(slides, v, true);
-        }
-
-
-        function afterSlideLoads(v){
-            activeSlidesNavigation(v.slidesNav, v.slideIndex);
-
-            //if the site is not just resizing and readjusting the slides
-            if(!v.localIsResizing){
-                if(isFunction( options.afterSlideLoad )){
-                    fireCallback('afterSlideLoad', v);
-                }
-
-                //needs to be inside the condition to prevent problems with continuousVertical and scrollHorizontally
-                //and to prevent double scroll right after a windows resize
-                canScroll = true;
-
-                playMedia(v.destiny);
-            }
-
-            //letting them slide again
-            slideMoving = false;
-        }
-
-        /**
-        * Performs the horizontal movement. (CSS3 or jQuery)
-        *
-        * @param fireCallback {Bool} - determines whether or not to fire the callback
-        */
-        function performHorizontalMove(slides, v, fireCallback){
-            var destinyPos = v.destinyPos;
-
-            if(options.css3){
-                var translate3d = 'translate3d(-' + Math.round(destinyPos.left) + 'px, 0px, 0px)';
-
-                FP.test.translate3dH[v.sectionIndex] = translate3d;
-                css(addAnimation($(SLIDES_CONTAINER_SEL, slides)), getTransforms(translate3d));
-
-                afterSlideLoadsId = setTimeout(function(){
-                    if(fireCallback){
-                        afterSlideLoads(v);
-                    }
-                }, options.scrollingSpeed);
-            }else{
-                FP.test.left[v.sectionIndex] = Math.round(destinyPos.left);
-
-                scrollTo(slides, Math.round(destinyPos.left), options.scrollingSpeed, function(){
-                    if(fireCallback){
-                        afterSlideLoads(v);
-                    }
-                });
-            }
-        }
-
-        /**
-        * Sets the state for the horizontal bullet navigations.
-        */
-        function activeSlidesNavigation(slidesNav, slideIndex){
-            if(options.slidesNavigation && slidesNav != null){
-                removeClass($(ACTIVE_SEL, slidesNav), ACTIVE);
-                addClass( $('a', $('li', slidesNav)[slideIndex] ), ACTIVE);
-            }
-        }
-
-        var previousHeight = windowsHeight;
-
-        /*
-        * Resize event handler.
-        */        
-        function resizeHandler(){
-            clearTimeout(resizeId);
-
-            //in order to call the functions only when the resize is finished
-            //http://stackoverflow.com/questions/4298612/jquery-how-to-call-resize-event-only-once-its-finished-resizing    
-            resizeId = setTimeout(function(){
-
-                //issue #3336 
-                //(some apps or browsers, like Chrome/Firefox for Mobile take time to report the real height)
-                //so we check it 3 times with intervals in that case
-                for(var i = 0; i< 4; i++){
-                    resizeHandlerId = setTimeout(resizeActions, 200 * i);
-                }
-            }, 200);
-        }
-
-        /**
-        * When resizing the site, we adjust the heights of the sections, slimScroll...
-        */
-        function resizeActions(){
-
-            //checking if it needs to get responsive
-            responsive();
-
-            // rebuild immediately on touch devices
-            if (isTouchDevice) {
-                var activeElement = document.activeElement;
-
-                //if the keyboard is NOT visible
-                if (!matches(activeElement, 'textarea') && !matches(activeElement, 'input') && !matches(activeElement, 'select')) {
-                    var currentHeight = getWindowHeight();
-
-                    //making sure the change in the viewport size is enough to force a rebuild. (20 % of the window to avoid problems when hidding scroll bars)
-                    if( Math.abs(currentHeight - previousHeight) > (20 * Math.max(previousHeight, currentHeight) / 100) ){
-                        reBuild(true);
-                        previousHeight = currentHeight;
-                    }
-                }
-            }
-            else{
-                adjustToNewViewport();
-            }
-        }
-
-        /**
-        * Checks if the site needs to get responsive and disables autoScrolling if so.
-        * A class `fp-responsive` is added to the plugin's container in case the user wants to use it for his own responsive CSS.
-        */
-        function responsive(){
-            var widthLimit = options.responsive || options.responsiveWidth; //backwards compatiblity
-            var heightLimit = options.responsiveHeight;
-
-            //only calculating what we need. Remember its called on the resize event.
-            var isBreakingPointWidth = widthLimit && window.innerWidth < widthLimit;
-            var isBreakingPointHeight = heightLimit && window.innerHeight < heightLimit;
-
-            if(widthLimit && heightLimit){
-                setResponsive(isBreakingPointWidth || isBreakingPointHeight);
-            }
-            else if(widthLimit){
-                setResponsive(isBreakingPointWidth);
-            }
-            else if(heightLimit){
-                setResponsive(isBreakingPointHeight);
-            }
-        }
-
-        /**
-        * Adds transition animations for the given element
-        */
-        function addAnimation(element){
-            var transition = 'all ' + options.scrollingSpeed + 'ms ' + options.easingcss3;
-
-            removeClass(element, NO_TRANSITION);
-            return css(element, {
-                '-webkit-transition': transition,
-                'transition': transition
-            });
-        }
-
-        /**
-        * Remove transition animations for the given element
-        */
-        function removeAnimation(element){
-            return addClass(element, NO_TRANSITION);
-        }
-
-        /**
-        * Activating the vertical navigation bullets according to the given slide name.
-        */
-        function activateNavDots(name, sectionIndex){
-            if(options.navigation && $(SECTION_NAV_SEL)[0] != null){
-                    removeClass($(ACTIVE_SEL, $(SECTION_NAV_SEL)[0]), ACTIVE);
-                if(name){
-                    addClass( $('a[href="#' + name + '"]', $(SECTION_NAV_SEL)[0]), ACTIVE);
-                }else{
-                    addClass($('a', $('li', $(SECTION_NAV_SEL)[0])[sectionIndex]), ACTIVE);
-                }
-            }
-        }
-
-        /**
-        * Activating the website main menu elements according to the given slide name.
-        */
-        function activateMenuElement(name){
-            $(options.menu).forEach(function(menu) {
-                if(options.menu && menu != null){
-                    removeClass($(ACTIVE_SEL, menu), ACTIVE);
-                    addClass($('[data-menuanchor="'+name+'"]', menu), ACTIVE);
-                }
-            });
-        }
-
-        /**
-        * Sets to active the current menu and vertical nav items.
-        */
-        function activateMenuAndNav(anchor, index){
-            activateMenuElement(anchor);
-            activateNavDots(anchor, index);
-        }
-
-        /**
-        * Retuns `up` or `down` depending on the scrolling movement to reach its destination
-        * from the current section.
-        */
-        function getYmovement(destiny){
-            var fromIndex = index($(SECTION_ACTIVE_SEL)[0], SECTION_SEL);
-            var toIndex = index(destiny, SECTION_SEL);
-            if( fromIndex == toIndex){
-                return 'none';
-            }
-            if(fromIndex > toIndex){
-                return 'up';
-            }
-            return 'down';
-        }
-
-        /**
-        * Retuns `right` or `left` depending on the scrolling movement to reach its destination
-        * from the current slide.
-        */
-        function getXmovement(fromIndex, toIndex){
-            if( fromIndex == toIndex){
-                return 'none';
-            }
-            if(fromIndex > toIndex){
-                return 'left';
-            }
-            return 'right';
-        }
-
-        function addTableClass(element){
-            //In case we are styling for the 2nd time as in with reponsiveSlides
-            if(!hasClass(element, TABLE)){
-                var wrapper = document.createElement('div');
-                wrapper.className = TABLE_CELL;
-                wrapper.style.height = getTableHeight(element) + 'px';
-
-                addClass(element, TABLE);
-                wrapInner(element, wrapper);
-            }
-        }
-
-        function getTableHeight(element){
-            var sectionHeight = windowsHeight;
-
-            if(options.paddingTop || options.paddingBottom){
-                var section = element;
-                if(!hasClass(section, SECTION)){
-                    section = closest(element, SECTION_SEL);
-                }
-
-                var paddings = parseInt(getComputedStyle(section)['padding-top']) + parseInt(getComputedStyle(section)['padding-bottom']);
-                sectionHeight = (windowsHeight - paddings);
-            }
-
-            return sectionHeight;
-        }
-
-        /**
-        * Adds a css3 transform property to the container class with or without animation depending on the animated param.
-        */
-        function transformContainer(translate3d, animated){
-            if(animated){
-                addAnimation(container);
-            }else{
-                removeAnimation(container);
-            }
-
-            css(container, getTransforms(translate3d));
-            FP.test.translate3d = translate3d;
-
-            //syncronously removing the class after the animation has been applied.
-            setTimeout(function(){
-                removeClass(container, NO_TRANSITION);
-            },10);
-        }
-
-        /**
-        * Gets a section by its anchor / index
-        */
-        function getSectionByAnchor(sectionAnchor){
-            var section = $(SECTION_SEL + '[data-anchor="'+sectionAnchor+'"]', container)[0];
-            if(!section){
-                var sectionIndex = typeof sectionAnchor !== 'undefined' ? sectionAnchor -1 : 0;
-                section = $(SECTION_SEL)[sectionIndex];
-            }
-
-            return section;
-        }
-
-        /**
-        * Gets a slide inside a given section by its anchor / index
-        */
-        function getSlideByAnchor(slideAnchor, section){
-            var slide = $(SLIDE_SEL + '[data-anchor="'+slideAnchor+'"]', section)[0];
-            if(slide == null){
-                slideAnchor = typeof slideAnchor !== 'undefined' ? slideAnchor : 0;
-                slide = $(SLIDE_SEL, section)[slideAnchor];
-            }
-
-            return slide;
-        }
-
-        /**
-        * Scrolls to the given section and slide anchors
-        */
-        function scrollPageAndSlide(sectionAnchor, slideAnchor){
-            var section = getSectionByAnchor(sectionAnchor);
-
-            //do nothing if there's no section with the given anchor name
-            if(section == null) return;
-
-            var slide = getSlideByAnchor(slideAnchor, section);
-
-            //we need to scroll to the section and then to the slide
-            if (getAnchor(section) !== lastScrolledDestiny && !hasClass(section, ACTIVE)){
-                scrollPage(section, function(){
-                    scrollSlider(slide);
-                });
-            }
-            //if we were already in the section
-            else{
-                scrollSlider(slide);
-            }
-        }
-
-        /**
-        * Scrolls the slider to the given slide destination for the given section
-        */
-        function scrollSlider(slide){
-            if(slide != null){
-                landscapeScroll(closest(slide, SLIDES_WRAPPER_SEL), slide);
-            }
-        }
-
-        /**
-        * Creates a landscape navigation bar with dots for horizontal sliders.
-        */
-        function addSlidesNavigation(section, numSlides){
-            appendTo(createElementFromHTML('<div class="' + SLIDES_NAV + '"><ul></ul></div>'), section);
-            var nav = $(SLIDES_NAV_SEL, section)[0];
-
-            //top or bottom
-            addClass(nav, 'fp-' + options.slidesNavPosition);
-
-            for(var i=0; i< numSlides; i++){
-                appendTo(createElementFromHTML('<li><a href="#"><span class="fp-sr-only">'+ getBulletLinkName(i, 'Slide') +'</span><span></span></a></li>'), $('ul', nav)[0] );
-            }
-
-            //centering it
-            css(nav, {'margin-left': '-' + (nav.innerWidth/2) + 'px'});
-
-            addClass($('a', $('li', nav)[0] ), ACTIVE);
-        }
-
-
-        /**
-        * Sets the state of the website depending on the active section/slide.
-        * It changes the URL hash when needed and updates the body class.
-        */
-        function setState(slideIndex, slideAnchor, anchorLink, sectionIndex){
-            var sectionHash = '';
-
-            if(options.anchors.length && !options.lockAnchors){
-
-                //isn't it the first slide?
-                if(slideIndex){
-                    if(anchorLink != null){
-                        sectionHash = anchorLink;
-                    }
-
-                    //slide without anchor link? We take the index instead.
-                    if(slideAnchor == null){
-                        slideAnchor = slideIndex;
-                    }
-
-                    lastScrolledSlide = slideAnchor;
-                    setUrlHash(sectionHash + '/' + slideAnchor);
-
-                //first slide won't have slide anchor, just the section one
-                }else if(slideIndex != null){
-                    lastScrolledSlide = slideAnchor;
-                    setUrlHash(anchorLink);
-                }
-
-                //section without slides
-                else{
-                    setUrlHash(anchorLink);
-                }
-            }
-
-            setBodyClass();
-        }
-
-        /**
-        * Sets the URL hash.
-        */
-        function setUrlHash(url){
-            if(options.recordHistory){
-                location.hash = url;
-            }else{
-                //Mobile Chrome doesn't work the normal way, so... lets use HTML5 for phones :)
-                if(isTouchDevice || isTouch){
-                    window.history.replaceState(undefined, undefined, '#' + url);
-                }else{
-                    var baseUrl = window.location.href.split('#')[0];
-                    window.location.replace( baseUrl + '#' + url );
-                }
-            }
-        }
-
-        /**
-        * Gets the anchor for the given slide / section. Its index will be used if there's none.
-        */
-        function getAnchor(element){
-            if(!element){
-                return null;
-            }
-            var anchor = element.getAttribute('data-anchor');
-            var elementIndex = index(element);
-
-            //Slide without anchor link? We take the index instead.
-            if(anchor == null){
-                anchor = elementIndex;
-            }
-
-            return anchor;
-        }
-
-        /**
-        * Sets a class for the body of the page depending on the active section / slide
-        */
-        function setBodyClass(){
-            var section = $(SECTION_ACTIVE_SEL)[0];
-            var slide = $(SLIDE_ACTIVE_SEL, section)[0];
-
-            var sectionAnchor = getAnchor(section);
-            var slideAnchor = getAnchor(slide);
-
-            var text = String(sectionAnchor);
-
-            if(slide){
-                text = text + '-' + slideAnchor;
-            }
-
-            //changing slash for dash to make it a valid CSS style
-            text = text.replace('/', '-').replace('#','');
-
-            //removing previous anchor classes
-            var classRe = new RegExp('\\b\\s?' + VIEWING_PREFIX + '-[^\\s]+\\b', "g");
-            $body.className = $body.className.replace(classRe, '');
-
-            //adding the current anchor
-            addClass($body, VIEWING_PREFIX + '-' + text);
-        }
-
-        /**
-        * Checks for translate3d support
-        * @return boolean
-        * http://stackoverflow.com/questions/5661671/detecting-transform-translate3d-support
-        */
-        function support3d() {
-            var el = document.createElement('p'),
-                has3d,
-                transforms = {
-                    'webkitTransform':'-webkit-transform',
-                    'OTransform':'-o-transform',
-                    'msTransform':'-ms-transform',
-                    'MozTransform':'-moz-transform',
-                    'transform':'transform'
-                };
-
-            //preventing the style p:empty{display: none;} from returning the wrong result
-            el.style.display = 'block';
-
-            // Add it to the body to get the computed style.
-            document.body.insertBefore(el, null);
-
-            for (var t in transforms) {
-                if (el.style[t] !== undefined) {
-                    el.style[t] = 'translate3d(1px,1px,1px)';
-                    has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
-                }
-            }
-
-            document.body.removeChild(el);
-
-            return (has3d !== undefined && has3d.length > 0 && has3d !== 'none');
-        }
-
-        /**
-        * Removes the auto scrolling action fired by the mouse wheel and trackpad.
-        * After this function is called, the mousewheel and trackpad movements won't scroll through sections.
-        */
-        function removeMouseWheelHandler(){
-            if (document.addEventListener) {
-                document.removeEventListener('mousewheel', MouseWheelHandler, false); //IE9, Chrome, Safari, Oper
-                document.removeEventListener('wheel', MouseWheelHandler, false); //Firefox
-                document.removeEventListener('MozMousePixelScroll', MouseWheelHandler, false); //old Firefox
-            } else {
-                document.detachEvent('onmousewheel', MouseWheelHandler); //IE 6/7/8
-            }
-        }
-
-        /**
-        * Adds the auto scrolling action for the mouse wheel and trackpad.
-        * After this function is called, the mousewheel and trackpad movements will scroll through sections
-        * https://developer.mozilla.org/en-US/docs/Web/Events/wheel
-        */
-        function addMouseWheelHandler(){
-            var prefix = '';
-            var _addEventListener;
-
-            if (window.addEventListener){
-                _addEventListener = "addEventListener";
-            }else{
-                _addEventListener = "attachEvent";
-                prefix = 'on';
-            }
-
-            // detect available wheel event
-            var support = 'onwheel' in document.createElement('div') ? 'wheel' : // Modern browsers support "wheel"
-                      document.onmousewheel !== undefined ? 'mousewheel' : // Webkit and IE support at least "mousewheel"
-                      'DOMMouseScroll'; // let's assume that remaining browsers are older Firefox
-            var passiveEvent = g_supportsPassive ? {passive: false }: false;
-
-            if(support == 'DOMMouseScroll'){
-                document[ _addEventListener ](prefix + 'MozMousePixelScroll', MouseWheelHandler, passiveEvent);
-            }
-
-            //handle MozMousePixelScroll in older Firefox
-            else{
-                document[ _addEventListener ](prefix + support, MouseWheelHandler, passiveEvent);
-            }
-        }
-
-        /**
-        * Binding the mousemove when the mouse's middle button is pressed
-        */
-        function addMiddleWheelHandler(){
-            container.addEventListener('mousedown', mouseDownHandler);
-            container.addEventListener('mouseup', mouseUpHandler);
-        }
-
-        /**
-        * Unbinding the mousemove when the mouse's middle button is released
-        */
-        function removeMiddleWheelHandler(){
-            container.removeEventListener('mousedown', mouseDownHandler);
-            container.removeEventListener('mouseup', mouseUpHandler);
-        }
-
-        /**
-        * Adds the possibility to auto scroll through sections on touch devices.
-        */
-        function addTouchHandler(){
-            if(isTouchDevice || isTouch){
-                if(options.autoScrolling){
-                    $body.removeEventListener(events.touchmove, preventBouncing, {passive: false});
-                    $body.addEventListener(events.touchmove, preventBouncing, {passive: false});
-                }
-
-                var touchWrapper = options.touchWrapper;
-                touchWrapper.removeEventListener(events.touchstart, touchStartHandler);
-                touchWrapper.removeEventListener(events.touchmove, touchMoveHandler, {passive: false});
-
-                touchWrapper.addEventListener(events.touchstart, touchStartHandler);
-                touchWrapper.addEventListener(events.touchmove, touchMoveHandler, {passive: false});
-            }
-        }
-
-        /**
-        * Removes the auto scrolling for touch devices.
-        */
-        function removeTouchHandler(){
-            if(isTouchDevice || isTouch){
-                // normalScrollElements requires it off #2691
-                if(options.autoScrolling){
-                    $body.removeEventListener(events.touchmove, touchMoveHandler, {passive: false});
-                    $body.removeEventListener(events.touchmove, preventBouncing, {passive: false});
-                }
-
-                var touchWrapper = options.touchWrapper;
-                touchWrapper.removeEventListener(events.touchstart, touchStartHandler);
-                touchWrapper.removeEventListener(events.touchmove, touchMoveHandler, {passive: false});
-            }
-        }
-
-        /*
-        * Returns and object with Microsoft pointers (for IE<11 and for IE >= 11)
-        * http://msdn.microsoft.com/en-us/library/ie/dn304886(v=vs.85).aspx
-        */
-        function getMSPointer(){
-            var pointer;
-
-            //IE >= 11 & rest of browsers
-            if(window.PointerEvent){
-                pointer = { down: 'pointerdown', move: 'pointermove'};
-            }
-
-            //IE < 11
-            else{
-                pointer = { down: 'MSPointerDown', move: 'MSPointerMove'};
-            }
-
-            return pointer;
-        }
-
-        /**
-        * Gets the pageX and pageY properties depending on the browser.
-        * https://github.com/alvarotrigo/fullPage.js/issues/194#issuecomment-34069854
-        */
-        function getEventsPage(e){
-            var events = [];
-
-            events.y = (typeof e.pageY !== 'undefined' && (e.pageY || e.pageX) ? e.pageY : e.touches[0].pageY);
-            events.x = (typeof e.pageX !== 'undefined' && (e.pageY || e.pageX) ? e.pageX : e.touches[0].pageX);
-
-            //in touch devices with scrollBar:true, e.pageY is detected, but we have to deal with touch events. #1008
-            if(isTouch && isReallyTouch(e) && options.scrollBar && typeof e.touches !== 'undefined'){
-                events.y = e.touches[0].pageY;
-                events.x = e.touches[0].pageX;
-            }
-
-            return events;
-        }
-
-        /**
-        * Slides silently (with no animation) the active slider to the given slide.
-        * @param noCallback {bool} true or defined -> no callbacks
-        */
-        function silentLandscapeScroll(activeSlide, noCallbacks){
-            setScrollingSpeed(0, 'internal');
-
-            if(typeof noCallbacks !== 'undefined'){
-                //preventing firing callbacks afterSlideLoad etc.
-                isResizing = true;
-            }
-
-            landscapeScroll(closest(activeSlide, SLIDES_WRAPPER_SEL), activeSlide);
-
-            if(typeof noCallbacks !== 'undefined'){
-                isResizing = false;
-            }
-
-            setScrollingSpeed(originals.scrollingSpeed, 'internal');
-        }
-
-        /**
-        * Scrolls silently (with no animation) the page to the given Y position.
-        */
-        function silentScroll(top){
-            // The first section can have a negative value in iOS 10. Not quite sure why: -0.0142822265625
-            // that's why we round it to 0.
-            var roundedTop = Math.round(top);
-
-            if (options.css3 && options.autoScrolling && !options.scrollBar){
-                var translate3d = 'translate3d(0px, -' + roundedTop + 'px, 0px)';
-                transformContainer(translate3d, false);
-            }
-            else if(options.autoScrolling && !options.scrollBar){
-                css(container, {'top': -roundedTop + 'px'});
-                FP.test.top = -roundedTop + 'px';
-            }
-            else{
-                var scrollSettings = getScrollSettings(roundedTop);
-                setScrolling(scrollSettings.element, scrollSettings.options);
-            }
-        }
-
-        /**
-        * Returns the cross-browser transform string.
-        */
-        function getTransforms(translate3d){
-            return {
-                '-webkit-transform': translate3d,
-                '-moz-transform': translate3d,
-                '-ms-transform':translate3d,
-                'transform': translate3d
-            };
-        }
-
-        /**
-        * Allowing or disallowing the mouse/swipe scroll in a given direction. (not for keyboard)
-        * @type  m (mouse) or k (keyboard)
-        */
-        function setIsScrollAllowed(value, direction, type){
-            //up, down, left, right
-            if(direction !== 'all'){
-                isScrollAllowed[type][direction] = value;
-            }
-
-            //all directions?
-            else{
-                Object.keys(isScrollAllowed[type]).forEach(function(key){
-                    isScrollAllowed[type][key] = value;
-                });
-            }
-        }
-
-        /*
-        * Destroys fullpage.js plugin events and optinally its html markup and styles
-        */
-        function destroy(all){
-            setAutoScrolling(false, 'internal');
-            setAllowScrolling(true);
-            setMouseHijack(false);
-            setKeyboardScrolling(false);
-            addClass(container, DESTROYED);
-
-            [
-                afterSlideLoadsId, 
-                afterSectionLoadsId,
-                resizeId,
-                scrollId,
-                scrollId2,
-                g_doubleCheckHeightId,
-                resizeHandlerId
-            ].forEach(function(timeoutId){
-                clearTimeout(timeoutId);
-            });
-
-            window.removeEventListener('scroll', scrollHandler);
-            window.removeEventListener('hashchange', hashChangeHandler);
-            window.removeEventListener('resize', resizeHandler);
-
-            document.removeEventListener('keydown', keydownHandler);
-            document.removeEventListener('keyup', keyUpHandler);
-
-            ['click', 'touchstart'].forEach(function(eventName){
-                document.removeEventListener(eventName, delegatedEvents);
-            });
-
-            ['mouseenter', 'touchstart', 'mouseleave', 'touchend'].forEach(function(eventName){
-                document.removeEventListener(eventName, onMouseEnterOrLeave, true); //true is required!
-            });
-
-            //lets make a mess!
-            if(all){
-                destroyStructure();
-            }
-        }
-
-        /*
-        * Removes inline styles added by fullpage.js
-        */
-        function destroyStructure(){
-            //reseting the `top` or `translate` properties to 0
-            silentScroll(0);
-
-            //loading all the lazy load content
-            $('img[data-src], source[data-src], audio[data-src], iframe[data-src]', container).forEach(function(item){
-                setSrc(item, 'src');
-            });
-
-            $('img[data-srcset]').forEach(function(item){
-                setSrc(item, 'srcset');
-            });
-
-            remove($(SECTION_NAV_SEL + ', ' + SLIDES_NAV_SEL +  ', ' + SLIDES_ARROW_SEL));
-
-            //removing inline styles
-            css($(SECTION_SEL), {
-                'height': '',
-                'background-color' : '',
-                'padding': ''
-            });
-
-            css($(SLIDE_SEL), {
-                'width': ''
-            });
-
-            css(container, {
-                'height': '',
-                'position': '',
-                '-ms-touch-action': '',
-                'touch-action': ''
-            });
-
-            css($htmlBody, {
-                'overflow': '',
-                'height': ''
-            });
-
-            // remove .fp-enabled class
-            removeClass($html, ENABLED);
-
-            // remove .fp-responsive class
-            removeClass($body, RESPONSIVE);
-
-            // remove all of the .fp-viewing- classes
-            $body.className.split(/\s+/).forEach(function (className) {
-                if (className.indexOf(VIEWING_PREFIX) === 0) {
-                    removeClass($body, className);
-                }
-            });
-
-            //removing added classes
-            $(SECTION_SEL + ', ' + SLIDE_SEL).forEach(function(item){
-                if(options.scrollOverflowHandler && options.scrollOverflow){
-                    options.scrollOverflowHandler.remove(item);
-                }
-                removeClass(item, TABLE + ' ' + ACTIVE + ' ' + COMPLETELY);
-                var previousStyles = item.getAttribute('data-fp-styles');
-                if(previousStyles){
-                    item.setAttribute('style', item.getAttribute('data-fp-styles'));
-                }
-
-                //removing anchors if they were not set using the HTML markup
-                if(hasClass(item, SECTION) && !g_initialAnchorsInDom){
-                    item.removeAttribute('data-anchor');
-                }
-            });
-
-            //removing the applied transition from the fullpage wrapper
-            removeAnimation(container);
-
-            //Unwrapping content
-            [TABLE_CELL_SEL, SLIDES_CONTAINER_SEL,SLIDES_WRAPPER_SEL].forEach(function(selector){
-                $(selector, container).forEach(function(item){
-                    //unwrap not being use in case there's no child element inside and its just text
-                    unwrap(item);
-                });
-            });
-
-            //removing the applied transition from the fullpage wrapper
-            css(container, {
-                '-webkit-transition': 'none',
-                'transition': 'none'
-            });
-
-            //scrolling the page to the top with no animation
-            window.scrollTo(0, 0);
-
-            //removing selectors
-            var usedSelectors = [SECTION, SLIDE, SLIDES_CONTAINER];
-            usedSelectors.forEach(function(item){
-                removeClass($('.' + item), item);
-            });
-        }
-
-        /*
-        * Sets the state for a variable with multiple states (original, and temporal)
-        * Some variables such as `autoScrolling` or `recordHistory` might change automatically its state when using `responsive` or `autoScrolling:false`.
-        * This function is used to keep track of both states, the original and the temporal one.
-        * If type is not 'internal', then we assume the user is globally changing the variable.
-        */
-        function setVariableState(variable, value, type){
-            options[variable] = value;
-            if(type !== 'internal'){
-                originals[variable] = value;
-            }
-        }
-
-        /**
-        * Displays warnings
-        */
-        function displayWarnings(){
-            var l = options['li' + 'c' + 'enseK' + 'e' + 'y'];
-            var msgStyle = 'font-size: 15px;background:yellow;';
-
-            if(!isOK){
-                showError('error', 'Fullpage.js version 3 has changed its license to GPLv3 and it requires a `licenseKey` option. Read about it here:');
-                showError('error', 'https://github.com/alvarotrigo/fullPage.js#options.');
-            }
-            else if(l && l.length < 20){
-                console.warn('%c This website was made using fullPage.js slider. More info on the following website:', msgStyle);
-                console.warn('%c https://alvarotrigo.com/fullPage/', msgStyle);
-            }
-
-            if(hasClass($html, ENABLED)){
-                showError('error', 'Fullpage.js can only be initialized once and you are doing it multiple times!');
-                return;
-            }
-
-            // Disable mutually exclusive settings
-            if (options.continuousVertical &&
-                (options.loopTop || options.loopBottom)) {
-                options.continuousVertical = false;
-                showError('warn', 'Option `loopTop/loopBottom` is mutually exclusive with `continuousVertical`; `continuousVertical` disabled');
-            }
-
-            if(options.scrollOverflow &&
-               (options.scrollBar || !options.autoScrolling)){
-                showError('warn', 'Options scrollBar:true and autoScrolling:false are mutually exclusive with scrollOverflow:true. Sections with scrollOverflow might not work well in Firefox');
-            }
-
-            if(options.continuousVertical && (options.scrollBar || !options.autoScrolling)){
-                options.continuousVertical = false;
-                showError('warn', 'Scroll bars (`scrollBar:true` or `autoScrolling:false`) are mutually exclusive with `continuousVertical`; `continuousVertical` disabled');
-            }
-
-            if(options.scrollOverflow && options.scrollOverflowHandler == null){
-                options.scrollOverflow = false;
-                showError('error', 'The option `scrollOverflow:true` requires the file `scrolloverflow.min.js`. Please include it before fullPage.js.');
-            }
-
-            //using extensions? Wrong file!
-            extensions.forEach(function(extension){
-                //is the option set to true?
-                if(options[extension]){
-                    showError('warn', 'fullpage.js extensions require fullpage.extensions.min.js file instead of the usual fullpage.js. Requested: '+ extension);
-                }
-            });
-
-            //anchors can not have the same value as any element ID or NAME
-            options.anchors.forEach(function(name){
-
-                //case insensitive selectors (http://stackoverflow.com/a/19465187/1081396)
-                var nameAttr = [].slice.call($('[name]')).filter(function(item) {
-                    return item.getAttribute('name') && item.getAttribute('name').toLowerCase() == name.toLowerCase();
-                });
-
-                var idAttr = [].slice.call($('[id]')).filter(function(item) {
-                    return item.getAttribute('id') && item.getAttribute('id').toLowerCase() == name.toLowerCase();
-                });
-
-                if(idAttr.length || nameAttr.length ){
-                    showError('error', 'data-anchor tags can not have the same value as any `id` element on the site (or `name` element for IE).');
-                    var propertyName = idAttr.length ? 'id' : 'name';
-
-                    if(idAttr.length || nameAttr.length){
-                        showError('error', '"' + name + '" is is being used by another element `'+ propertyName +'` property');
-                    }
-                }
-            });
-        }
-
-        /**
-        * Getting the position of the element to scroll when using jQuery animations
-        */
-        function getScrolledPosition(element){
-            var position;
-
-            //is not the window element and is a slide?
-            if(element.self != window && hasClass(element, SLIDES_WRAPPER)){
-                position = element.scrollLeft;
-            }
-            else if(!options.autoScrolling  || options.scrollBar){
-                position = getScrollTop();
-            }
-            else{
-                position = element.offsetTop;
-            }
-
-            //gets the top property of the wrapper
-            return position;
-        }
-
-        /**
-        * Simulates the animated scrollTop of jQuery. Used when css3:false or scrollBar:true or autoScrolling:false
-        * http://stackoverflow.com/a/16136789/1081396
-        */
-        function scrollTo(element, to, duration, callback) {
-            var start = getScrolledPosition(element);
-            var change = to - start;
-            var currentTime = 0;
-            var increment = 20;
-            activeAnimation = true;
-
-            var animateScroll = function(){
-                if(activeAnimation){ //in order to stope it from other function whenever we want
-                    var val = to;
-
-                    currentTime += increment;
-
-                    if(duration){
-                        val = window.fp_easings[options.easing](currentTime, start, change, duration);
-                    }
-
-                    setScrolling(element, val);
-
-                    if(currentTime < duration) {
-                        setTimeout(animateScroll, increment);
-                    }else if(typeof callback !== 'undefined'){
-                        callback();
-                    }
-                }else if (currentTime < duration){
-                    callback();
-                }
-            };
-
-            animateScroll();
-        }
-
-        /**
-        * Scrolls the page / slider the given number of pixels.
-        * It will do it one or another way dependiong on the library's config.
-        */
-        function setScrolling(element, val){
-            if(!options.autoScrolling || options.scrollBar || (element.self != window && hasClass(element, SLIDES_WRAPPER))){
-
-                //scrolling horizontally through the slides?
-                if(element.self != window  && hasClass(element, SLIDES_WRAPPER)){
-                    element.scrollLeft = val;
-                }
-                //vertical scroll
-                else{
-                    element.scrollTo(0, val);
-                }
-            }else{
-                 element.style.top = val + 'px';
-            }
-        }
-
-        /**
-        * Gets the active slide.
-        */
-        function getActiveSlide(){
-            var activeSlide = $(SLIDE_ACTIVE_SEL, $(SECTION_ACTIVE_SEL)[0])[0];
-            return nullOrSlide(activeSlide);
-        }
-
-        /**
-        * Gets the active section.
-        */
-        function getActiveSection(){
-            return new Section($(SECTION_ACTIVE_SEL)[0]);
-        }
-
-        /**
-        * Item. Slide or Section objects share the same properties.
-        */
-        function Item(el, selector){
-            this.anchor = el.getAttribute('data-anchor');
-            this.item = el;
-            this.index = index(el, selector);
-            this.isLast = this.index === el.parentElement.querySelectorAll(selector).length -1;
-            this.isFirst = !this.index;
-        }
-
-        /**
-        * Section object
-        */
-        function Section(el){
-            Item.call(this, el, SECTION_SEL);
-        }
-
-        /**
-        * Slide object
-        */
-        function Slide(el){
-            Item.call(this, el, SLIDE_SEL);
-        }
-
-        return FP;
-    } //end of $.fn.fullpage
-
-    //utils
-    /**
-    * Shows a message in the console of the given type.
-    */
-    function showError(type, text){
-        window.console && window.console[type] && window.console[type]('fullPage: ' + text);
-    }
-
-    /**
-    * Equivalent or jQuery function $().
-    */
-    function $(selector, context){
-        context = arguments.length > 1 ? context : document;
-        return context ? context.querySelectorAll(selector) : null;
-    }
-
-    /**
-    * Extends a given Object properties and its childs.
-    */
-    function deepExtend(out) {
-        out = out || {};
-        for (var i = 1, len = arguments.length; i < len; ++i){
-            var obj = arguments[i];
-
-            if(!obj){
-              continue;
-            }
-
-            for(var key in obj){
-              if (!obj.hasOwnProperty(key)){
-                continue;
-              }
-
-              // based on https://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
-              if (Object.prototype.toString.call(obj[key]) === '[object Object]'){
-                out[key] = deepExtend(out[key], obj[key]);
-                continue;
-              }
-
-              out[key] = obj[key];
-            }
-        }
-        return out;
-    }
-
-    /**
-    * Checks if the passed element contains the passed class.
-    */
-    function hasClass(el, className){
-        if(el == null){
-            return false;
-        }
-        if (el.classList){
-            return el.classList.contains(className);
-        }
-        return new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-    }
-
-    /**
-    * Gets the window height. Crossbrowser.
-    */
-    function getWindowHeight(){
-        return 'innerHeight' in window ? window.innerHeight : document.documentElement.offsetHeight;
-    }
-
-    /**
-    * Gets the window width.
-    */
-    function getWindowWidth(){
-        return window.innerWidth;
-    }
-
-    /**
-    * Set's the CSS properties for the passed item/s.
-    * @param {NodeList|HTMLElement} items
-    * @param {Object} props css properties and values.
-    */
-    function css(items, props) {
-        items = getList(items);
-
-        var key;
-        for (key in props) {
-            if (props.hasOwnProperty(key)) {
-                if (key !== null) {
-                    for (var i = 0; i < items.length; i++) {
-                        var item = items[i];
-                        item.style[key] = props[key];
-                    }
-                }
-            }
-        }
-
-        return items;
-    }
-
-    /**
-    * Generic function to get the previous or next element.
-    */
-    function until(item, selector, fn){
-        var sibling = item[fn];
-        while(sibling && !matches(sibling, selector)){
-            sibling = sibling[fn];
-        }
-
-        return sibling;
-    }
-
-    /**
-    * Gets the previous element to the passed element that matches the passed selector.
-    */
-    function prevUntil(item, selector){
-        return until(item, selector, 'previousElementSibling');
-    }
-
-    /**
-    * Gets the next element to the passed element that matches the passed selector.
-    */
-    function nextUntil(item, selector){
-        return until(item, selector, 'nextElementSibling');
-    }
-
-    /**
-    * Gets the previous element to the passed element.
-    */
-    function prev(item){
-        return item.previousElementSibling;
-    }
-
-    /**
-    * Gets the next element to the passed element.
-    */
-    function next(item){
-        return item.nextElementSibling;
-    }
-
-    /**
-    * Gets the last element from the passed list of elements.
-    */
-    function last(item){
-        return item[item.length-1];
-    }
-
-    /**
-    * Gets index from the passed element.
-    * @param {String} selector is optional.
-    */
-    function index(item, selector) {
-        item = isArrayOrList(item) ? item[0] : item;
-        var children = selector != null? $(selector, item.parentNode) : item.parentNode.childNodes;
-        var num = 0;
-        for (var i=0; i<children.length; i++) {
-             if (children[i] == item) return num;
-             if (children[i].nodeType==1) num++;
-        }
-        return -1;
-    }
-
-    /**
-    * Gets an iterable element for the passed element/s
-    */
-    function getList(item){
-        return !isArrayOrList(item) ? [item] : item;
-    }
-
-    /**
-    * Adds the display=none property for the passed element/s
-    */
-    function hide(el){
-        el = getList(el);
-
-        for(var i = 0; i<el.length; i++){
-            el[i].style.display = 'none';
-        }
-        return el;
-    }
-
-    /**
-    * Adds the display=block property for the passed element/s
-    */
-    function show(el){
-        el = getList(el);
-
-        for(var i = 0; i<el.length; i++){
-            el[i].style.display = 'block';
-        }
-        return el;
-    }
-
-    /**
-    * Checks if the passed element is an iterable element or not
-    */
-    function isArrayOrList(el){
-        return Object.prototype.toString.call( el ) === '[object Array]' ||
-            Object.prototype.toString.call( el ) === '[object NodeList]';
-    }
-
-    /**
-    * Adds the passed class to the passed element/s
-    */
-    function addClass(el, className) {
-        el = getList(el);
-
-        for(var i = 0; i<el.length; i++){
-            var item = el[i];
-            if (item.classList){
-                item.classList.add(className);
-            }
-            else{
-              item.className += ' ' + className;
-            }
-        }
-        return el;
-    }
-
-    /**
-    * Removes the passed class to the passed element/s
-    * @param {String} `className` can be multiple classnames separated by whitespace
-    */
-    function removeClass(el, className){
-        el = getList(el);
-
-        var classNames = className.split(' ');
-
-        for(var a = 0; a<classNames.length; a++){
-            className = classNames[a];
-            for(var i = 0; i<el.length; i++){
-                var item = el[i];
-                if (item.classList){
-                    item.classList.remove(className);
-                }
-                else{
-                    item.className = item.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-                }
-            }
-        }
-        return el;
-    }
-
-    /**
-    * Appends the given element ot the given parent.
-    */
-    function appendTo(el, parent){
-        parent.appendChild(el);
-    }
-
-    /**
-    Usage:
-
-    var wrapper = document.createElement('div');
-    wrapper.className = 'fp-slides';
-    wrap($('.slide'), wrapper);
-
-    https://jsfiddle.net/qwzc7oy3/15/ (vanilla)
-    https://jsfiddle.net/oya6ndka/1/ (jquery equivalent)
-    */
-    function wrap(toWrap, wrapper, isWrapAll) {
-        var newParent;
-        wrapper = wrapper || document.createElement('div');
-        for(var i = 0; i < toWrap.length; i++){
-            var item = toWrap[i];
-            if(isWrapAll && !i || !isWrapAll){
-                newParent = wrapper.cloneNode(true);
-                item.parentNode.insertBefore(newParent, item);
-            }
-            newParent.appendChild(item);
-        }
-        return toWrap;
-    }
-
-    /**
-    Usage:
-    var wrapper = document.createElement('div');
-    wrapper.className = 'fp-slides';
-    wrap($('.slide'), wrapper);
-
-    https://jsfiddle.net/qwzc7oy3/27/ (vanilla)
-    https://jsfiddle.net/oya6ndka/4/ (jquery equivalent)
-    */
-    function wrapAll(toWrap, wrapper) {
-        wrap(toWrap, wrapper, true);
-    }
-
-    /**
-    * Usage:
-    * wrapInner(document.querySelector('#pepe'), '<div class="test">afdas</div>');
-    * wrapInner(document.querySelector('#pepe'), element);
-    *
-    * https://jsfiddle.net/zexxz0tw/6/
-    *
-    * https://stackoverflow.com/a/21817590/1081396
-    */
-    function wrapInner(parent, wrapper) {
-        if (typeof wrapper === "string"){
-            wrapper = createElementFromHTML(wrapper);
-        }
-
-        parent.appendChild(wrapper);
-
-        while(parent.firstChild !== wrapper){
-            wrapper.appendChild(parent.firstChild);
-       }
-    }
-
-    /**
-    * Usage:
-    * unwrap(document.querySelector('#pepe'));
-    * unwrap(element);
-    *
-    * https://jsfiddle.net/szjt0hxq/1/
-    *
-    */
-    function unwrap(wrapper) {
-        var wrapperContent = document.createDocumentFragment();
-        while (wrapper.firstChild) {
-            wrapperContent.appendChild(wrapper.firstChild);
-        }
-
-        wrapper.parentNode.replaceChild(wrapperContent, wrapper);
-    }
-
-    /**
-    * http://stackoverflow.com/questions/22100853/dom-pure-javascript-solution-to-jquery-closest-implementation
-    * Returns the element or `false` if there's none
-    */
-    function closest(el, selector) {
-        if(el && el.nodeType === 1){
-            if(matches(el, selector)){
-                return el;
-            }
-            return closest(el.parentNode, selector);
-        }
-        return null;
-    }
-
-    /**
-    * Places one element (rel) after another one or group of them (reference).
-    * @param {HTMLElement} reference
-    * @param {HTMLElement|NodeList|String} el
-    * https://jsfiddle.net/9s97hhzv/1/
-    */
-    function after(reference, el) {
-        insertBefore(reference, reference.nextSibling, el);
-    }
-
-    /**
-    * Places one element (rel) before another one or group of them (reference).
-    * @param {HTMLElement} reference
-    * @param {HTMLElement|NodeList|String} el
-    * https://jsfiddle.net/9s97hhzv/1/
-    */
-    function before(reference, el) {
-        insertBefore(reference, reference, el);
-    }
-
-    /**
-    * Based in https://stackoverflow.com/a/19316024/1081396
-    * and https://stackoverflow.com/a/4793630/1081396
-    */
-    function insertBefore(reference, beforeElement, el){
-        if(!isArrayOrList(el)){
-            if(typeof el == 'string'){
-                el = createElementFromHTML(el);
-            }
-            el = [el];
-        }
-
-        for(var i = 0; i<el.length; i++){
-            reference.parentNode.insertBefore(el[i], beforeElement);
-        }
-    }
-
-    //http://stackoverflow.com/questions/3464876/javascript-get-window-x-y-position-for-scroll
-    function getScrollTop(){
-        var doc = document.documentElement;
-        return (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
-    }
-
-    /**
-    * Gets the siblings of the passed element
-    */
-    function siblings(el){
-        return Array.prototype.filter.call(el.parentNode.children, function(child){
-          return child !== el;
-        });
-    }
-
-    //for IE 9 ?
-    function preventDefault(event){
-        if(event.preventDefault){
-            event.preventDefault();
-        }
-        else{
-            event.returnValue = false;
-        }
-    }
-
-    /**
-    * Determines whether the passed item is of function type.
-    */
-    function isFunction(item) {
-      if (typeof item === 'function') {
-        return true;
-      }
-      var type = Object.prototype.toString(item);
-      return type === '[object Function]' || type === '[object GeneratorFunction]';
-    }
-
-    /**
-    * Trigger custom events
-    */
-    function trigger(el, eventName, data){
-        var event;
-        data = typeof data === 'undefined' ? {} : data;
-
-        // Native
-        if(typeof window.CustomEvent === "function" ){
-            event = new CustomEvent(eventName, {detail: data});
-        }
-        else{
-            event = document.createEvent('CustomEvent');
-            event.initCustomEvent(eventName, true, true, data);
-        }
-
-        el.dispatchEvent(event);
-    }
-
-    /**
-    * Polyfill of .matches()
-    */
-    function matches(el, selector) {
-        return (el.matches || el.matchesSelector || el.msMatchesSelector || el.mozMatchesSelector || el.webkitMatchesSelector || el.oMatchesSelector).call(el, selector);
-    }
-
-    /**
-    * Toggles the visibility of the passed element el.
-    */
-    function toggle(el, value){
-        if(typeof value === "boolean"){
-            for(var i = 0; i<el.length; i++){
-                el[i].style.display = value ? 'block' : 'none';
-            }
-        }
-        //we don't use it in other way, so no else :)
-
-        return el;
-    }
-
-    /**
-    * Creates a HTMLElement from the passed HTML string.
-    * https://stackoverflow.com/a/494348/1081396
-    */
-    function createElementFromHTML(htmlString) {
-        var div = document.createElement('div');
-        div.innerHTML = htmlString.trim();
-
-        // Change this to div.childNodes to support multiple top-level nodes
-        return div.firstChild;
-    }
-
-    /**
-    * Removes the passed item/s from the DOM.
-    */
-    function remove(items){
-        items = getList(items);
-        for(var i = 0; i<items.length; i++){
-            var item = items[i];
-            if(item && item.parentElement) {
-                item.parentNode.removeChild(item);
-            }
-        }
-    }
-
-    /**
-    * Filters an array by the passed filter funtion.
-    */
-    function filter(el, filterFn){
-        Array.prototype.filter.call(el, filterFn);
-    }
-
-    //https://jsfiddle.net/w1rktecz/
-    function untilAll(item, selector, fn){
-        var sibling = item[fn];
-        var siblings = [];
-        while(sibling){
-            if(matches(sibling, selector) || selector == null) {
-                siblings.push(sibling);
-            }
-            sibling = sibling[fn];
-        }
-
-        return siblings;
-    }
-
-    /**
-    * Gets all next elements matching the passed selector.
-    */
-    function nextAll(item, selector){
-        return untilAll(item, selector, 'nextElementSibling');
-    }
-
-    /**
-    * Gets all previous elements matching the passed selector.
-    */
-    function prevAll(item, selector){
-        return untilAll(item, selector, 'previousElementSibling');
-    }
-
-    /**
-    * Converts an object to an array.
-    */
-    function toArray(objectData){
-        return Object.keys(objectData).map(function(key) {
-           return objectData[key];
-        });
-    }
-
-    /**
-    * forEach polyfill for IE
-    * https://developer.mozilla.org/en-US/docs/Web/API/NodeList/forEach#Browser_Compatibility
-    */
-    if (window.NodeList && !NodeList.prototype.forEach) {
-        NodeList.prototype.forEach = function (callback, thisArg) {
-            thisArg = thisArg || window;
-            for (var i = 0; i < this.length; i++) {
-                callback.call(thisArg, this[i], i, this);
-            }
-        };
-    }
-
-    //utils are public, so we can use it wherever we want
-    window.fp_utils = {
-        $: $,
-        deepExtend: deepExtend,
-        hasClass: hasClass,
-        getWindowHeight: getWindowHeight,
-        css: css,
-        until: until,
-        prevUntil: prevUntil,
-        nextUntil: nextUntil,
-        prev: prev,
-        next: next,
-        last: last,
-        index: index,
-        getList: getList,
-        hide: hide,
-        show: show,
-        isArrayOrList: isArrayOrList,
-        addClass: addClass,
-        removeClass: removeClass,
-        appendTo: appendTo,
-        wrap: wrap,
-        wrapAll: wrapAll,
-        wrapInner: wrapInner,
-        unwrap: unwrap,
-        closest: closest,
-        after: after,
-        before: before,
-        insertBefore: insertBefore,
-        getScrollTop: getScrollTop,
-        siblings: siblings,
-        preventDefault: preventDefault,
-        isFunction: isFunction,
-        trigger: trigger,
-        matches: matches,
-        toggle: toggle,
-        createElementFromHTML: createElementFromHTML,
-        remove: remove,
-        filter: filter,
-        untilAll: untilAll,
-        nextAll: nextAll,
-        prevAll: prevAll,
-        showError: showError
-    };
-
-    return initialise;
-}));
-
-/**
- * jQuery adapter for fullPage.js 3.0.0
- */
-if(window.jQuery && window.fullpage){
-    (function ($, fullpage) {
-        'use strict';
-
-        // No jQuery No Go
-        if (!$ || !fullpage) {
-            window.fp_utils.showError('error', 'jQuery is required to use the jQuery fullpage adapter!');
-            return;
-        }
-
-        $.fn.fullpage = function(options) {
-            options = $.extend({}, options, {'$': $});
-            var instance = new fullpage(this[0], options);
-        };
-    })(window.jQuery, window.fullpage);
-}
-
 $(document).ready(function() {
   $(".burger-menu").click(function() {
     $(this).toggleClass("active");
@@ -7222,14 +3020,15 @@ $(document).ready(function() {
       .find(".nav-mobile")
       .toggleClass("active");
   });
-  $(".scroll-to-form").click(function() {
-    $("html").animate(
-      {
-        scrollTop: $("#contact-form").offset().top // прокручиваем страницу к требуемому элементу
-      },
-      1500 // скорость прокрутки
-    );
-  });
+
+  // $(".scroll-to-form").click(function() {
+  //   $("html").animate(
+  //     {
+  //       scrollTop: $("#contact-form").offset().top // прокручиваем страницу к требуемому элементу
+  //     },
+  //     1500 // скорость прокрутки
+  //   );
+  // });
 
   $(".acordeon-item.active")
     .find(".acordeon-item-content")
@@ -7294,7 +3093,7 @@ $(document).ready(function() {
       {
         breakpoint: 992,
         settings: {
-          slidesToShow: 2,
+          slidesToShow: 1,
           slidesToScroll: 1,
           swipe: true,
           variableWidth: false
@@ -7331,13 +3130,504 @@ $(document).ready(function() {
   ) {
     $(".slide-load").removeClass("active");
   });
+});
 
-  if ($(".fullpage-wrap").hasClass() == 0) {
-    if ($(window).width() > 991) {
-      var myFullpage = new fullpage("#fullpage", {});
-      $(".scroll-to-form").on("click", function() {
-        fullpage_api.moveTo(5);
-      });
+$(document).ready(function() {
+  var VectorCanvas=function(t,e,i){if(this.mode=window.SVGAngle?"svg":"vml",this.params=i,"svg"===this.mode)this.createSvgNode=function(t){return document.createElementNS(this.svgns,t)};else{try{document.namespaces.rvml||document.namespaces.add("rvml","urn:schemas-microsoft-com:vml"),this.createVmlNode=function(t){return document.createElement("<rvml:"+t+' class="rvml">')}}catch(o){this.createVmlNode=function(t){return document.createElement("<"+t+' xmlns="urn:schemas-microsoft.com:vml" class="rvml">')}}document.createStyleSheet().addRule(".rvml","behavior:url(#default#VML)")}"svg"===this.mode?this.canvas=this.createSvgNode("svg"):(this.canvas=this.createVmlNode("group"),this.canvas.style.position="absolute"),this.setSize(t,e)};VectorCanvas.prototype={svgns:"http://www.w3.org/2000/svg",mode:"svg",width:0,height:0,canvas:null};var ColorScale=function(t,e,i,o){t&&this.setColors(t),e&&this.setNormalizeFunction(e),i&&this.setMin(i),i&&this.setMax(o)};ColorScale.prototype={colors:[]};var JQVMap=function(t){t=t||{};var e,i=this,o=JQVMap.maps[t.map];if(!o)throw new Error('Invalid "'+t.map+'" map parameter. Please make sure you have loaded this map file in your HTML.');this.selectedRegions=[],this.multiSelectRegion=t.multiSelectRegion,this.container=t.container,this.defaultWidth=o.width,this.defaultHeight=o.height,this.color=t.color,this.selectedColor=t.selectedColor,this.hoverColor=t.hoverColor,this.hoverColors=t.hoverColors,this.hoverOpacity=t.hoverOpacity,this.setBackgroundColor(t.backgroundColor),this.width=t.container.width(),this.height=t.container.height(),this.resize(),jQuery(window).resize(function(){var o=t.container.width(),s=t.container.height();if(o&&s){i.width=o,i.height=s,i.resize(),i.canvas.setSize(i.width,i.height),i.applyTransform();var r=jQuery.Event("resize.jqvmap");jQuery(t.container).trigger(r,[o,s]),e&&(jQuery(".jqvmap-pin").remove(),i.pinHandlers=!1,i.placePins(e.pins,e.mode))}}),this.canvas=new VectorCanvas(this.width,this.height,t),t.container.append(this.canvas.canvas),this.makeDraggable(),this.rootGroup=this.canvas.createGroup(!0),this.index=JQVMap.mapIndex,this.label=jQuery("<div/>").addClass("jqvmap-label").appendTo(jQuery("body")).hide(),t.enableZoom&&(jQuery("<div/>").addClass("jqvmap-zoomin").text("+").appendTo(t.container),jQuery("<div/>").addClass("jqvmap-zoomout").html("&#x2212;").appendTo(t.container)),i.countries=[];for(var s in o.paths){var r=this.canvas.createPath({path:o.paths[s].path});r.setFill(this.color),r.id=i.getCountryId(s),i.countries[s]=r,"svg"===this.canvas.mode?r.setAttribute("class","jqvmap-region"):jQuery(r).addClass("jqvmap-region"),jQuery(this.rootGroup).append(r)}if(jQuery(t.container).delegate("svg"===this.canvas.mode?"path":"shape","mouseover mouseout",function(e){var s=e.target,r=e.target.id.split("_").pop(),a=jQuery.Event("labelShow.jqvmap"),n=jQuery.Event("regionMouseOver.jqvmap");r=r.toLowerCase(),"mouseover"===e.type?(jQuery(t.container).trigger(n,[r,o.paths[r].name]),n.isDefaultPrevented()||i.highlight(r,s),t.showTooltip&&(i.label.text(o.paths[r].name),jQuery(t.container).trigger(a,[i.label,r]),a.isDefaultPrevented()||(i.label.show(),i.labelWidth=i.label.width(),i.labelHeight=i.label.height()))):(i.unhighlight(r,s),i.label.hide(),jQuery(t.container).trigger("regionMouseOut.jqvmap",[r,o.paths[r].name]))}),jQuery(t.container).delegate("svg"===this.canvas.mode?"path":"shape","click",function(e){var s=e.target,r=e.target.id.split("_").pop(),a=jQuery.Event("regionClick.jqvmap");if(r=r.toLowerCase(),jQuery(t.container).trigger(a,[r,o.paths[r].name,e]),!t.multiSelectRegion&&!a.isDefaultPrevented())for(var n in o.paths)i.countries[n].currentFillColor=i.countries[n].getOriginalFill(),i.countries[n].setFill(i.countries[n].getOriginalFill());a.isDefaultPrevented()||(i.isSelected(r)?i.deselect(r,s):i.select(r,s))}),t.showTooltip&&t.container.mousemove(function(t){if(i.label.is(":visible")){var e=t.pageX-15-i.labelWidth,o=t.pageY-15-i.labelHeight;0>e&&(e=t.pageX+15),0>o&&(o=t.pageY+15),i.label.css({left:e,top:o})}}),this.setColors(t.colors),this.canvas.canvas.appendChild(this.rootGroup),this.applyTransform(),this.colorScale=new ColorScale(t.scaleColors,t.normalizeFunction,t.valueMin,t.valueMax),t.values&&(this.values=t.values,this.setValues(t.values)),t.selectedRegions)if(t.selectedRegions instanceof Array)for(var a in t.selectedRegions)this.select(t.selectedRegions[a].toLowerCase());else this.select(t.selectedRegions.toLowerCase());if(this.bindZoomButtons(),t.pins&&(e={pins:t.pins,mode:t.pinMode},this.pinHandlers=!1,this.placePins(t.pins,t.pinMode)),t.showLabels){this.pinHandlers=!1;var n={};for(s in i.countries)"function"!=typeof i.countries[s]&&(t.pins&&t.pins[s]||(n[s]=s.toUpperCase()));e={pins:n,mode:"content"},this.placePins(n,"content")}JQVMap.mapIndex++};JQVMap.prototype={transX:0,transY:0,scale:1,baseTransX:0,baseTransY:0,baseScale:1,width:0,height:0,countries:{},countriesColors:{},countriesData:{},zoomStep:1.4,zoomMaxStep:4,zoomCurStep:1},JQVMap.xlink="http://www.w3.org/1999/xlink",JQVMap.mapIndex=1,JQVMap.maps={},function(){var t={colors:1,values:1,backgroundColor:1,scaleColors:1,normalizeFunction:1,enableZoom:1,showTooltip:1,borderColor:1,borderWidth:1,borderOpacity:1,selectedRegions:1,multiSelectRegion:1},e={onLabelShow:"labelShow",onLoad:"load",onRegionOver:"regionMouseOver",onRegionOut:"regionMouseOut",onRegionClick:"regionClick",onRegionSelect:"regionSelect",onRegionDeselect:"regionDeselect",onResize:"resize"};jQuery.fn.vectorMap=function(i){var o={map:"world_en",backgroundColor:"#a5bfdd",color:"#f4f3f0",hoverColor:"#c9dfaf",hoverColors:{},selectedColor:"#c9dfaf",scaleColors:["#b6d6ff","#005ace"],normalizeFunction:"linear",enableZoom:!0,showTooltip:!0,borderColor:"#818181",borderWidth:1,borderOpacity:.25,selectedRegions:null,multiSelectRegion:!1},s=this.data("mapObject");if("addMap"===i)JQVMap.maps[arguments[1]]=arguments[2];else{if("set"!==i||!t[arguments[1]]){if("string"==typeof i&&"function"==typeof s[i])return s[i].apply(s,Array.prototype.slice.call(arguments,1));jQuery.extend(o,i),o.container=this,this.css({position:"relative",overflow:"hidden"}),s=new JQVMap(o),this.data("mapObject",s),this.unbind(".jqvmap");for(var r in e)o[r]&&this.bind(e[r]+".jqvmap",o[r]);var a=jQuery.Event("load.jqvmap");return jQuery(o.container).trigger(a,s),s}s["set"+arguments[1].charAt(0).toUpperCase()+arguments[1].substr(1)].apply(s,Array.prototype.slice.call(arguments,2))}}}(jQuery),ColorScale.arrayToRgb=function(t){for(var e,i="#",o=0;o<t.length;o++)e=t[o].toString(16),i+=1===e.length?"0"+e:e;return i},ColorScale.prototype.getColor=function(t){"function"==typeof this.normalize&&(t=this.normalize(t));for(var e,i=[],o=0,s=0;s<this.colors.length-1;s++)e=this.vectorLength(this.vectorSubtract(this.colors[s+1],this.colors[s])),i.push(e),o+=e;var r=(this.maxValue-this.minValue)/o;for(s=0;s<i.length;s++)i[s]*=r;for(s=0,t-=this.minValue;t-i[s]>=0;)t-=i[s],s++;var a;for(a=s===this.colors.length-1?this.vectorToNum(this.colors[s]).toString(16):this.vectorToNum(this.vectorAdd(this.colors[s],this.vectorMult(this.vectorSubtract(this.colors[s+1],this.colors[s]),t/i[s]))).toString(16);a.length<6;)a="0"+a;return"#"+a},ColorScale.rgbToArray=function(t){return t=t.substr(1),[parseInt(t.substr(0,2),16),parseInt(t.substr(2,2),16),parseInt(t.substr(4,2),16)]},ColorScale.prototype.setColors=function(t){for(var e=0;e<t.length;e++)t[e]=ColorScale.rgbToArray(t[e]);this.colors=t},ColorScale.prototype.setMax=function(t){this.clearMaxValue=t,"function"==typeof this.normalize?this.maxValue=this.normalize(t):this.maxValue=t},ColorScale.prototype.setMin=function(t){this.clearMinValue=t,"function"==typeof this.normalize?this.minValue=this.normalize(t):this.minValue=t},ColorScale.prototype.setNormalizeFunction=function(t){"polynomial"===t?this.normalize=function(t){return Math.pow(t,.2)}:"linear"===t?delete this.normalize:this.normalize=t,this.setMin(this.clearMinValue),this.setMax(this.clearMaxValue)},ColorScale.prototype.vectorAdd=function(t,e){for(var i=[],o=0;o<t.length;o++)i[o]=t[o]+e[o];return i},ColorScale.prototype.vectorLength=function(t){for(var e=0,i=0;i<t.length;i++)e+=t[i]*t[i];return Math.sqrt(e)},ColorScale.prototype.vectorMult=function(t,e){for(var i=[],o=0;o<t.length;o++)i[o]=t[o]*e;return i},ColorScale.prototype.vectorSubtract=function(t,e){for(var i=[],o=0;o<t.length;o++)i[o]=t[o]-e[o];return i},ColorScale.prototype.vectorToNum=function(t){for(var e=0,i=0;i<t.length;i++)e+=Math.round(t[i])*Math.pow(256,t.length-i-1);return e},JQVMap.prototype.applyTransform=function(){var t,e,i,o;this.defaultWidth*this.scale<=this.width?(t=(this.width-this.defaultWidth*this.scale)/(2*this.scale),i=(this.width-this.defaultWidth*this.scale)/(2*this.scale)):(t=0,i=(this.width-this.defaultWidth*this.scale)/this.scale),this.defaultHeight*this.scale<=this.height?(e=(this.height-this.defaultHeight*this.scale)/(2*this.scale),o=(this.height-this.defaultHeight*this.scale)/(2*this.scale)):(e=0,o=(this.height-this.defaultHeight*this.scale)/this.scale),this.transY>e?this.transY=e:this.transY<o&&(this.transY=o),this.transX>t?this.transX=t:this.transX<i&&(this.transX=i),this.canvas.applyTransformParams(this.scale,this.transX,this.transY)},JQVMap.prototype.bindZoomButtons=function(){var t=this;this.container.find(".jqvmap-zoomin").click(function(){t.zoomIn()}),this.container.find(".jqvmap-zoomout").click(function(){t.zoomOut()})},JQVMap.prototype.deselect=function(t,e){if(t=t.toLowerCase(),e=e||jQuery("#"+this.getCountryId(t))[0],this.isSelected(t))this.selectedRegions.splice(this.selectIndex(t),1),jQuery(this.container).trigger("regionDeselect.jqvmap",[t]),e.currentFillColor=e.getOriginalFill(),e.setFill(e.getOriginalFill());else for(var i in this.countries)this.selectedRegions.splice(this.selectedRegions.indexOf(i),1),this.countries[i].currentFillColor=this.color,this.countries[i].setFill(this.color)},JQVMap.prototype.getCountryId=function(t){return"jqvmap"+this.index+"_"+t},JQVMap.prototype.getPin=function(t){var e=jQuery("#"+this.getPinId(t));return e.html()},JQVMap.prototype.getPinId=function(t){return this.getCountryId(t)+"_pin"},JQVMap.prototype.getPins=function(){var t=this.container.find(".jqvmap-pin"),e={};return jQuery.each(t,function(t,i){i=jQuery(i);var o=i.attr("for").toLowerCase(),s=i.html();e[o]=s}),JSON.stringify(e)},JQVMap.prototype.highlight=function(t,e){e=e||jQuery("#"+this.getCountryId(t))[0],this.hoverOpacity?e.setOpacity(this.hoverOpacity):this.hoverColors&&t in this.hoverColors?(e.currentFillColor=e.getFill()+"",e.setFill(this.hoverColors[t])):this.hoverColor&&(e.currentFillColor=e.getFill()+"",e.setFill(this.hoverColor))},JQVMap.prototype.isSelected=function(t){return this.selectIndex(t)>=0},JQVMap.prototype.makeDraggable=function(){var t,e,i=!1,o=this;o.isMoving=!1,o.isMovingTimeout=!1;var s,r,a,n,l,h,c;this.container.mousemove(function(s){return i&&(o.transX-=(t-s.pageX)/o.scale,o.transY-=(e-s.pageY)/o.scale,o.applyTransform(),t=s.pageX,e=s.pageY,o.isMoving=!0,o.isMovingTimeout&&clearTimeout(o.isMovingTimeout),o.container.trigger("drag")),!1}).mousedown(function(o){return i=!0,t=o.pageX,e=o.pageY,!1}).mouseup(function(){return i=!1,clearTimeout(o.isMovingTimeout),o.isMovingTimeout=setTimeout(function(){o.isMoving=!1},100),!1}).mouseout(function(){return i&&o.isMoving?(clearTimeout(o.isMovingTimeout),o.isMovingTimeout=setTimeout(function(){i=!1,o.isMoving=!1},100),!1):void 0}),jQuery(this.container).bind("touchmove",function(t){var e,i,p,u,g=t.originalEvent.touches;if(1===g.length){if(1===s){if(h===g[0].pageX&&c===g[0].pageY)return;p=o.transX,u=o.transY,o.transX-=(h-g[0].pageX)/o.scale,o.transY-=(c-g[0].pageY)/o.scale,o.applyTransform(),(p!==o.transX||u!==o.transY)&&t.preventDefault(),o.isMoving=!0,o.isMovingTimeout&&clearTimeout(o.isMovingTimeout)}h=g[0].pageX,c=g[0].pageY}else 2===g.length&&(2===s?(i=Math.sqrt(Math.pow(g[0].pageX-g[1].pageX,2)+Math.pow(g[0].pageY-g[1].pageY,2))/n,o.setScale(l*i,r,a),t.preventDefault()):(e=jQuery(o.container).offset(),r=g[0].pageX>g[1].pageX?g[1].pageX+(g[0].pageX-g[1].pageX)/2:g[0].pageX+(g[1].pageX-g[0].pageX)/2,a=g[0].pageY>g[1].pageY?g[1].pageY+(g[0].pageY-g[1].pageY)/2:g[0].pageY+(g[1].pageY-g[0].pageY)/2,r-=e.left,a-=e.top,l=o.scale,n=Math.sqrt(Math.pow(g[0].pageX-g[1].pageX,2)+Math.pow(g[0].pageY-g[1].pageY,2))));s=g.length}),jQuery(this.container).bind("touchstart",function(){s=0}),jQuery(this.container).bind("touchend",function(){s=0})},JQVMap.prototype.placePins=function(t,e){var i=this;if((!e||"content"!==e&&"id"!==e)&&(e="content"),"content"===e?jQuery.each(t,function(t,e){if(0!==jQuery("#"+i.getCountryId(t)).length){var o=i.getPinId(t),s=jQuery("#"+o);s.length>0&&s.remove(),i.container.append('<div id="'+o+'" for="'+t+'" class="jqvmap-pin" style="position:absolute">'+e+"</div>")}}):jQuery.each(t,function(t,e){if(0!==jQuery("#"+i.getCountryId(t)).length){var o=i.getPinId(t),s=jQuery("#"+o);s.length>0&&s.remove(),i.container.append('<div id="'+o+'" for="'+t+'" class="jqvmap-pin" style="position:absolute"></div>'),s.append(jQuery("#"+e))}}),this.positionPins(),!this.pinHandlers){this.pinHandlers=!0;var o=function(){i.positionPins()};this.container.bind("zoomIn",o).bind("zoomOut",o).bind("drag",o)}},JQVMap.prototype.positionPins=function(){var t=this,e=this.container.find(".jqvmap-pin");jQuery.each(e,function(e,i){i=jQuery(i);var o=t.getCountryId(i.attr("for").toLowerCase()),s=jQuery("#"+o),r=document.getElementById(o).getBBox(),a=s.position(),n=t.scale,l=a.left+r.width/2*n-i.width()/2,h=a.top+r.height/2*n-i.height()/2;i.css("left",l).css("top",h)})},JQVMap.prototype.removePin=function(t){t=t.toLowerCase(),jQuery("#"+this.getPinId(t)).remove()},JQVMap.prototype.removePins=function(){this.container.find(".jqvmap-pin").remove()},JQVMap.prototype.reset=function(){for(var t in this.countries)this.countries[t].setFill(this.color);this.scale=this.baseScale,this.transX=this.baseTransX,this.transY=this.baseTransY,this.applyTransform()},JQVMap.prototype.resize=function(){var t=this.baseScale;this.width/this.height>this.defaultWidth/this.defaultHeight?(this.baseScale=this.height/this.defaultHeight,this.baseTransX=Math.abs(this.width-this.defaultWidth*this.baseScale)/(2*this.baseScale)):(this.baseScale=this.width/this.defaultWidth,this.baseTransY=Math.abs(this.height-this.defaultHeight*this.baseScale)/(2*this.baseScale)),this.scale*=this.baseScale/t,this.transX*=this.baseScale/t,this.transY*=this.baseScale/t},JQVMap.prototype.select=function(t,e){t=t.toLowerCase(),e=e||jQuery("#"+this.getCountryId(t))[0],this.isSelected(t)||(this.multiSelectRegion?this.selectedRegions.push(t):this.selectedRegions=[t],jQuery(this.container).trigger("regionSelect.jqvmap",[t]),this.selectedColor&&e&&(e.currentFillColor=this.selectedColor,e.setFill(this.selectedColor)))},JQVMap.prototype.selectIndex=function(t){t=t.toLowerCase();for(var e=0;e<this.selectedRegions.length;e++)if(t===this.selectedRegions[e])return e;return-1},JQVMap.prototype.setBackgroundColor=function(t){this.container.css("background-color",t)},JQVMap.prototype.setColors=function(t,e){if("string"==typeof t)this.countries[t].setFill(e),this.countries[t].setAttribute("original",e);else{var i=t;for(var o in i)this.countries[o]&&(this.countries[o].setFill(i[o]),this.countries[o].setAttribute("original",i[o]))}},JQVMap.prototype.setNormalizeFunction=function(t){this.colorScale.setNormalizeFunction(t),this.values&&this.setValues(this.values)},JQVMap.prototype.setScale=function(t){this.scale=t,this.applyTransform()},JQVMap.prototype.setScaleColors=function(t){this.colorScale.setColors(t),this.values&&this.setValues(this.values)},JQVMap.prototype.setValues=function(t){var e,i=0,o=Number.MAX_VALUE;for(var s in t)s=s.toLowerCase(),e=parseFloat(t[s]),isNaN(e)||(e>i&&(i=t[s]),o>e&&(o=e));o===i&&i++,this.colorScale.setMin(o),this.colorScale.setMax(i);var r={};for(s in t)s=s.toLowerCase(),e=parseFloat(t[s]),r[s]=isNaN(e)?this.color:this.colorScale.getColor(e);this.setColors(r),this.values=t},JQVMap.prototype.unhighlight=function(t,e){t=t.toLowerCase(),e=e||jQuery("#"+this.getCountryId(t))[0],e.setOpacity(1),e.currentFillColor&&e.setFill(e.currentFillColor)},JQVMap.prototype.zoomIn=function(){var t=this,e=(jQuery("#zoom").innerHeight()-12-30-6-7-6)/(this.zoomMaxStep-this.zoomCurStep);if(t.zoomCurStep<t.zoomMaxStep){t.transX-=(t.width/t.scale-t.width/(t.scale*t.zoomStep))/2,t.transY-=(t.height/t.scale-t.height/(t.scale*t.zoomStep))/2,t.setScale(t.scale*t.zoomStep),t.zoomCurStep++;var i=jQuery("#zoomSlider");i.css("top",parseInt(i.css("top"),10)-e),t.container.trigger("zoomIn")}},JQVMap.prototype.zoomOut=function(){var t=this,e=(jQuery("#zoom").innerHeight()-12-30-6-7-6)/(this.zoomMaxStep-this.zoomCurStep);if(t.zoomCurStep>1){t.transX+=(t.width/(t.scale/t.zoomStep)-t.width/t.scale)/2,t.transY+=(t.height/(t.scale/t.zoomStep)-t.height/t.scale)/2,t.setScale(t.scale/t.zoomStep),t.zoomCurStep--;var i=jQuery("#zoomSlider");i.css("top",parseInt(i.css("top"),10)+e),t.container.trigger("zoomOut")}},VectorCanvas.prototype.applyTransformParams=function(t,e,i){"svg"===this.mode?this.rootGroup.setAttribute("transform","scale("+t+") translate("+e+", "+i+")"):(this.rootGroup.coordorigin=this.width-e+","+(this.height-i),this.rootGroup.coordsize=this.width/t+","+this.height/t)},VectorCanvas.prototype.createGroup=function(t){var e;return"svg"===this.mode?e=this.createSvgNode("g"):(e=this.createVmlNode("group"),e.style.width=this.width+"px",e.style.height=this.height+"px",e.style.left="0px",e.style.top="0px",e.coordorigin="0 0",e.coordsize=this.width+" "+this.height),t&&(this.rootGroup=e),e},VectorCanvas.prototype.createPath=function(t){var e;if("svg"===this.mode)e=this.createSvgNode("path"),e.setAttribute("d",t.path),null!==this.params.borderColor&&e.setAttribute("stroke",this.params.borderColor),this.params.borderWidth>0&&(e.setAttribute("stroke-width",this.params.borderWidth),e.setAttribute("stroke-linecap","round"),e.setAttribute("stroke-linejoin","round")),this.params.borderOpacity>0&&e.setAttribute("stroke-opacity",this.params.borderOpacity),e.setFill=function(t){this.setAttribute("fill",t),null===this.getAttribute("original")&&this.setAttribute("original",t)},e.getFill=function(){return this.getAttribute("fill")},e.getOriginalFill=function(){return this.getAttribute("original")},e.setOpacity=function(t){this.setAttribute("fill-opacity",t)};else{e=this.createVmlNode("shape"),e.coordorigin="0 0",e.coordsize=this.width+" "+this.height,e.style.width=this.width+"px",e.style.height=this.height+"px",e.fillcolor=JQVMap.defaultFillColor,e.stroked=!1,e.path=VectorCanvas.pathSvgToVml(t.path);var i=this.createVmlNode("skew");i.on=!0,i.matrix="0.01,0,0,0.01,0,0",i.offset="0,0",e.appendChild(i);var o=this.createVmlNode("fill");e.appendChild(o),e.setFill=function(t){this.getElementsByTagName("fill")[0].color=t,null===this.getAttribute("original")&&this.setAttribute("original",t)},e.getFill=function(){return this.getElementsByTagName("fill")[0].color},e.getOriginalFill=function(){return this.getAttribute("original")},e.setOpacity=function(t){this.getElementsByTagName("fill")[0].opacity=parseInt(100*t,10)+"%"}}return e},VectorCanvas.prototype.pathSvgToVml=function(t){var e,i,o="",s=0,r=0;return t.replace(/([MmLlHhVvCcSs])((?:-?(?:\d+)?(?:\.\d+)?,?\s?)+)/g,function(t,a,n){n=n.replace(/(\d)-/g,"$1,-").replace(/\s+/g,",").split(","),n[0]||n.shift();for(var l=0,h=n.length;h>l;l++)n[l]=Math.round(100*n[l]);switch(a){case"m":s+=n[0],r+=n[1],o="t"+n.join(",");break;case"M":s=n[0],r=n[1],o="m"+n.join(",");break;case"l":s+=n[0],r+=n[1],o="r"+n.join(",");break;case"L":s=n[0],r=n[1],o="l"+n.join(",");break;case"h":s+=n[0],o="r"+n[0]+",0";break;case"H":s=n[0],o="l"+s+","+r;break;case"v":r+=n[0],o="r0,"+n[0];break;case"V":r=n[0],o="l"+s+","+r;break;case"c":e=s+n[n.length-4],i=r+n[n.length-3],s+=n[n.length-2],r+=n[n.length-1],o="v"+n.join(",");break;case"C":e=n[n.length-4],i=n[n.length-3],s=n[n.length-2],r=n[n.length-1],o="c"+n.join(",");break;case"s":n.unshift(r-i),n.unshift(s-e),e=s+n[n.length-4],i=r+n[n.length-3],s+=n[n.length-2],r+=n[n.length-1],o="v"+n.join(",");break;case"S":n.unshift(r+r-i),n.unshift(s+s-e),e=n[n.length-4],i=n[n.length-3],s=n[n.length-2],r=n[n.length-1],o="c"+n.join(",")}return o}).replace(/z/g,"")},VectorCanvas.prototype.setSize=function(t,e){if("svg"===this.mode)this.canvas.setAttribute("width",t),this.canvas.setAttribute("height",e);else if(this.canvas.style.width=t+"px",this.canvas.style.height=e+"px",this.canvas.coordsize=t+" "+e,this.canvas.coordorigin="0 0",this.rootGroup){for(var i=this.rootGroup.getElementsByTagName("shape"),o=0,s=i.length;s>o;o++)i[o].coordsize=t+" "+e,i[o].style.width=t+"px",i[o].style.height=e+"px";this.rootGroup.coordsize=t+" "+e,this.rootGroup.style.width=t+"px",this.rootGroup.style.height=e+"px"}this.width=t,this.height=e};
+
+  jQuery.fn.vectorMap('addMap', 'russia', {
+      "width": 990,
+      "height": 593,
+      "paths": {
+          "da": {
+              "path": "m64.939,403.74,2.6516,1.2627,3.6618,0.50507,1.7678-2.0203,2.1466,2.0203,2.3991-1.6415,0.25254-1.7678,1.6415-2.1466,3.0305,0.50508,3.7881-2.9042-0.50508-1.894-4.7982-0.50508,0.75762-3.1567-1.0102-0.63134,0.63135-2.2728-3.1567-2.7779,1.5152-0.50508,3.9143,0.88388,0-1.389-1.0102-1.2627,8.3338-0.25254,4.9245,5.4296,1.2627,1.894-0.37881,2.2728-5.3033-0.3788,0.50508,2.5254,1.5152,3.0304-1.0102,3.5355-2.3991,2.7779-1.2627,0.25254,4.5457,0.75761-5.5558,2.1466-0.50508,2.0203-0.75762,0.50508-3.0305,0.50507-0.25254,4.7982-1.2627,0.88388-1.1364,13.132-9.0914-0.12627-3.6618-2.2728-1.389-0.88388,0-11.617-3.283-5.9346,0.37881-2.9042,1.2627-0.37881z",
+              "name": "Республика Дагестан"
+          },
+          "cr": {
+              "name": "Республика Крым",
+              "path": "m7.63 300.28 3.08 -4.47 -2.39 -5.96 -2.32 -1.30 -0.26 -1.56 5.37 0.27 5.62 1.13 3.78 3.17 -0.68 -4.60 2.99 3.45 0.38 1.58 3.51 3.18 1.69 4.34 -1.36 3.53 -0.62 6.67 2.20 0.60 1.62 -0.23 0.49 2.00 2.15 0.47 2.86 3.79 -3.47 0.05 -1.26 2.11 -4.89 -4.06 -1.13 -2.79 -2.69 -0.25 -5.54 -2.16 -3.75 -1.18 -4.89 0.14z"
+          },
+          "sa": {
+              "path": "M701.25,126.75l-1.44,1.06-1.25,1.63s1.44,0.87,2.16,0.87c0.71,0,2.69-1.97,2.69-1.97l-2.16-1.59zm18.47,12.09c-0.18-0.01-0.4,0.02-0.63,0.07-1.78,0.35-4.81,1.93-4.81,1.93s-1.41,1.1-2.12,1.1c-0.72,0-2.35-0.38-2.35-0.38-0.71,0-2.5,1.25-2.5,1.25l-1.4,1.78s-1.1-0.51-1.1,0.38-0.35,1.96,0.72,2.5c1.07,0.53,1.61,1.06,2.5,1.06s3.22-0.72,3.22-0.72l1.97-0.87,1.97,1.06s0.51-0.9,1.4-1.44c0.9-0.53,3.4-2.31,3.75-3.03,0.36-0.71,0.72-3.22,0.72-3.22s-0.11-1.36-1.34-1.47zm-19.81,7.1c-0.15,0.01-0.29,0.05-0.44,0.09-1.25,0.36-2.85,0.19-3.56,0.19-0.72,0-0.91,0.19-0.91,0.19s-0.88,1.58-1.59,1.93c-0.72,0.36-1.99,0.74-3.07,0.57-1.07-0.18-3.75-1.25-3.75-1.25s-1.93-0.02-1.93,1.59,3.03,3.41,3.03,3.41l1.06,1.4s-2.51,0.73-3.41,0.38c-0.89-0.36-2.65-2.16-2.65-2.16l-3.22-0.72s-2.88,0.2-2.88,1.1c0,0.89-0.68,2.67-0.68,3.56s-0.9,3.04,0.53,3.94c1.43,0.89,1.79,3.03,1.97,3.75,0.17,0.71,0.7,1.77,2.84,2.31,2.14,0.53,4.29,0.53,5,1.06,0.71,0.54,1.77,1.07,2.84,0.53,1.08-0.53,1.82-2.65,1.82-2.65l2.12-1.97s1.61-1.44,2.5-2.16c0.89-0.71,2.7-0.54,4.13-1.44,1.42-0.89,2.31-3.75,2.31-3.75v-5l-0.38-4.43s-0.68-0.58-1.68-0.47zm106.25,5.62c-0.45,0.09-0.75,4.1-0.75,4.1l-7.32,1.65-3.28,0.63-4.53-6.06-7.84-0.13-0.38,0.87-5.68,1.66-1.76,2.13-6.06,6.31v2.78l-2.15,1.91-3.29,5.03-4.93-2.38-3.41-0.37-1.75,2h-4.56l-3.41,1.78-1.75-1.53,4.28-2.91-2.28-1.62-3.03-0.13-8.84,4.03,1.9,5.44-0.87,4.78-2.66,2.91-1.65-2.13,3.03-7.47-1.75-0.37-2.66,4.03-3.03,2.03-1-0.75,1-3.16,2.28-0.74,2.91-2.66-7.1,1.75-9.22,5.31-6.68,0.25,3.65,3.66-3.65,3.4-0.5,3.03,0.37,1.16,3.91-1.78-1,4.03,4.81,2.91-0.91,2.9-2-1.37-3.68,1,1.28,3.41,2.4-0.26-1.03,2.66-3.9-0.5-4.28-1.66-3.53,0.26-2.41,3.15-0.63,4.06h-6.46l-1.76-1.53-2.4-2-0.5,4.41,0.87,0.87-0.12,1.41,1.65,0.87-0.9,2.54,1.66,6.18-3.29-1.4-1,1.15-9.87-5.31v-4.94l-2.25,0.13-1.78,2.41-2-3.41,3.65-0.63-0.5-2.9-4.43-1.66,0.75-0.87,0.12-2.53-5.28-4.04-5.31-2.53-1,3.66-7.35,0.65-2.37-1.65-4.19,2.15v2.13l4.19,4.69-10.94,5.31-10.28-1.16,0.44-4.4-12.07,0.19-3.96,3.78h-2.85l-1.09,1.09,2.66,2.87h-2.13l-2.91-2.06,1.19-2.09-0.87-1.38-1.54-1.78,0.07,2.28-1.5,1.07-3.85-1.32s-2.9,3.53-2.84,3.78c0.06,0.26,2.66,3.29,2.66,3.29l-1.41,3.34,1.59,2.09,0.19,2.78,7.38,5.82-0.32,5.47,2.53,1.9,1.63,2.53-2.53,2.72-4.41,3.03-0.69,2.63-4.81,2.78,0.25,6.12-2.25,1.1-2.97-1.28-5.65,4.75-4.44,0.09,0.06,1.97,5.38,6.59,1.78,20.1-6.35,1.97,4.19,3.4-1.78,4.19v1.25l7.16,8.84-4.57,6.69,0.97,1.6-2.4,1.87,0.09,2.25,5.63,0.34,0.71,0.72,9.1,0.19,3.31,3.31-0.53,1.6-3.31,0.34,0.19,3.94,4.03-1.06,5.06,6.59-0.53,5.53,3.84,5.19-1.97,3.4,0.53,2.13,7.69,6.53v4.37l-3.75,6.44,0.28,10.78,3.85,4.13,3.37-3.94,3.75,0.09,1.88-1.34,2.68-0.62,2.41-2.07,3.56,3.85,0.38,2.31,4-5.06,0.09-4.13,5.38-2.75-0.29-6.25,2.32-4.12,3.84-1.5,4.91,1.06,6.15,4.91,0.57,3.84,1.31,0.87,4.03-1.4,2.5-2.06,2.69,1.06,0.87,4.47,3.13,4.56,2.15,1.78v3.03l2.32,1.35,0.71,4.71,3.94,0.19,0.97,1.35,1.53,4.09,8.38-0.25,3.31-1.97,5.53,1.16,3.56,1.97,11-0.72,5.54,3.75,2.21,0.53,5.19-2.6h2.6l3.03,2.26,2.78-0.19,3.22-3.94,5.68-0.06,2.5-1.97h7.88l0.19-3.75,10.68-5.09,0.82-3.04-4.28-4.12,2.31-1.69,0.62-4.03-1.34-1.69-2.41,0.38-2.03-1.44,2.75-4.03-2.84-1.6,0.25-1.87,1.53-1.97-1.44-1.44-3.47-1.15-0.53-1.6,3.38-1.43-1.88-0.91-0.19-5.25-0.87-0.62-0.19-1.88,2.78-1.25-1.62-1.25v-2.94l5.47-1.97,3.12,0.16,0.25-1.78,6.53,0.09v-2.75l-1.25-1.53,1.16-1.25,3.47-0.62,3.31-2.22,1.34-6,5-0.44,0.1-2.06s-5.29-4.9-5.47-5.25c-0.18-0.36-0.88-3.94-0.88-3.94l-3.56-2.59v-5.97l2.94-7.16-1.69-9.19,0.78-3.12,13.5,0.72,0.25-5.28,5.19-1.16,3.47,1.87,0.81-2.31-2.41-3.69,1.69-0.62,0.19-2.75-7.16-8.5,0.1-4.37-3.13-1.5-0.09-4.04-1.78-1.15,1.09-2.13,3.81-0.47,1.35-1.78,4.28,0.38,0.09-2.44-3.37-1.5,0.15-3.31,5.47-0.53v-3.57l5.63,0.44,5.62-8.03,0.44-2.5-6.06-6.06-0.19-1.88,2.31-3.4-0.97-1.79-3.31,0.19-1.5-2.34,4.72-1.41-0.09-1.53-2.07-0.97-0.25-1.34,2.13-3.75,5.72-1.97-0.78-3.56,5.15,0.68-0.62-5.43,1.34,0.28,0.19-3.59-2.69-0.63-2.94-4.53-7.59-0.28-4.19-1.88,0.72-3.47h-3.12l-0.19-1.62,8.12-10.44,1.07-7.84s-9.81-5.72-10.25-5.63zm-135.1,8.56c-0.12,0.03-0.23,0.08-0.34,0.19-0.89,0.9-1.07,1.79-0.53,2.5,0.53,0.72,1.06,1.63,1.78,2.35,0.71,0.71,2.31,1.25,2.31,1.25s0.71-1.1,0.53-1.82c-0.18-0.71-1.97-2.84-1.97-2.84s-0.94-1.78-1.78-1.63zm28.94,7.35l-2.31,0.34s-1.07,0.91-1.25,1.63c-0.18,0.71-0.9,1.24,0,1.78,0.89,0.53,3.75,1.25,3.75,1.25s1.6-0.02,1.78,0.87c0.18,0.9,0.18,1.8,0,2.69s-0.53,1.78-0.53,1.78l0.72,0.72,1.93-0.53s0.74-0.72,1.82-0.72h2.65s1.44-0.53,1.97-1.25c0.54-0.71,1.97-1.25,1.97-1.25h2.69s1.41-0.52,0.87-1.59c-0.53-1.07-1.76-1.62-2.65-2.16-0.9-0.53-3.22-2.31-3.22-2.31h-2.5l-3.6,0.34-2.84,0.38-1.25-1.97zm-17,10.15c-0.12,0-0.22,0.01-0.31,0.04-0.72,0.17-1.44,1.4-1.44,1.4s0.37,1.78,2.16,1.78c1.78,0,2.3,0.55,2.65-0.34,0.36-0.89-0.87-2.31-0.87-2.31s-1.37-0.55-2.19-0.57z",
+              "name": "Республика Саха (Якутия)"
+          },
+          "so": {
+              "path": "m75.583,387.43-2.2728,2.6516-4.1669-2.6516-2.0203,1.1364-0.37881,5.8084-1.1364,1.389-2.2728-0.12627-5.9346-2.6516-3.0305-3.283,0.12627-4.9245,4.672,0.75761,0.37881-0.88388,2.5254-0.12627,3.283,1.5152,4.0406-1.894s-0.12627-3.5355,0.75761-2.7779c0.88388,0.75762,1.389,1.2627,1.389,1.2627l0.25254,3.5355z",
+              "name": "Республика Северная Осетия"
+          },
+          "kb": {
+              "path": "m50.982,375.86c0.26786,0.35715,2.5893,4.7322,2.5893,4.7322l0.98214,3.9286,4.6429,1.1607,2.8571-1.0714,3.2143,1.5179,4.375-1.875,0.26786-3.125-5.9821-2.3214-1.875-5.0893-2.2321-1.1607-4.375,0.71429z",
+              "name": "Республика Кабардино-Балкария"
+          },
+          "kc": {
+              "path": "m43.482,361.39,2.2321,8.4821,5.0893,6.25,4.375-2.6786,5.3571-0.89286,0.08929-3.3928,3.75-1.0714-6.6964-7.2321-2.2321,2.4107-2.8571,0.26786-1.6071-4.5536,0.44643-2.1429z",
+              "name": "Карачаево-Черкесия"
+          },
+          "st": {
+              "path": "m63.929,367.73-3.4821,0.98215,0.17857,3.75,1.5179,1.25,1.7857,4.6428,6.5179,3.0357,1.3393,1.3393,0.08929,3.0357,3.8393,1.7857,1.6071,2.5893,3.2143,0.625,0.71429-1.4286-2.8571-3.125,1.5179-0.53572,3.5714,0.80357,0.17857-1.1607-0.98214-1.3393,7.7679-0.0893,1.6964-1.5179,0.26786-3.5714-5.2679-7.5-0.17857-9.4643-3.4821-6.0714-4.9107-0.98214-1.5179-2.7679-5.0893-5.7143-0.98214-0.625-1.5179,1.3393-2.7679-2.0536-1.4286,0.80357-0.80357,1.0714-0.08929,1.6071,0.35714,1.3393,0.35714,1.1607-0.71429,1.6071-0.98214,1.4286-1.9643,2.2322-1.875,1.0714-0.71428,0.98214-0.98214,2.3214z",
+              "name": "Ставропольский край"
+          },
+          "ks": {
+              "path": "m51.607,356.48-0.08929,2.0536,0.98214,3.8393,0.35714,0.80357,2.2321,0.0893,3.75-4.5536,1.4286-1.9643,1.9643-1.0714,2.6786-4.0178-0.26786-3.3929,0.17857-1.6964,0.89286-1.5179,1.3393,0,1.7857,1.5179,1.3393,0,2.5893-3.0357,0.08929-1.9643-0.89286-0.98214-2.2321-1.3393,0.17857-2.9464,2.8571-3.125,0.08929-1.4286-2.7679-2.9464-3.75-0.71428-0.80357-0.89286,1.6071-1.25,0.17857-2.4107-2.1429-1.6072-2.5893-0.80357-1.6071-1.6964-1.25-0.98214-0.89286-0.0893-1.3393,2.2322-0.625,0.98214,1.0714,1.4286-0.35714,1.5179-0.80357,0.625-2.7679-0.26786-0.89286-0.89286-1.9643,0.0893-1.875,0.71429-3.0357,1.7857-1.6964,0-1.3393-1.4286-1.6071-0.625-1.1607-1.4286,0-2.6786-2.2321-0.26786-1.25,0.625-0.35714,2.9464-0.089286,13.214,0.71429,5.8929,0.98214,3.6607-0.089286,2.3214-0.625,2.7679-0.089286,2.4107,0.17857,2.0536,1.5179,0.89285,0.71429,0.625,1.6071,1.5179,0.89286,1.0714,0.89286,0.89286l7.947-4.27-0.804-1.25-0.357-1.43-5.089,2.68h-1.875l-1.25-1.875,0.35714-3.5714,6.25-1.4286,2.7679-2.3214,0.71429-2.5893-1.3393-0.80357-1.9643,0.44642-1.1607-1.5178-0.71429-2.6786-1.3393-1.7857-0.17857-1.25,0.08929-1.1607,1.3393-0.80357,1.3393,0.625,1.0714,1.3393,1.0714,1.9643,1.3393,1.7857,2.3214,1.3393,1.6964,0.89285s0.625,0.26786,0.71429,0.625c0.08929,0.35715,0.89286,2.6786,0.89286,2.6786v4.0178l-0.08929,1.3393-1.0714,1.0714-1.875,1.5178-1.6071,1.4286z",
+              "name": "Краснодарский край"
+          },
+          "ro": {
+              "path": "m67.5,323.45,2.0536,0.98214,1.4286-0.17857,0.625-0.89286-0.44643-1.1607-1.25-0.89286-1.9643-1.3393-0.89286-1.1607-0.35714-0.71428,1.0714-1.4286l2.231-1.08,1.6071-0.26786,1.0714,0.35714,1.4286,1.3393,1.5179,0.35714,1.6964-0.89286,0.89286,0.44643,1.072,1.06,1.339,1.79,0.268,1.33,1.607-0.08,1.3393-0.80358,1.6964-0.0893,1.3393-0.0893,0.35714-1.5178,0.53571-1.4286,1.25-1.6071,1.3393-1.0714,1.6964,1.0714,0.71429,0.35714,0.89286-1.875,0.44643-0.71428,2.6786-0.26786,1.875-1.6964,2.3214-0.17857,2.0536,1.1607,2.1429,1.25,0.98214,0.53571,3.9286,0.0893h2.2321l1.5179-0.98215h1.3393l0.71429,0.625,0.26786,1.6964-0.08929,1.9643v1.875l-0.08929,1.0714-0.981,1.34-1.25,0.98214-1.25,0.71429-0.80357,0.35714-0.35714,1.25-0.44643,1.6072-0.08929,1.4286-0.44643,1.1607-0.625,1.4286-1.4286,1.5179-1.6964,0.53571h-3.125l-1.608-0.36-1.518,0.53-0.625,1.97-0.982,0.62-0.80357,0.53572,0.17857,0.89285,1.3393,1.4286,0.71429,1.4286-1.1607,1.4286-1.3393,0.89285-0.80357,1.7857-0.08929,0.80357,0.98214,0.53571,1.1607,1.1607,0.625,1.0714,0.80357,0.80357,0.71429,1.3393v1.0714l-0.71429,0.80357,0.53572,0.625,1.4286,0.35715,0.625-0.53572,0.71429-0.0893,0.35714,0.98214v1.4286l-1.3393,1.3393-2.1429,1.0714-2.0536,1.1607-3.3929,0.0893-0.80357,0.80357-1.3393,0.80357-1.696,0.46-1.429-0.71-1.696-0.71-0.893-0.9-0.178-2.23-0.179-1.52-1.696-2.14-1.1607-0.80357-0.17857-1.25-0.80357-0.89286-1.7857-0.0893h-2.7679l-2.8571-0.0893-1.3393-0.17857-1.6071-1.7857-0.98214-0.71429v-0.89286l1.3393-1.5178v-1.5179l-0.625-1.25-1.875-1.4286-0.71429-0.625,0.26786-2.2322,2.7679-3.2143,0.08928-1.6071-1.9643-2.2322-1.3393-0.89285-2.411-0.55-1.0714-0.35714-0.08929-0.71429,1.0714-1.0714,0.26786-1.1607z",
+              "name": "Ростовская область"
+          },
+          "kk": {
+              "path": "m74.554,348.71,0.98214,1.6071,1.1607,1.0714,1.1607,1.6964,0.80357,1.1607,1.1607,0.71429,2.5893,0.44643,1.3393,0.625,0.98214,1.6071s0.98214,1.7857,1.25,2.2321c0.26786,0.44643,0.98214,2.4107,0.98214,2.4107l0.17857,4.9107v3.2143l0.89286,2.2321,3.3036,4.1964,1.25,2.0536-0.17857,2.5893-1.4286,1.875,0.89286,1.3393,4.375,4.7321,0.53571,1.25,0.35714,0.98215,0.89286,0.53571,1.4286,0.0893,1.6071-0.26786,1.7857-0.53572,2.2321-0.89285,2.3214-0.26786,0.713-0.71,0.625-2.15-0.268-1.16-2.232-1.34-0.982-0.71,0.08928-1.3393,1.0714-0.625,1.7857,0.0893,1.4286-1.25-0.53572-0.71428-0.71428-2.0536-0.268-1.7-0.179-1.16h1.0714l1.6964,1.25,1.7857,0.80357,2.6786-0.17857h0.89286l0.53571-1.1607-0.17857-2.4107-0.08929-3.8393v-6.3393-0.98214l-0.08929-2.2321,2.9464-2.8572,0.17857-1.3393-1.4286-0.625v-3.2143l-1.0714-1.1607-1.1607-0.35715-2.5-0.17857-0.625-1.4286-0.17857-0.80357-1.25,0.26786-0.625,1.0714h-1.3393l-1.25-0.0893-1.071-0.98-0.804-0.71-2.321-0.27-0.98214,0.35715-0.71429,0.80357-0.71429,0.35714-0.26786,1.1607-0.35714,0.80357,0.35714,0.625,1.0714,0.35714,1.0714-0.44643,0.89286,0.35714,0.08929,0.98215-0.44643,1.5178-5,3.125-3.3929,0.26786-2.3214,1.3393-1.5179,0.53571-3.8393-1.7857-0.53571-0.35715-0.08929-3.3928-0.71429-1.4286-2.3214-2.2322-0.625-1.25-1.9643-0.80357h-3.5714z",
+              "name": "Республика Калмыкия"
+          },
+          "as": {
+              "path": "m116.873,350.94,1.6415-1.389,1.1364-0.63135,1.7678,1.2627,2.0203,0.63135,2.2728,0.50508,0.88388,1.0102,2.1466,0.88388,0.75761,1.1364,0.63134,1.1364,0,1.389,0,0.88389-1.5152,0.3788-1.1364,1.389-0.12627,1.0102,0.63134,1.389,1.0102,1.1364-0.37881,2.1466-0.75762,1.0102-1.7678,0.88389-0.25254,1.1364,0.50508,0.88388,1.7678,1.1364,2.2728,1.5152,1.389,1.6415,0.63134,1.0102,0,1.5152-1.0102,1.1364-0.25254,2.0203-1.0102,1.0102,0,2.2728,0,2.7779-0.75761,0.3788-1.7678-0.3788-1.894-0.75762-0.63134,0.37881-0.37881,2.1466,1.6415,2.1466,1.1364,1.2627,0.88388,1.0102,0.50508,0.63134,0.12627,1.2627-3.9143,0.25253-3.0305,0.63135-2.1466,0-1.894-1.2627-2.0203-1.5152-5.4296,0-1.0102-0.37881-1.1364-1.1364,0.37881-2.9042-0.88388-1.0102-2.2728-1.6415,0-1.6415,1.0102-0.3788,1.5152,0,1.389-1.0102-0.63134-1.389-0.75761-4.0406,0.63134-0.3788,1.2627,0.75761,2.9042,1.389,2.0203-0.25254,1.2627-0.12627,0.50508-1.6415-0.25254-5.4296,0.12627-5.0508-0.25254-4.2931,2.1466-2.2728,1.0102-1.1364,0.12627-1.389-1.2627-0.50508-0.25254-2.1466z",
+              "name": "Астраханская область"
+          },
+          "ad": {
+              "path": "m51.786,356.21,2.4107-1.4286,2.5-2.6786,0.35714-2.1428-0.26786-3.9286-1.0714-2.7679-2.9464-0.98214l-2.412-1.78-2.232-3.75-1.5179-1.1607-1.3393,0.71428-0.17857,2.1429,1.6071,1.875,0.80357,2.5893,1.1607,1.6964,1.6071-0.35714,1.5179,0.44643-0.44643,2.9464-2.9464,2.3214-3.394,0.71-2.8571,0.35715-0.17857,3.8393,1.0714,1.7857h1.7857l5.3571-2.9464,0.35714,1.7857z",
+              "name": "Республика Адыгея"
+          },
+          "vl": {
+              "path": "m115.893,313.18,1.5179-0.98214,1.875-0.0893,1.1607-1.0714,1.1607-1.6072,0-1.25,1.1607-0.98214,1.9643,1.25,2.5,1.9643,3.3036,2.1428,3.9286,1.5179,1.4286,1.5179,0.625,2.1428,0.44643,1.4286,2.8571,0.35714,0.44643,1.4286,2.5893,0.80357,1.7857,1.7857,1.6964,1.6964,0.17857,2.2322-1.5179,1.25-1.6071,2.2321-1.4286,1.3393-0.26786,1.25,0.89286,2.2321,2.9464,1.875,1.6964,1.875,1.7857,1.1607,1.25,3.3036,1.0714,1.875,0.0893,1.25-0.71428,0.53572-1.3393,0.44643-0.71429,0.53571-2.8571,0.26786-4.6429-0.0893-1.6964,0.26786-0.71429,1.6071,0,2.8572-0.17857,1.1607-1.6964,1.25-1.3393,0.98214-4.0178-0.0893-1.0714-0.0893-1.3393-3.0357-1.4286-1.0714-1.875-1.0714-1.0714-0.625l-2.256-0.46-2.054-1.25-1.071-0.18-1.1607,0.625-0.98214,0.71429-1.25,0.26785-2.1429-0.0893-0.89286-1.1607-0.35714-1.25-1.4286,0.26786-0.89286,1.1607h-1.25l-1.875-0.71428-1.25-0.80357-1.3393-0.35715-1.4286,0.17858-1.4286,1.25h-0.89286l-1.4286-2.5-1.25-1.4286-1.0714-0.71428,0.448-1.44,0.893-1.52,1.607-1.43,0.179-0.89-1.6964-2.1429-0.44643-1.0714,1.4286-0.80358,0.625-1.875,0.625-0.53571,1.25-0.35714,1.6071,0.0893h3.0357l1.7857-0.625,1.9643-2.5893,0.89286-4.0179,0.625-1.4286,2.8571-2.0536,1.1607-1.6964,0.35714-3.3036v-2.2322z",
+              "name": "Волгоградская область"
+          },
+          "vn": {
+              "path": "m100.089,310.77,0-6.0714,0.08929-1.1607,3.75-3.2143,2.5-3.6607,1.3393-1.4286,0.35714-1.875,2.4107-0.71428,0.35714-2.5893,0.625-1.7857,1.0714-0.35714,0.625-2.0536,1.3393-1.7857,1.1607-1.0714,0.98214-0.53571,0.89286,1.1607,0.44643,0,0.71429-1.0714,0.53571-0.71428,1.1607-0.17857,0.89286,0.89285,1.25,1.1607,1.4286,1.4286,1.1607,1.5179,0.80357,0.89285-0.26786,2.1429,0,1.6071,1.875,1.0714,2.3214,1.3393,0.80357,1.3393-0.0893,1.7857-0.89285,1.5178-0.44643,0.98215,1.5179,1.25,1.875,1.7857,1.9643,2.2321,1.3393,1.6964,1.1607,1.9643-0.26786,2.3214,0,2.0536-2.1429,1.0714-0.71428,0.17857-4.2857-1.875-2.6786-1.7857-2.1429-1.4286-1.6964-1.1607-0.53571-0.17857-0.71429,0.80357-0.44643,1.25-1.4286,1.9643-1.6964,0.44643-2.8571,0.80357-3.5714,1.1607-3.2143,0.0893-2.5-0.17857-2.3214-1.25-2.3214-1.0714z",
+              "name": "Воронежская область"
+          },
+          "bl": {
+              "path": "m93.304,272.29-5.4464,3.3036,0.08928,2.6786,1.6964,1.875,0.08929,3.125,0.44643,1.6964,2.8571,1.6071,2.8571,0.44643l1.608,2.23-2.5,3.3036-0.35714,2.1429,1.0714,1.6071,2.3214,1.5179,0.17857,2.9464,1.1607,1.5179,0.71428,0.89285,4.7321-4.375,3.75-5.4464,2.0536-0.89285,0.80357-4.1072,1.0714-0.89285,0.53571-1.3393-2.5-2.8571-3.5714-4.1071-2.7679-0.26786-2.9464-1.1607-2.6786-1.6964-2.5893-1.6072-1.9643-1.6071z",
+              "name": "Белгородская область"
+          },
+          "ky": {
+              "path": "m93.482,271.84,0-4.6429l-0.357-1.61-1.786-1.97-0.714-1.07,1.3393-1.0714,3.75-1.3393,2.7679-1.3393,2.6786,0.0893,0.53571,1.0714,1.25-0.0893,1.7857-1.1607h0.80357l0.98214,0.44643,1.4286,1.6071,0.53571,0.80357,0.08929,1.6964,1.0714,0.89286,1.0714,0.71428h0.89286l1.0714,1.25,0.17857,3.2143v2.4107l-0.89286,0.98214v1.5179,1.1607l1.0714,1.25,1.1607,0.98214,0.89286,0.17857,1.5179,0.53571,1.0714,1.6072,1.6071,1.5178-0.71429,1.1607-0.80357,0.89286-0.89286-0.80358-1.9643,1.25-1.4286,1.1607-0.53571,0.80357-3.4821-4.1071-2.2321-2.3214-0.98214-0.53572-3.3036-0.625-2.8571-1.5178-3.6607-2.1429-2.4107-1.9643z",
+              "name": "Курская область"
+          },
+          "or": {
+              "path": "m104.732,258.27,1.0714-1.875,2.2321-0.26786,0.89286-1.6071,0.89286-0.53572,1.9643,0.89286,1.6964-0.0893,1.6071-0.71429,1.0714-1.5179,0.89286-0.53571,0.98214,0.17857,1.3393,0.98214,1.9643,0.89286,1.1607,0.89286,0.35714,0.89285,0.71429,1.3393,0.17857,2.0536,0,3.6607,0.98214,1.7857,1.4286,1.875,0.80357,1.25,0.71429,1.7857-0.26786,1.5179-3.9286,1.875-1.9643,0.98214-1.0714,2.1429-1.875,1.0714-1.875,1.0714-2.4107-0.89286-1.9643-1.6071-0.44643-1.6964,0.44643-1.9643,0.44643-0.89285,0.08928-4.4643-0.89286-1.6964-1.7857-0.53571-1.7857-1.4286-0.08929-1.6072-1.3393-1.5178-1.6071-1.6964z",
+              "name": "Орловская область"
+          },
+          "lp": {
+              "path": "m116.875,278.45,1.5179,1.875,1.0714,0.89286,1.1607,0.71428,1.1607,1.0714,2.5,2.2321,1.25,1.5179,0.625,1.4286-0.44643,2.5893,0.53572,0.625,2.5,1.3393,1.875,1.7857,1.0714-0.17857,1.0714-0.625,0.44643-0.80357,0.0893-5.8036,0.35714-0.71428,1.4286-0.80357,2.3214-0.17857,2.0536-1.1607,1.3393-0.44643,0.17857-1.6964,0.625-1.3393,1.25-1.5179-0.80357-1.1607-2.6786-0.98215-0.53571-0.53571-0.17858-0.71429,1.0714-1.3393,0-1.6071-2.1428-0.35715-1.0714,0.44643-1.6072,0.80357-0.98214,0.89286-1.1607,0.625-1.4286,0.0893-1.3393-1.5179-1.6964-1.6964-0.80357-0.98214-2.4107,0.89285-3.125,1.6964-1.1607,1.6072-1.6071,1.4286z",
+              "name": "Липецкая область"
+          },
+          "tl": {
+              "path": "m123.482,256.3,3.2143-2.0536,0.98214-0.17857,1.6071,0.80357,0.98215-0.80357,0.71428-1.0714,3.125,0,1.6072,0.625,2.0536,0.35714,1.4286,0.80358,2.4107,0.35714,1.4286,0.71428,0.53572,1.0714,0.98214,1.0714,1.25,1.4286,0.71429,1.6072-0.35715,1.6964-0.98214,1.1607-0.71428,1.6964-1.3393,1.9643-1.6964,2.0536-1.0714,1.875-0.71428,0.98215-0.53572,0.35714-1.7857,0-2.5,0.89286-1.5179,1.0714-1.3393,0.26785-2.0536-1.3393-2.0536-2.5893-0.26786-2.0536-0.53571-1.4286-1.6071-2.5l-1.413-2.14-0.179-2.23z",
+              "name": "Тульская область"
+          },
+          "bn": {
+              "path": "m97.679,258.62,0.26786-1.7857,2.3214-1.5179,0.44643-1.1607,0-1.4286-1.6071-1.9643-1.7857-2.1429-1.6964-1.9643-2.3214-1.875-1.5179-0.89286-1.6964-0.26786-0.89286-1.1607,0.17857-2.3214,1.3393-1.6071,3.125-2.1429,2.6786-1.875,0.89286-1.7857,0.98214-0.71428,1.6964,0.26786,0.625,1.25,0.625,1.5178,1.0714,2.2322,1.1607,0.80357,5.8929,0.26785,2.1429-0.35714,1.4286,0.53572,3.125,0.89285,2.3214,0,0.71429,1.9643,0,2.2321-0.17857,1.1607-0.98214,1.5178-0.71429,0.53572-0.26786,1.4286,0.26786,1.5179,0,1.25-0.80357,1.4286-1.4286,1.5178-1.7857,0.71429-1.6964,0.17857-1.7857-0.71428-1.4286,0.71428-0.26786,0.89286-2.4107,0.80357-1.0714,1.4286-1.3393,1.25-1.4286,0.17857-1.4286-0.71428z",
+              "name": "Брянская область"
+          },
+          "kj": {
+              "path": "m119.196,239.61,1.6071-1.25,1.6071-1.3393l1.161-0.27,1.429,0.63,0.80357,1.4286,1.0714,1.25,1.7857,0.80357,1.7857,0.35715,3.125,0.0893,1.875-0.0893,1.6071-1.0714,2.4107-0.0893,1.4286,0.44643,0.98214,2.0536,0.26786,1.4286,1.25,0.625,1.6071,0.98215,0.98214,0.80357,0.53572,1.25-0.53572,2.0536-1.0714,1.7857-1.4286,1.9643-1.1607,1.25-0.89286,0.44643-3.75-1.25-2.6786-1.0714-2.6786,0.0893-1.875,0.44642-1.0714,1.25-1.5179-0.44642-1.0714,0.0893-1.0714,0.80357-2.0536,1.0714-0.89286-0.89286-1.0714-0.80357-1.9643-1.25-1.5179-0.89285-0.89286-0.44643v-1.0714-2.4107l-0.08929-0.625,1.1607-1.6964,1.0714-1.875v-1.7857l-0.26786-1.6071z",
+              "name": "Калужская область"
+          },
+          "sm": {
+              "path": "M109.375,237.55,110,235.95,110.179,234.52,109.732,233l-0.08928-1.4286,1.5179-1.3393,0.71429-1.6071,0.08929-3.125,0.35714-1.875,2.4107-2.5,2.5-1.9643,1.875-1.7857s1.875-1.3393,2.2321-1.5179c0.35714-0.17857,2.5-1.5178,2.5-1.5178l2.5,0.0893,3.0357,3.4822,1.875,3.4821,2.5,3.6607,1.4286,0.89286,2.7679,0.53571h2.0536l0.80357,0.71429,1.1607,1.875,1.1607,1.3393,1.25,1.6071,1.0714,1.4286,0.17857,1.3393-0.98214,1.25-1.875,0.89285-1.875,0.53572-0.89286,1.25-0.44643,0.89285-1.875,0.44643-1.7857,0.625-1.6072,0.35715h-3.0357l-3.75-0.80358-1.7857-1.7857-1.4286-1.3393-1.1607-0.26785-1.1607,0.71428-2.2321,1.5179-1.1607,0.44643-1.7857-0.44643-4.1071-0.98214-2.4107-0.35715z",
+              "name": "Смоленская область"
+          },
+          "mc": {
+              "path": "m146.07,234.16,3.5714,0.26785,2.3214-0.89285,1.4286-0.44643,0.53571,0.625,0.0893,1.7857,0,1.1607-0.17857,1.3393,1.5178,0.89286,2.9464,0.44643,1.7857,0.89285,2.0536,0.89286,2.7678,0.89286,1.7857,0.26786,1.25,0.53571,0.26786,1.6071-0.0893,1.5179-0.44643,1.6964-1.5179,0.625-2.1428,1.1607-1.6072,1.3393-0.0893,1.25-0.625,1.7857-1.1607,1.5179-0.35714,1.6071,0.17857,1.6072,0.0893,0.89285,1.1607,1.0714,1.0714,0.625,1.1607-1.0714,0.625,0.44643,0,1.5179-0.0893,3.2143-0.44643,1.1607-1.3393-0.44643-1.875-0.17857-1.6072,0.17857-0.80357,0.89286-2.0536,0.0893-1.6071-0.35714-1.25-0.71429-1.0714-1.1607-1.6071-0.625-1.6964,0-0.44643,0.80357-0.17857,1.1607-1.0714,0.53571-1.4286,0.0893-0.80357-0.80358-0.17858-0.625,1.1607-2.4107,0.26786-1.9643-0.53572-1.6964-1.1607-1.5179-1.1607-1.5179-1.0714-0.89286,0.625-1.25,2.5-2.9464,1.1607-2.6786-0.71429-1.7857-1.6071-1.6071-1.6071-0.98215-0.53572-0.35714-0.625-1.875-0.80357-1.25-0.80357-0.80357,0.625-1.5179,2.5893-1.3393z",
+              "name": "Москва и Московская область"
+          },
+          "rz": {
+              "path": "m144.55,265.59-1.9643,2.6786-2.1429,3.125-0.625,2.7679-0.80357,1.7857,0.17857,0.80357,1.6964,0.71429,1.9643,1.3393,0.44643,1.5179-0.26786,0.89286,1.4286,1.1607,1.9643,0,1.1607,0.71429,0.0893,1.875,0.44643,1.1607,1.25,0.44643,1.5179-0.625,1.9643,0,1.5179,0.98214,0.625,1.7857,1.0714,1.1607,2.6786-0.17857,3.125,0,2.9464-2.0536,3.0357-2.9464,1.5179-2.2321,1.0714-1.7857-0.98214-2.2321-0.53572-3.125-2.0536-2.0536-1.25-1.6964-0.44643-2.8571-0.53571-1.6072-0.35715-0.98214-2.1428-0.35714-3.4822,0.26786-0.625,0.80357-2.1428-0.17857-1.875-0.71429-1.875-1.0714-1.9643-0.89286-1.0714,0.35715-0.80357,1.4286-1.4286,0.89286-1.6071-0.44643z",
+              "name": "Рязанская область"
+          },
+          "tb": {
+              "path": "m142.77,279.43-1.6964,2.1429-0.35714,1.7857-0.80358,0.89286-2.6786,0.98214-1.875,0.44643-1.5178,0.71429-0.71429,1.4286,0,2.1429,0.26786,2.3214-0.71429,1.875-1.5179,0.53571-0.44642,1.4286-0.44643,1.6964-0.625,1.1607,0.08928,0.625,2.3214,2.1429,2.2321,2.1429,1.6072,2.2321,1.4286,2.0536,0.98214,0,2.1429,0,1.9643-1.25,2.5-1.25,1.6964-1.0714,4.0179-0.26785,1.0714-0.98215v-3.6607c0-0.35714,0.0893-2.3214,0.0893-2.3214l1.5179-1.1607s0.71429-0.71429,0.80357-1.0714c0.0893-0.35714-0.26785-4.6429-0.26785-4.6429l1.4286-1.0714-0.80357-2.1428-1.7857-1.4286-2.3214,0.26786-0.89285,0.625-1.1607-0.80357-0.89286-1.3393v-1.3393l-1.875-0.80357h-1.3393l-0.89286-1.0714-0.26786-1.3393z",
+              "name": "Тамбовская область"
+          },
+          "kn": {
+              "path": "m74.107,152.55,0,2.2322,0.53571,2.5,2.0536,5.1786,1.4286,3.4821,1.9643,3.6607,2.5,1.0714,3.75-0.44642,1.9643-1.3393,0.625-1.7857-0.44643-4.2857-0.89286-2.8571-1.5179-1.6071-2.4107-0.53572-0.98214-0.71428,0-3.0357-0.80357-1.4286-1.6964-1.6071-1.6071-0.26786-0.35714,1.25-0.625,1.3393-0.625,0.89285-1.4286-0.35714z",
+              "name": "Калининградская область"
+          },
+          "ps": {
+              "path": "m125.268,213.98,0.35714-2.1428-0.26786-2.1429-1.4286-1.875-1.3393-1.4286-0.08929-1.6964,0.98214-0.71429,0.17857-1.6964-0.89286-0.98215-1.25-1.875,0-4.1964,1.5179-0.89285,3.75-2.2322,0.80357-2.4107,0.53572-1.7857,1.875-1.25,2.4107-0.0893,1.3393-1.6071,0.98214-1.6964s1.25-0.625,1.6072-0.80357c0.35714-0.17857,2.8571-0.71429,2.8571-0.71429l1.5179-0.0893,1.0714,0.53571-0.625,1.5179-0.71428,0.89285-0.17857,0.98215,1.6071,0.26785,1.25-1.7857,0.98214-2.0536,1.1607-1.5179,1.6071-0.71428h1.6071l1.5179-1.5179,1.1607-0.625h1.4286l0.98214,0.98214,0.625,1.5179,0.98214,1.6071-0.26786,1.6964-0.89285,0.98214-0.35715,1.3393-0.80357,1.6071-0.17857,1.1607h-1.4286-0.80357l-0.71429-0.53572-0.80357,0.53572-0.625,0.80357-0.53571,1.5178-0.53572,2.1429-0.0893,2.5-0.35715,1.875-1.1607,1.25-1.3393,0.98214h-1.7857l-1.5179,1.3393-0.53571,1.7857-1.3393,0.53572-0.44643,1.0714-0.17857,1.4286-1.7857,0.89286-1.7857,0.80357-0.625,1.6964,0.625,1.5178,0.625,0.625-0.26785,1.4286s-0.0893,0.44643-0.44643,0.80358c-0.35714,0.35714-1.1607,1.3393-1.1607,1.3393l-1.4286,0.80357-2.3214,0.89286-1.0714,0.0893-1.1607-0.89286-0.89286-0.89286z",
+              "name": "Псковская область"
+          },
+          "no": {
+              "path": "m153.12,188.27,1.5179,1.25,2.1428,0.35714,2.1429,0.17857,1.25,1.1607,2.5,0.53571,2.3214-0.0893,1.0714-0.89286,0.44643,0.625,0.0893,1.7857,2.1429-0.53571,2.3214,0.0893,0.80357,0.80358,0.17857,2.5,0.17857,2.5,0.53572,1.0714,1.3393,0.17858,1.3393,0.44642,0.26785,2.1429,0.71429,1.6964,0.98214,0.80357,0.44643,2.9464,0.0893,2.2321,0.89285,1.4286-0.53571,0.98215-0.71429,0.53571,0,1.6071,0.17858,1.5179,1.4286,1.3393,0.625,0.53571,0.0893,1.9643,0,1.9643-0.17857,1.3393-1.25,0.53571-0.71428-0.26785-0.625-0.80358-0.71429-0.80357-0.17857-1.1607-0.98214-0.80357-0.80358-0.625-2.0536,0-1.5178-0.53572-0.53572-0.35714-1.5178-0.53571-0.71429-0.26786,0-0.44643s-0.26786-1.25-0.26786-1.6964c0-0.44643-0.0893-2.0536-0.0893-2.0536l-0.625-0.98214h-1.7857l-0.89285-0.44643-0.44643-0.98214-0.98215-0.625-0.53571,0.625-0.89286,1.0714-1.6964,1.4286h-2.1428c-0.35715,0-1.5179,0.0893-1.5179,0.0893l-0.71429-1.0714-1.0714-0.71428-2.3214-0.17857-2.6786-0.0893-1.5179-0.44643-1.3393-0.98214-2.3214-0.44643h-2.1428l-0.89286-1.1607-1.25-1.0714-0.53571-0.71429-1.1607-0.71428,0.98214-2.7679,0.71429-0.44643,1.1607-1.5179,1.0714-1.0714,2.0536-0.625,2.5-1.9643,0.625-1.9643,0.0893-3.5714,0.98214-2.5893,1.0714-1.25,1.1607,0.26786z",
+              "name": "Новгородская область"
+          },
+          "tr": {
+              "path": "m128.661,216.66,3.2143-0.625,2.2321-1.6072,1.3393-1.6071,0.17857-1.4286-0.80357-1.4286-0.26786-1.3393,0.35714-0.89286,1.4286-0.89285,1.6964-0.625,1.1607,0.44643,1.5179,1.5178,1.0714,0.98215,0.98215,0.53571,1.6964,0.17857,2.4107,0.35714,1.3393,0.98215,1.3393,0.26785,3.2143,0.44643,1.5178,0,1.25,0.71429,0.80358,0.71428,1.875,0.35715,1.7857-0.17857,1.875-1.6072,1.25-1.25,0.71429,0.44643,0.625,0.80357,1.4286,0.44643,1.4286,0.17857,0.53571,1.5179,0.17857,2.4107,0.35715,0.80358,1.1607,0.71428,1.4286,0.80357,1.0714,0.26786,1.875,0.35714,0.98214,0.26786,1.25,1.0714,0.44643,1.3393,0.98214,1.0714,0.80358,0.53572,1.7857-0.35715,1.3393,0.0893,1.25,0.71429,1.6071,0.89285,0,1.5179-0.625,1.6964-1.25,1.6071-1.6071,0.44643-1.25,0.98214-1.5179,1.3393-0.89286,1.0714-0.44643,0.71428-0.26785,1.5179-0.44643,1.0714-1.25,1.4286-0.53572,1.4286-0.35714,2.0536-2.0536,1.9643-2.0536,1.3393-1.0714,0.17858-0.53571-0.71429-0.26786-1.7857-1.6964-0.71429-3.8393-0.89286-3.8393-1.6071-3.0357-0.80357-1.5178-1.0714-0.0893-3.0357-0.35714-1.6964-3.3036,0.80357-3.4822,0.26786-1.3393-0.89286-3.4821-4.4643-1.5179-2.0536-3.3036-0.625-2.7679-0.53571-1.4286-1.7857z",
+              "name": "Тверская область"
+          },
+          "vm": {
+              "path": "m167.41,247.73,1.6072,1.7857,2.0536,1.25,1.1607,1.0714,1.3393,0.35714,0.80357,0.89286,0.0893,1.5178-0.89285,1.7857-0.35715,1.0714,1.25,0.625,1.7857,0.26785,1.0714,1.1607,0.17857,1.9643,0.98214,1.875,1.0714,1.25,1.3393,1.25,1.3393,1.3393,1.3393,1.1607,1.7857,1.875,0.89286,1.3393-0.17857,0.98214-0.89286,0.71429l-0.18,0.98,0.53571,0.71429,0.44643,0.71428,0.0893,1.6072-1.7857,0.53571-2.2321-0.0893-1.1607-1.0714-4.4643-0.0893h-5.1786l-1.7857,0.53571-0.71429-1.6964-1.6964-1.9643-1.6071-2.6786-0.80357-4.1964-0.0893-4.1071-0.17857-2.0536-0.44643-0.44643-0.71428,0.44643-1.1607,0.26785-1.4286-1.25-0.26786-2.5893,0.71429-2.0536,1.1607-2.0536,0.44643-1.7857,1.3393-1.0714z",
+              "name": "Владимирская область"
+          },
+          "pz": {
+              "path": "m157.05,289.96,1.6964,1.7857,2.0536,1.5179,1.25,0.98214,1.6964,0.625,1.25,1.875,0.71429,1.6071,0.26785,1.9643,0.98215,0.98214,1.0714,1.0714,2.6786,0.17857,1.6964,0.0893,0.625,2.1429,0.89286,1.7857,1.6964,0.71429,2.1429,0.26785,1.4286,1.0714,0.625,1.0714-1.5179,0.89286-0.89286,0.98214,0.0893,4.1071-0.26786,3.4822-2.7679,1.25-1.0714-0.0893-0.89286,1.6071-1.9643,0.98215-1.1607-1.7857-0.98214-0.98214-5.9822-0.0893-1.1607-1.875-0.89286-0.89285-3.125-0.71429-0.98214-1.6071-1.25-1.6964-2.1429-0.71429-2.4107-1.3393-1.6071-1.0714-2.5,0.0893-0.71429-1.875,0.26786-2.5,1.1607-0.89285,3.8393-0.80357,0.89285-2.4107,0-3.4821,1.3393-1.6964,1.3393-1.6071-0.26786-2.5893,0-1.9643,1.1607-0.89286z",
+              "name": "Пензенская область"
+          },
+          "sr": {
+              "path": "m137.23,308.27-0.17857,3.0357-0.26786,1.25-2.2321,1.1607,1.4286,1.6964,1.0714,3.2143,2.2321,0.71429,0.98215,0.80357,0.89285,1.0714,1.7857,0.625,2.5893,2.5,0.89286,1.0714,0,1.875-1.5179,2.0536-2.4107,2.8571-0.44643,1.25,0.44643,1.6964,0.71429,0.89286,2.1428,1.1607,4.0179,3.9286,1.7857,4.5536,1.25,1.4286,1.25,1.3393,0.26786,1.9643-0.71428,2.5-0.53572,2.4107,0.26786,1.7857,0.89286,1.0714,1.6071,0.44643,1.6964,0,1.6964-1.1607,1.25-1.0714,0.44642-2.6786,0.0893-1.875,2.2321-0.625,3.3036,1.25,1.6964,0.35714,1.6072,0,1.3393-1.5179,0.44643-0.53571,1.6071,0.35714,1.3393,1.0714,1.5178,0.89286,4.6429,0,1.1607-1.1607,1.3393,0.17857,0.89286,0.80358,1.6071-0.53572,0-1.7857-0.89286-1.9643-0.35714-1.3393-0.17857-3.9286-0.0893-2.0536-0.71428-1.25,0.0893-2.8571-0.35714-1.6071,0-2.5-0.80357-1.3393-1.1607-1.6071-2.5-1.0714-1.6072-2.0536-2.5893-0.0893-1.0714-0.35714-1.7857-1.6964-0.625-1.25-0.44642-0.89286-1.7857-2.4107-5.625-0.26786-0.53571-0.17857-1.9643-2.5893-3.125-0.89286-2.2321-2.9464-6.1607-3.3036-2.3214,0-1.0714-1.6964,0.44643-2.5-0.80357-0.35714-3.8393,2.1428-1.5179,0.35715z",
+              "name": "Саратовская область"
+          },
+          "mr": {
+              "path": "m157.59,290.05,1.875,2.1429,2.6786,1.7857,1.7857,1.1607,1.7857,2.7679,0.44642,2.4107,2.0536,2.1429,2.5893,0.0893,1.6071,0.26786,0.89286,2.2321,0.71429,1.4286,2.0536,0.89286,1.7857,0.35714,1.25,0.625,0.53572,0.80358,5.8928,0.17857,2.6786-3.5714,0.35715-0.53572,0.71428-1.3393,0.0893-2.1429-0.0893-1.9643-1.7857-0.98215-0.35714-2.5-0.0893-0.80357-1.6964,0,0,0.17857-0.80357,0.89286-1.3393,0.80357-5.2678,0-2.5893-2.3214,0.17857-3.5714-1.1607-1.0714-0.17857-0.80358,1.0714-1.0714,0-1.6072-2.5893-0.53571-1.7857-0.0893-0.80357-1.25-0.71429-1.6964-1.25,1.1607-2.1429,2.3214-2.4107,1.5178-1.5179,0.98215-2.9464,0.26785z",
+              "name": "Республика Мордовия"
+          },
+          "cu": {
+              "path": "m189.11,299.07,1.3393-0.89286,2.9464,0.44643,1.3393,0.44643,1.0714-1.3393,0.26786-1.7857,2.2321-1.1607,2.2321-2.2322,3.125,0.0893,2.6786,0,1.25,1.5179,0.35715,2.9464-0.17857,1.5179,0.35714,1.25,0.71428,1.1607-0.0893,0.71428-1.3393,0.625-4.1071-0.0893-1.3393,0.53571-0.80357,0.80357,0,0.89286,1.1607,0.71428-0.17857,0.89286-1.3393,1.1607-1.7857,1.25-2.1429,0.98214-1.3393,0.44643-1.3393-1.3393-2.5-0.44643-0.98215-0.625-0.98214-1.3393-0.80357-0.80357,0.80357-3.5714z",
+              "name": "Чувашская Республика"
+          },
+          "ul": {
+              "path": "m188.57,305.32-1.875,2.6786-0.98215,1.4286-4.8214-0.26785-0.80358,0.26785-1.7857,1.4286-0.80357,1.1607,0,2.3214,0,2.5893,0,1.6964-1.7857,1.4286-1.0714,0.26786-0.89286,0-1.25,1.25-1.25,1.0714-0.625,0.26786,0.89286,1.9643,1.6071,1.6071,2.3214,0.44643,1.5178,0.17857,1.25,1.6072,1.5179,0.80357,2.1429,0.17857,0.89286-0.625,0.0893-1.875,0.17857-1.6964,1.0714-1.6964,0.35714-1.3393,1.3393-0.26786,0.80357,0.53571,1.3393,0.625,1.875-0.17857,1.3393-0.98214,1.0714,0.17857,1.6964,1.4286,2.0536,1.875,1.5179,1.6072,0.80357,1.4286,2.3214,0.17857,1.1607-1.5179,2.8572-2.0536,2.0536-1.1607,0.26785-2.3214,0-3.5714-1.875-1.1607-3.6607-0.0893-2.0536-1.4286-0.98214-1.1607-2.5-0.26785-0.98215-1.5179-3.0357-1.5179-0.80357-1.5179-0.625-2.0536z",
+              "name": "Ульяновская область"
+          },
+          "ss": {
+              "path": "m180.98,329.96,1.3393,2.1428,0.71428,2.8572,0.44643,2.8571,0,2.1429,0.625,2.3214-0.0893,2.8571,0.35714,2.4107,0.53571,2.1429,0.625,1.9643,0.71429,0.98214,5.8929,0.0893,3.0357-1.6071,1.25-1.9643,1.9643-0.35715,1.6964-0.0893,2.1429-1.4286,1.4286-0.89286,1.25-0.17857,1.6072,0.625,1.7857-0.17857,0.80357-1.875,1.0714-2.3214,4.375-2.5893,1.7857-1.4286,1.1607-2.0536-0.625-1.5179-0.80357-1.7857-0.35715-2.5-1.1607-1.25-0.71429-2.4107-3.6607-0.26785-2.3214-1.6964-1.4286-0.80357-3.5714,2.3214-1.9643,2.2322-2.4107,0.0893-0.98214-0.98214-2.2321-2.4107-2.4107-1.875-1.0714-1.0714-0.89285,0.26785-1.6072,0.71429-1.6964-0.0893-1.5178-0.80357-1.0714,0-0.625,0.98215-0.53572,1.0714-0.80357,1.5179-0.17857,1.3393,0,0.98214-0.0893,0.71429z",
+              "name": "Самарская область"
+          },
+          "ob": {
+              "path": "m185.89,352.82,0.53571,1.4286,0.71429,1.6071-1.0714,1.6072,1.0714,1.4286,3.0357,0.17857,1.9643-0.35714,2.5,0,0.17857,2.3214-0.89286,2.6786,0.35714,1.0714,3.5714,1.6071,2.1429,1.4286,0.17857,3.5714,0,4.1071,0,1.4286-1.25,0.89286,0,1.9643,0,0.71428,0.71429,1.0714,1.0714,0.89286,1.7857-2.5,0-1.4286,0.89286-0.89286,1.4286,0,1.0714,2.3214-0.17858,1.4286-0.71428,1.25-0.35714,1.4286l0.36,1.43,1.25,0.89286,2.3214,1.25,1.7857,0.89286h1.9643,2.5l1.4286-1.0714,1.6071,0.17857,1.9643,1.0714,0.89285,1.6071,0.35715,1.7857,1.0714,1.25h1.7857l0.89286-0.89285h1.25l1.6071,0.53571,1.25,1.4286,0.53571,2.6786-0.17857,3.5714,1.7857,1.6072,1.4286,0.89285,1.0714,1.6072,1.0714,0.53571,1.6071-0.71429,1.4286-0.17857,1.6071,1.4286v1.25l1.9643,1.7857,1.25,0.71428,2.1429,0.35715h2.6786l1.4286-0.17857,1.25-0.89286,1.25-1.0714,0.89286-0.89286-0.17858-1.25-2.3214-3.2143-1.0714-1.25v-3.75l-0.71429-2.1429-0.17857-2.1429,1.0714-2.3214,1.9643-1.4286-1.4286-1.7857-3.0357-2.8571-1.9643,0.35714-1.4286-0.17857-0.89286-1.25h-2.3214l-1.4286,1.25-1.0714,1.25-0.53572,1.0714h-2.5l-1.0714-2.5-3.2143-0.17858-2.8572-0.35714-0.89285-2.5-1.08,0.33-1.79,0.89h-1.4286l-0.17857-1.0714,1.4286-1.7857,2.5-2.5-0.53-1.78-0.71-0.36v-0.89286l2.5-1.9643,0.35715-1.0714v-2.1429h-1.7857l-2.1429,0.71429-1.6071,0.17857-1.4286-1.9643-0.53571-2.3214,1.25-1.7857,1.0714-0.89286v-1.6071l-0.35714-2.3214,1.0714-0.89285,0.17857-3.0357-1.25-1.9643-1.7857-1.7857-0.17857-1.6071,1.0714-2.8571,1.6072-2.5,0.89285-1.7857-0.53571-1.25-2.1429-1.6071-1.4286-2.1429-1.25-1.4286-1.6071,1.7857-1.4286,1.4286-4.1072,2.5-1.4286,1.9643-0.35714,1.9643-0.53571,0.35714-1.9643,0.17857-2.1429-0.35714-1.9643,0.53571-1.9643,1.4286-2.8571,0.53572-1.0714,0.71428-1.4286,1.7857-2.1429,1.25h-2.5z",
+              "name": "Оренбургская область"
+          },
+          "nn": {
+              "path": "m186.25,271.57,4.2857-0.53571,2.5-1.4286,3.5714-0.71428,2.6786-1.0714,1.25-0.17857,2.3214,1.25,1.7857,1.0714,2.6786-0.17857,1.4286,0,2.6786-1.0714,1.25,0.17857,1.4286,1.9643,1.0714,2.1429,2.5,0.17857,2.5,1.7857,1.0714,1.25,0.89286,2.5,1.25,1.4286-0.17858,1.6071-1.25,0.89286-1.7857,0.17857-0.71429,0.89286-1.6071,0-0.71428-0.89286-1.7857-1.0714-1.6071,0.71429,0,1.6071-1.25,1.4286-1.25,0.53572-2.1429-0.89286-2.1429-1.6071-3.0357-0.89286-1.7857,0-1.0714,0.89286-0.71429,1.7857,0,2.8571-0.17857,2.8572,0.53571,1.0714-1.0714,1.4286-2.3214,1.4286-1.4286,0.89285,0,1.4286-0.35715,0.89285-0.89285,0.71429-2.8572-0.35714-1.0714-0.17858-0.89285,0-0.71429,0.53572-0.38692,0.34215-0.69448-0.12626-0.44194-0.50508-0.50508-3.0936-1.5784-0.12627-1.5784,1.4521-2.2097,0.44194-3.9775-0.25253-2.0834-2.0203,0.1894-3.3461-1.2627-1.389-0.0631-0.75761,1.0102-1.4521-0.0631-1.0733-3.7249-0.63135-1.1996-0.75761-1.0733-2.7148,1.1364-2.336-1.1996-3.3461,2.0203-0.50507,3.283-0.12627,5.9978,0.12627,1.2627,0.88388,2.0203,0.1894,2.0203-0.75761,0.12627-1.5152-0.94702-1.4521,0.63135-1.0733z",
+              "name": "Нижегородская область"
+          },
+          "ml": {
+              "path": "m211.51,286.29,2.2728,2.336,2.4622,2.0834,2.7779,1.1364,2.9673,0.0631,2.4622,2.0834,1.5784,1.6415,0.44194,1.3258,0.63134,0.94702-0.3788,1.6415-0.56821,1.1364-0.0631,1.8309-1.5152,1.389-0.88388,0.56821-1.4521-0.12627-1.1996-1.5152-1.1996-0.44194-1.389-0.82075-1.7046-0.12627-0.50508,0.88389-1.7046,0.88388-2.5885,0.12627-1.9572-0.82075-1.1364-0.69448-0.88388-3.0305-0.37881-4.7351-1.1996-1.4521-4.0406-0.0631-1.3258-0.1894-0.63134-1.0733,0-2.0834,0.0631-3.0936,0.37881-1.8309,1.0102-1.0733,0.82075-0.63134,2.5885,0.3788,2.2728,0.88389,2.9673,1.7678z",
+              "name": "Республика Марий Эл"
+          },
+          "ta": {
+              "path": "m190.93,308.14,0.0631,1.1364,0.44194,1.0733,0.88389,1.0102,1.5152,0.63134,1.8309,1.4521,1.5152,0.75762,1.389,0.44194,1.4521,1.0733,1.389,1.0102,2.4622,0.44194,1.4521,0.0631,1.7046,0.88388,0.12627,2.2097-0.37881,2.9042,0.44195,1.4521,2.0834,1.1996,1.0733,0.75761,2.9042,0.18941,0.82075,0.69448,0.56821,1.7046,1.3258,2.1466,0.63134,2.5885,0.88389,1.7678,1.6415,1.894,1.389,2.2728,1.6415,1.1364,0.88388,0.88388,1.1996,0.0631,2.9042-1.8309,2.9042-2.7148,0.44194-0.63135,0-1.894-1.0102-1.0102-0.0631-0.88388,1.8309-0.25254,1.2627,0.31567,0.75762,0.56822,1.3258,0.3788,1.6415-0.31567,1.1996-0.69448,2.9042-0.12627,1.5152-0.37881,0-0.94701-0.37881-1.2627-1.1996-1.5784-0.63134-1.2627-1.5152-0.44194-0.88389-1.2627s1.2627-1.0102,1.5784-1.1364c0.31567-0.12627,2.2728-0.75762,2.2728-0.75762l0.0631-1.4521s-1.1364-0.18941-1.389-0.50508c-0.25254-0.31567-0.69448-0.94702-0.69448-0.94702l2.0203-1.3258,2.0203-1.389,0.12626-1.1364-0.69447-0.82075h-1.5152l-0.69448,0.0631-1.1364,1.3258-0.56821,0.69448h-1.894l-0.12627,0.88388-0.12627,1.3258-0.82075,1.1364-1.5152-0.12627-0.75761-1.4521-1.1364-0.94702-0.82075,1.0102-1.7678-0.31567-0.56821-2.2728-1.4521-0.88388-0.63135-1.2627,0.12627-1.3258-1.1364-1.3258,0.0631-2.6516,0.12627-3.0936,0.63135-0.94702-0.25254-1.0102-0.69448-1.0733-0.56821-0.56821-1.0102,0.44194-0.88388,0.37881-1.0102-0.12627-1.0733-0.88389-0.88388-0.82074-1.8309-0.69448-1.4521-0.44195-0.94702,0.94702-1.8309,0.75762-1.8309,0.1894-1.6415-0.31567-1.9572-1.0733-1.389,0.50508h-2.7148l-2.0834,0.0631-1.389,1.1364-0.0631,0.88389,0.69448,0.50507,0.12627,0.82075-0.82075,1.0733-1.5152,1.2627-2.6516,1.0733-1.5784,0.69448-1.1364-0.75762-2.0834-0.82075z",
+              "name": "Республика Татарстан"
+          },
+          "iv": {
+              "path": "m174.26,252.7,2.0203-1.1364s0.94702-0.50507,1.1996-0.50507c0.25254,0,2.5885,0.31567,2.5885,0.31567l2.7148,1.1364,2.3991,1.1364,1.2627,1.1996s1.4521,1.0102,1.7046,1.1996c0.25254,0.18941,1.4521,1.2627,1.4521,1.2627l1.7046,0.63135,1.1364-0.88388h0.88388l0.50508,0.82074,0.1894,1.1996,1.0102,0.75762,1.5152,0.82074,1.0102,0.63135,0.44194,1.0102-0.69448,1.0733-0.12626,0.88388,0.75761,0.37881,0.88388-0.56821,1.389,0.63134,0.69448,0.94702,0.25254,1.2627-0.25254,0.50508-1.894,0.69448-2.9673,0.82075-3.0936,0.50507-2.3991,1.5152-3.4724,0.50508-0.94702-0.12627-1.7678-2.3991-3.5987-3.4724-2.7148-3.3461-0.82075-2.7779-0.88388-1.0102-2.1466-0.44195-0.69448-0.56821,0.50507-1.4521,0.56821-1.3258z",
+              "name": "Ивановская область"
+          },
+          "yr": {
+              "path": "m184.11,228.33,1.7678,1.5784,1.9572,0.50507,1.7678,0.50508,1.3258,1.6415,1.9572,1.5784,1.5784,0.0631,1.0733-0.69448,0.82075,0.31568,0.3788,1.4521,0.12627,3.4093-0.0631,2.6516,0.25254,1.5152,0.88388,1.0102,0.56821,0.94702-0.37881,1.0733-1.7046,1.1364-2.7148,1.3258-3.283,2.2097-1.6415,1.0733-3.3461,0.88388-2.4622-0.1894-2.1466-0.63135-2.6516-0.69448-2.1466,0.63135-1.8309,1.0733-1.7046-0.88388-1.4521-1.0102-1.894-1.1364-1.1364-1.1996-0.25254-1.3258,0.56821-1.4521,2.0203-0.88388,2.2097-1.1996,1.6415-2.7779,1.0102-2.9673,1.1996-1.2627,0.75762-2.4622,1.6415-1.8309,1.9572-1.8309,2.7148-1.5152z",
+              "name": "Ярославская область"
+          },
+          "kt": {
+              "path": "m198.7,245,1.389,0.12627,1.2627-0.75762,1.5152-1.389,1.894-0.75762,1.894,1.1364,1.894,1.5152,2.5254,0.12627,0.63135-0.75761,0.75761,0.50507,1.2627,2.1466,2.2728,2.2728,1.5152,1.5152,1.1364,1.894,0.3788,2.2728,1.2627,1.7678,1.5152,1.6415,2.5254,1.389,1.7678,1.5152,1.7678,1.894,2.0203,0.88388,1.894,0.12627,2.0203-2.0203,1.6415-0.3788,0.63135,1.894,1.1364,1.0102-0.12627,1.6415-1.6415,1.5152-0.12627,1.894-0.3788,2.5254s-1.7678,0.75761-2.3991,0.75761c-0.63134,0-6.3134-0.12626-6.3134-0.12626l-3.1567,0.12626-1.1364,1.1364-1.2627,0.50507-2.0203-0.75761-1.5152-0.75762-2.0203-0.3788-1.0102-1.5152-0.88388-1.6415-0.75762-0.63135-1.1364-0.12627-0.88388,0.50508-2.1466,0.75762-3.283-0.25254-1.7678-0.50508-2.0203-1.2627-0.50508-0.50508,0.25254-0.63134v-1.1364l-1.389-1.2627-0.88389-0.50508-0.63134,0.37881-0.38556,0.10695-0.53571-0.35714,0.0893-0.89286,0.71429-0.625,0.0893-0.98214-0.89285-0.71429-1.7857-1.0714-0.98214-0.98215-0.26786-0.98214-0.71428-0.89286h-0.98215l-0.89285,0.625-0.625,0.0893-1.25-0.71429-1.4286-0.80357-1.3393-1.25-1.7857-1.3393-0.69-0.57,1.07-0.71,2.05-0.54,2.3214-0.71428,2.8571-2.0536,3.3036-1.6964z",
+              "name": "Костромская область"
+          },
+          "le": {
+              "path": "m153.49,177.57,1.7678-1.6415,1.5152,0,2.2728-1.894,2.5254-0.50507,2.2728,0.63134,2.9042,2.1466,2.7779,1.5152,0.75761,2.5254,0.12627,1.389,1.0102,1.1364,1.1364-0.37881,0.75761-2.0203-0.12627-2.3991-0.88388-1.6415-0.88388-1.894,0.12626-2.0203,1.1364-1.2627-0.25254-1.894-0.75762-1.0102,0-0.37881,1.2627-0.25254,3.283,0.25254,3.5355,1.2627,2.2728,0.12627,1.894,0.12627,1.2627,1.1364,0.63135,1.2627,0,1.7678-0.37881,1.6415-0.25254,2.1466-0.63134,1.7678-2.1466,1.2627-0.75761,1.0102-1.0102,1.894-1.0102,1.1364-1.7678,1.1364-0.63135,1.2627,0.25254,1.1364,1.389,0.75762,2.1466,0.25253,1.0102,0.88389,0.25254,1.6415,1.0102,0.75762,2.1466,0.12627,1.1364-0.50508,3.4093-0.25254,1.7678-0.63134,2.0203-0.25254,1.5152,0.75761,1.0102,1.6415,1.1364-1.2627,1.389-1.7678,0.75762,0.88388,0.50507,2.0203,0.63135,2.2728,2.1466,0.50507,1.2627,0.75762,1.1364,1.0102,0.12626,1.2627,0.12627,1.6415-0.12627,1.7678-1.2627,0.75761-2.2728-0.25254-1.389-0.88388-1.389-0.25254-0.75761,0.88388-1.5152,1.0102-3.0305,0-1.5152,0.3788-2.7779,3.0305-1.0102,1.389-0.37881,2.1466-1.6415,1.0102-1.1364,0.12627-0.3788,1.2627-1.2627,0.63134-0.63135-1.0102-1.1364-1.1364-2.2728-0.12627-0.75761,0-1.1364-3.0305,0-2.9042-1.0102-1.5152-0.88389-1.894-0.12627-1.6415-2.2728-0.88388-0.88388-0.63135s-0.37881-1.0102-0.37881-1.5152c0-0.50507-0.25254-3.4093-0.25254-3.4093l-0.75761-1.1364-2.3991-0.25254-1.389,0.75761-0.75762-0.50507-0.12627-1.2627-0.63134-0.88389-1.0102,0.63135-2.1466,0.3788-2.7779-0.88388-1.5152-0.88388-3.283-0.37881-1.2627-0.88388-1.0102-0.75762,0.63135-1.2627,0.88388-2.1466,0.88388-1.389,0.12627-1.2627z",
+              "name": "Санкт-Петербург и Ленинградская область"
+          },
+          "ki": {
+              "path": "m237.59,265.33,1.2627-0.88388,0.12627-2.0203,0-2.0203-1.0102-1.389-0.12627-1.6415,1.5152-0.37881,3.9143,0.25254,2.5254-0.88388,2.6516-1.1364,0.63134-1.389,1.1364-0.63134,2.7779,0.25254,1.389,1.7678,0.12627,2.7779-0.63134,3.0305-1.0102,1.389-0.75761,2.7779-1.894,0.75762-2.0203,0.12626-1.6415,1.7678-0.63134,1.6415-1.0102,0.63134-0.75761,0.88389,0.75761,1.389,1.6415,0.88388,1.0102,1.389-1.6415,1.894,0.12626,1.894,1.1364,0.88389,1.2627,0.50507,0.88388-1.389,0.88388-1.894,2.7779,0,3.1567,0.3788,4.2932,1.2627,1.7678,2.2728,2.1466-0.12627,2.1466-1.6415,1.6415,0.37881,1.2627,1.0102,0.75762,1.894s1.0102,1.5152,1.389,1.7678c0.3788,0.25254,2.5254,1.894,2.5254,1.894l0.25254,1.5152-0.88389,2.0203-2.0203,1.1364-3.5355,0.25253-1.2627,0.63135-1.2627,1.5152-0.25254,1.389,1.0102,1.389,0.12627,1.1364-1.5152,1.1364-0.75762,1.389-0.12627,2.1466-1.2627,1.0102-2.7779,0.12627-1.1364-1.2627-1.0102-2.5254-2.0203-0.12627-1.389-0.3788v-1.894l-2.0203-1.1364-3.1567,0.75761-1.7678,1.389s-1.2627,1.0102-1.2627,1.5152c0,0.50508-0.3788,2.2728-0.50507,2.7779-0.12627,0.50508-1.6415,1.5152-1.6415,1.5152l-2.5254,1.1364-1.894-0.50507-1.2627-1.389-1.5152,0.25253s-0.75761,0.50508-1.0102,1.389c-0.25254,0.88389-0.12627,2.7779-0.12627,2.7779l0.12627,1.894-2.0203,0.63135-3.4093,0.3788-0.25254,1.1364v1.389l-0.3788,1.389-1.7678,0.88389h-0.63135l-0.63134-1.5152-0.50508-0.37881,0.12627-2.5254,0.25254-2.5254,0.50508-1.5152-0.88389-1.6415-0.25254-1.2627,0.75762-2.9042,0.63134-2.5254-1.0102-1.5152-1.6415-2.5254-2.1466-1.5152-0.88388-0.63134-3.9144-0.12627-1.7678-1.2627-1.6415-1.5152-1.6415-1.5152-0.50507-0.50508,0.50507-1.0102,1.2627-1.6415,0.25254-1.0102,1.1364-0.75761,1.5152,0.50507,1.894,1.389,1.389-0.75761,2.1466-0.63135,1.389-1.2627v-1.5152l-1.2627-1.894-0.63135-1.5152s-0.78918-1.1049-0.85231-1.2627c-0.0631-0.15784,0.56821-0.69448,0.56821-0.69448l0.97858-0.63135,0.75762-0.75761s2.2728-0.0316,2.8095-0.0316c0.53664,0,3.1567,0.0631,3.8828,0.0631,0.72605,0,3.7881-0.44194,3.7881-0.44194l1.4521-0.59978s0.12626-1.5784,0.15783-1.7993c0.0316-0.22097,0.47351-2.4938,0.47351-2.4938l2.0203-2.3991z",
+              "name": "Кировская область"
+          },
+          "bs": {
+              "path": "m241.5,329.86,2.3991-1.6415,2.5254-1.6415,1.5152-0.25254,1.894,2.6516,2.2728,2.2728,2.9042,0,2.6516,2.5254,1.7678,2.5254,1.1364,1.7678,1.7678,0,1.2627,2.1466,2.6517,2.3991,2.2728,1.6415,2.0203,1.7678,1.2627,1.1364,0.88389,1.389-0.37881,1.1364-1.6415,0.63134-0.88388,1.2627,0.25254,1.389,1.389,0.63135-0.63135,1.2627-1.5152,0.50508-1.2627-0.75762-2.3991,0.37881,0,1.0102-1.5152-0.25254-0.50508-0.88388-1.5152-1.0102-4.5457,0-1.1364-0.37881,0-1.2627,1.7678-1.2627,0.12627-1.389-1.0102-0.88389-1.6415-1.1364-2.5254,0.25254-1.0102,2.1466-1.7678,2.6516-0.88388,2.0203,0.50508,3.0305,1.894,1.0102,2.0203-0.75761,1.6415,0.75761,1.0102,2.0203,2.5254,0.12627,2.0203,0.75761,2.7779,0,1.7678-0.50508,1.5152,1.1364-0.63135,1.389-1.894,1.5152-1.2627,1.1364-1.0102,1.389-1.2627,0-1.2627-0.63134-2.1466-0.75762-1.6415-0.3788-1.6415,1.2627-0.3788,1.5152-0.63135,1.389-2.3991,2.6516-1.6415,2.3991-3.9143,3.6618-1.894,1.5152-0.25254,2.0203-0.63134,1.5152-2.9042-0.25254-1.6415,1.7678-1.2627,1.389-0.50507,0.63135-2.0203,0-1.1364-2.0203-0.50508-0.63134-5.4296-0.63135-1.389-2.1466-2.7779,0.88388-1.2627-0.12627,0-0.50507,3.4093-4.4194,0-1.6415-0.88389-0.63134,0-1.1364,1.7678-1.1364,1.0102-1.389,0-2.0203-0.25253-0.50508-1.894-0.12627-2.2728,1.2627-1.7678-1.1364-1.1364-2.3991,1.2627-2.3991,1.0102-1.894-0.25254-2.5254,0-0.75761,0.88389-1.5152,0-3.1567-2.5254-2.9042-0.12627-2.0203,1.0102-2.6516,2.0203-4.1669,2.9042-2.1466,3.9143-3.1567,1.0102-2.1466-0.88389-1.389-0.12627-0.12627,0-0.75761,1.389-0.25254,2.3991,0.75762,1.389,0.12626,1.7678-0.63134,2.6516-0.25254,1.7678-0.12627,0.88388-0.63134,0-1.7678z",
+              "name": "Республика Башкортостан"
+          },
+          "cl": {
+              "path": "m272.18,347.66,1.7678-0.88388,2.7779,0.50507,2.3991,2.1466,2.3991,1.7678,3.0305,1.894,2.9042,0,1.5152,1.6415,1.6415,2.3991,0.75761,1.894-0.63135,3.1567,0,2.7779-0.88388,1.389-1.7678,0.63135-1.6415,1.1364-0.75762,1.2627-2.0203,0.63135-1.894,1.5152,0,1.1364,1.5152,1.5152,2.0203,2.0203,1.1364,2.3991-0.37881,2.7779-0.75762,1.7678-2.3991-0.63135-2.6516-0.50507-3.283-0.37881-2.0203-0.50508-1.5152-1.7678-2.0203-1.7678-1.1364-1.1364-1.1364,0.50508-1.5152,1.1364-0.88388,1.0102,0,1.894,1.6415,1.2627-0.37881,0.75761-2.2728,0.63135v1.0102c0,0.50508,0.75761,2.0203,0.75761,2.0203l2.0203,1.7678,0.12627,1.894-1.5152,0.63134-1.5152-1.5152-1.389-1.2627-2.2728-0.63134-3.283,0.12627-1.5152,0.25253-0.63134,1.2627,1.0102,1.389-0.37881,1.894-1.0102,1.6415-4.5457,0.25254-1.6415-0.88389-1.6415-0.63134,0.50507-2.0203,1.6415-0.88388-0.75761-1.7678-2.0203-2.3991-1.6415-1.0102-1.894,0.12627-1.389-0.63135,0.63134-2.7779,1.7678-2.6516,4.4194-4.1669,3.7881-4.672,1.2627-2.9042,1.389-0.88389,2.5254,0.25254,2.0203,1.0102h2.0203l1.894-2.2728,2.2728-1.894,0.50508-1.389-1.5152-1.2627-2.1466,0.50507h-3.0304l-2.7779-0.88388h-1.5152l-0.88388-1.894-1.389-0.50507-1.7678,0.63134-1.0102-0.37881-0.88389-0.63134-0.63134-1.894-0.12627-1.6415,3.6618-5.6821,0.75762-0.63135,1.7678,0.37881,1.7678,0.88388,0.63134,1.1364-0.3788,0.75762-1.2627,1.1364v1.1364l-0.12627,0.12627,0.75761,0.63135,2.6516,0.12627h2.2728l1.5152,1.0102,1.2627,1.1364,1.1364-0.63135,0.50507-0.75761,2.0203,0.12627,1.7678,0.37881,1.1364-1.2627-0.37881-1.0102-0.75761-0.88388,0.25253-1.5152,1.5152-1.0102,0.63135-1.1364z",
+              "name": "Челябинская область"
+          },
+          "ud": {
+              "path": "m261.7,302.33-0.12627,1.389-2.0203,2.7779-1.5152,1.389,0.12626,1.389-1.6415,1.0102-1.1364,1.5152-1.5152,2.3991-0.50508,1.894-0.50508,3.1567-2.0203,1.0102-2.2728,0.12627-0.63135,1.1364-0.37881,3.0304-0.12627,1.389-3.0304,2.0203-2.2728,1.389-1.0102,0-1.2627-1.5152-1.7678-0.75762-0.63134-1.2627,1.389-1.1364,2.0203-0.75761,0.50508-1.1364-0.37881-0.50508-1.5152-0.88388,0.25254-0.88389,2.7779-1.7678,1.0102-1.1364-0.50507-1.0102-0.75762-0.63134-2.0203,0.63134-1.1364,1.389-1.5152,0.63135-1.0102,0.25253-0.3788,1.5152-0.63135,0.75762-0.88388,0.25254-0.75762-1.0102-1.389-1.2627-0.75761,0.37881-1.2627,0.37881-0.88388-0.88389-0.63135-1.1364-1.0102-1.0102-0.63135-1.0102,0-1.1364,1.6415-0.88389,1.1364-1.1364,0.25254-2.0203,0.25254-1.0102,3.1567-0.50507,1.6415-0.50508,0.37881-4.4194s0-1.2627,0.63135-1.5152c0.63134-0.25253,1.2627-0.3788,1.2627-0.3788l1.2627,0.63134s1.6415,1.894,2.3991,1.389c0.75761-0.50507,1.894-0.88388,1.894-0.88388s2.3991-1.0102,2.2728-1.6415c-0.12627-0.63134,0.25254-1.6415,0.25254-1.6415l0.3788-1.389,2.1466-2.2728,1.2627-0.75761,2.2728-0.50508,1.6415,0.37881,0.88388,1.1364v0.75761l0.25254,0.63135,1.0102,0.12627,1.6415,0.3788,0.63135,0.50508,0.63134,1.6415,0.75762,0.75761z",
+              "name": "Удмуртская Республика"
+          },
+          "pe": {
+              "path": "M272.06,274.03l-2.28,1.16,0.5,1.5-0.5,3.53,0.5,1.28,1.41,2.41,2.25,1.62,0.65,1.66-1.4,2.12-2.41,1.03-2.87,0.63-1.66,0.87-1.13,1.54,0.5,1.24,0.63,1.38-0.13,1.03-1.9,1.63-0.38,2.4-0.87,1.6-0.13-0.19-1,0.12-1.28,2.5-2,2.29-0.15,1.53-0.88,0.87-2,2.03-1.91,3.41-0.62,3.9-1.28,0.88-2.25,0.38-1.28,0.78-0.63,4.9,2.53,2.66,2.13,2.28,2.53,0.25,2.28,1.5,3.41,4.94,1,0.37,1.28-0.12,1.12-1.25,0.88-1.28,1.03-1.75,1.25-1.66,1.28,0.88,1.5,1.28h2.41l2.03-0.91,0.5-1.75,0.25-1.91,0.87-0.75,0.88-1,0.78-0.5,2.5,2.75h3.69l0.87-1,0.5-1.5,0.25-1.65,0.88-1.25,4.69-0.38,2.15-0.78,0.63-1.5-0.63-0.62-0.12-1.41,1.12-1.38,0.75-1.03v-1.37l-0.5-0.88-0.62-1.03,0.25-1.75,1-1.53,2.03-1.5,3.15-0.5,1.88-1.91,2.28-1.62,2.28-1.66,2.28-1.65,0.88-0.75,0.5-1.25,1-1.78s0.9-1.12,1.53-1.75c0.63-0.64,1.62-1.91,1.62-1.91l1.16-1.37,0.25-1.66-2.41-0.38-2.65-0.75-2.66-1.65-2.75-1.38-2.66-1.28-2.53,0.66-3.15,0.12-3.66-0.9-2.9-1.63-1.63,0.85-0.41-0.22-1.9-1.25-1.38-2.03-1.12-1.13-2.28-0.78-0.13-1.63-1.12-1.28-1.41-1.5-1.91-0.5-2.62-0.25-2.41-0.78z",
+              "name": "Пермская область"
+          },
+          "sv": {
+              "path": "m316.13,291.72,1.7678-1.1364,1.1364,1.389,0.88388,2.3991,2.6516,1.5152,2.9042,2.1466,1.2627,2.3991,2.2728,2.7779,0.12627,1.7678,0.63135,2.0203,0.75761,1.5152-0.63134,1.7678-1.894,1.894-0.63135,1.7678-0.25253,4.7982,0.3788,2.7779,0.63135,1.0102-1.0102,2.9042-1.5152,1.7678-0.37881,2.3991,2.0203,1.2627,2.3991,2.0203,0.75761,2.0203,0.12627,2.6516-0.63134,1.6415,0,2.9042,0.75761,2.3991-0.25254,1.894s-0.88388,0.88388-0.88388,1.389c0,0.50508-0.50508,2.7779-0.50508,2.7779l-1.2627,1.2627-2.0203,0.12627-1.1364,0.88388h-3.0304l-1.5152-0.88388-2.1466,0.25254-1.389,1.1364-0.88388,1.389-0.25254,2.9042-0.75761,1.1364-1.1364,1.0102-1.7678,0.50508-3.0305,0.25254-2.0203,0.25254-1.0102,0.88388-1.894-0.37881-1.389-1.1364-1.894-1.894-2.5254-1.6415-1.5152-0.63135-2.2728,0.37881-1.894,0.3788-1.389-0.12626-1.6415-1.389-1.894-2.2728h-2.2728c-0.50508,0-1.6415-0.75761-1.6415-0.75761l-4.672-3.1567-1.6415-1.7678-2.9042-0.3788-1.389,0.12627-0.88389,0.12627-1.2627-1.2627-3.9143-3.283-3.1567-3.0305-0.50507-1.389,2.0203-2.9042,1.389-2.7779,0.75762-0.25253,1.6415,1.1364,1.1364,0.75761h2.7779l1.5152-1.389,0.50507-1.7678,0.12627-1.7678,2.5254-1.7678,1.7678,2.0203,1.2627,0.63134h2.3991l1.6415-1.1364,0.75761-2.0203,0.50508-1.894,3.7881-0.75762,2.5254-0.3788,1.389-1.2627v-1.0102l-0.88388-1.389,1.7678-2.1466,0.25254-1.1364v-1.389l-1.0102-1.6415,1.0102-2.5254,2.1466-1.6415,3.283-0.88388,1.1364-0.75762,8.0812-6.1872,0.88388-1.6415,1.6415-2.7779,2.1466-2.5254z",
+              "name": "Свердловская область"
+          },
+          "ku": {
+              "path": "m285.69,383.01,2.3991,1.894,3.283,0.88388,4.2932,1.2627,3.1567,0.75762,4.1669-0.50508,2.5254,0.25254,2.9042,1.0102,3.5355,1.1364,3.5355,0.88388,3.283,1.0102,3.4093-0.12627,2.3991-1.2627,3.6618,0,1.0102-1.5152,0-1.894-1.5152-2.1466-1.389-2.7779s-1.5152-0.12627-2.1466-0.37881c-0.63135-0.25254-2.2728-1.6415-2.2728-1.6415l-0.75761-3.1567-1.389-1.7678-2.6516-1.2627-1.5152-1.6415-1.2627-2.2728-1.6415-1.5152-1.389-1.2627-1.0102-1.389,0.50508-2.3991,1.389-1.2627,1.1364-1.894-2.5254,0.37881-3.0305,0.12627-1.389,0.50507-0.75762,0.50508-1.2627-0.37881-2.0203-1.0102-1.7678-1.7678-2.0203-1.389-1.7678-0.75761h-1.2627l-3.0305,0.63134-1.7678-0.12627v1.1364l0.63135,0.88388-0.50508,2.2728v2.2728l-0.25253,2.1466-0.88389,1.1364-2.5254,1.1364-1.389,1.1364-1.5152,1.2627-1.7678,0.88388-0.50507,1.2627,0.63134,1.1364,1.894,1.894,1.389,1.389,0.63134,1.7678v1.894l-0.50507,1.7678z",
+              "name": "Курганская область"
+          },
+          "ko": {
+              "path": "m254.63,259.27,2.1466-0.63134,0.63134-0.88388,1.894,0.12627,1.6415,1.894,2.1466,0.25254,2.1466-0.50508,1.5152-1.894,0.50508-1.5152-0.63135-0.88389,0.63135-1.5152,2.1466-1.2627,4.5457-1.894,2.6516-1.1364,0.25254-1.5152-0.50508-2.5254-2.1466-0.88389-3.283,0.12627-2.3991,1.6415-2.3991-0.75761s-0.50508-1.0102-1.2627-1.0102-1.5152-0.25253-1.5152-0.25253l0.50507-3.0305,1.7678-0.37881,1.389-1.5152,0.50508-1.894,2.1466-0.50508,2.2728,0.12627,0.63135-1.7678-0.63135-0.63134-0.63134-2.1466,0.63134-1.389,4.5457-2.0203v-1.2627l-1.0102-2.5254-0.63135-1.6415-1.6415-1.7678-0.63134-1.1364,0.25254-1.6415,1.2627-0.63134,1.7678,0.75761,1.5152,2.1466,1.6415,1.5152,2.2728,1.894,2.6516,1.2627,1.7678,1.1364,0.50508,1.7678,1.5152,1.5152,3.1567,0.3788,1.894,1.2627,2.9042,0.50507,0.88388,1.2627h2.0203l1.0102-0.63134-0.25254-1.5152-0.75761-1.5152,0.50507-1.0102,0.88389-1.5152s0.25253-1.1364-0.12627-1.6415c-0.37881-0.50508-1.1364-1.1364-1.1364-1.1364v-0.88388l2.7779-3.283,3.1567-2.1466,1.894-2.0203,1.0102-0.88388,2.3991,0.63134,3.4093,0.12627,2.5254,0.75762,4.2932,0.50507,2.1466,0.63135,3.283,0.12627,2.3991-0.50508,1.5152,0.12627,0.12627,1.894,1.2627,1.0102,2.1466,2.1466,5.3033,4.672,7.4499,4.672,6.4397,3.7881,5.177,3.0305,5.5558,3.283,2.7779,1.894,2.2728,0.25254h3.283l2.1466-1.0102,2.5254-2.3991,1.6415-1.2627,2.7779,0.25253,2.3991-0.12626,2.0203-0.63135,1.5152-0.88388,1.6415-0.37881,3.1567,0.12627,1.6415,0.25254-0.50508,1.5152-0.88388,1.1364-1.1364,0.63134-0.50508,1.894,1.2627,1.7678,1.2627,1.389,0.12627,1.894-1.1364,1.389-0.88388,0.25254-0.75762,1.389-2.0203,0.25254-2.3991-0.12627-2.1466,0.88388-2.5254,1.389-1.389,1.1364-3.0305-0.12627-2.1466-0.50507h-3.1567-2.0203l-1.0102,0.3788-1.389,1.5152-0.75762,0.88389-2.1466,1.6415-1.5152,0.50508h-2.3991l-2.3991-0.25254-1.5152,0.50508-2.9042,2.0203-2.2728,1.2627-1.5152,1.0102-1.5152,0.3788-1.2627-0.12626-1.2627-1.0102-0.12626-1.894-0.63135-1.389-1.6415,0.88388-1.5152,1.389-1.0102,1.2627-0.88388,0.50508-1.2627,0.50507-0.75762,0.37881-0.12627,1.7678-0.3788,1.7678-0.63135,1.389-0.88388,1.1364-1.0102,1.6415-1.894,1.6415-1.6415,1.389-1.2627,0.75762-2.7779,3.283-1.894,2.6516-1.1364,3.0305-0.50507,1.6415-1.5152,1.6415-2.0203,0.88388-1.5152,0.63134-1.7678,1.0102h-2.2728l-3.1567-1.0102-3.1567-1.6415-4.4194-2.1466-0.75761-0.3788-2.5254,0.50507h-3.283l-3.0305-0.88388-2.9042-1.389-1.0102,0.25254-1.6415-0.12627-1.5152-1.2627-2.2728-2.3991-1.894-0.88388-0.63135-1.5152-2.2728-3.0305-5.8084-1.1364-1.389-0.63134-1.7678,0.63134-0.75761,0.75762v0.75761l0.37881,0.88389v1.6415,1.0102l-0.50508,0.3788-1.389-0.63134-0.88388-0.37881-1.1364,0.25254-1.5152,0.88388-1.5152,0.50508-1.1364-0.25254-0.88389-1.389-0.88388-0.63135-2.2728-0.88388-6.0609-1.1364-1.2627,0.25254-1.1364,1.1364-0.63135,1.5152-1.1364,0.37881-1.6415-1.389v-1.1364l1.0102-1.389,0.50507-0.75761-0.50507-1.0102-1.1364-1.0102-1.1364-1.0102-0.3788-0.75761,1.5152-1.2627,1.1364-2.5254,1.6415-1.0102,1.6415-0.3788,1.894-1.2627,0.88388-2.3991,1.2627-1.2627z",
+              "name": "Республика Коми"
+          },
+          "mu": {
+              "path": "m247.31,136.92,1.1364-1.5152,1.5152-0.75761,2.9042,0,4.2932,0.12626,2.1466-0.50507,2.5254-1.6415,0.88388-2.0203,0.12627-3.5355,1.5152-3.4093,1.0102-1.0102,4.7982,0,2.3991-0.63134,1.0102-1.2627,1.7678-0.12627,2.3991,1.0102,3.0305,1.894,2.2728,1.894,2.6516,0,2.2728-0.25253,0.25254,2.3991,1.894,0.3788,1.7678,1.0102,0,2.2728,0,1.7678-1.0102,0.63134-1.5152-0.3788-0.75761-1.1364-0.25254-0.63134-0.88388,1.0102-0.25254,0.63135,0.50508,1.1364,1.1364,0.88388,0.50507,0.75762-0.3788,1.0102-1.0102,0.63134,0,0.75762,1.1364,1.2627,0.88388,1.5152,0.88388,1.7678,2.0203,2.1466,0.75761,1.7678,0,1.7678,0,1.1364-0.50507,1.1364-0.25254,2.0203-0.12627,5.5558,0,5.5558-0.75762,1.389-0.25253,1.894,0.63134,0.88389,0.63135,1.0102-0.12627,4.0406,0,3.5355-0.63135,1.389-1.7678,1.1364-0.88389,0.88388,0,1.0102-0.25254,0.88389-1.1364,0.88388-2.7779,0.75761-3.6618,0.12627-3.1567,0.50508-1.6415,0.37881-2.5254-0.50508-2.0203-0.75761-1.894-1.389-1.894-2.2728-1.7678-2.2728-1.1364-1.894-0.63135-2.2728-0.3788-2.3991-1.2627-2.6516-1.1364-2.0203-0.3788-1.6415-0.37881-3.9143,0-1.7678,0-1.389-0.88388-0.88389-0.12627-2.9042,0-2.1466,0.75761-1.5152,0.12627-1.1364,0-1.5152-0.88388,0-0.63135,0.88388-0.88388,1.389-0.75762,1.894-0.25253,0.63135-3.5355,0-2.6516-0.25254-0.75761-1.5152,1.389-2.0203,1.1364-0.75761,0.25254-1.0102-1.7678-2.2728-1.5152-1.7678-1.2627-2.7779-1.2627-1.2627z",
+              "name": "Мурманская область"
+          },
+          "kl": {
+              "path": "M246.94,136.91l-2.28,1.53,0.12,1.62-1,2.28-1.9,2.04-1.88,0.87-4.31-0.13-0.88,1-2.28,2.16h-2.91l-2.4,0.38-0.13,4.03-0.62,1.9-2.91,0.38-1.87,0.25,0.12,1.4,0.88,1.5-1.78,1.29-1.25,0.5-3.41-0.91-1.66,1.16-0.37,2.9-0.13,4.16-1.25,2.28-2.65,1.62-3.41,1.16-8.72-0.12-3.53-0.91-5.19-0.75-4.28-0.75,0.88,1.87-0.13,1.54,0.07,0.53-0.94,5.65-2.53,1.5-2.03,3.32-2.91,1.87-0.13,1.66,2.66,1.25,1.91,0.75,1,2.4,2.9,0.25,5.07-0.75,1.65-0.9,2.25,0.53,1.78,1.37,1.38-1.62,1.12-0.78,1.78,4.69,1.5,0.62,2.91,1.53,0.06,0.69-0.12,2.69,0.06,1.78-1.63,1.53,1,1.12,2.29,0.5,1.75-0.62,2.53-1,0.62-0.5,1.91,1.5,1,1.9,1.03,1.88,3.16,0.25,3.28-3.03,0.75-1.5,1.25-1.38,2.4-1.28,2.03-1.75,0.5-1.15-0.37-1.25-1.91-0.63-1-1.03,0.13-1.63,1.37-2.4,1.78-1.91,1.66-1.87,1.25-2.16,1.38,0.25,1.78,1.53h1.9l0.88-0.53,0.12-2,1.5-2.03,0.25-1.75-0.25-3.16-0.5-1.53,0.63-1.78,1.4-0.87,1.38-0.63,3.03-2.53,0.5-1.13,0.53-1.28h1.38l3.4-0.62,2.16-1,1.5-1.28v-1.88-3.4l0.25-2.54,1.03-0.87v-1.16l-0.12-2-0.78-1.15-2-0.38-1.41-0.37-0.63-0.88v-0.75l0.63-1.15,1.28-1,0.75-0.63-0.38-1.03-1.65-2.37-1.88-2.29-1.4-2.15-1.75-2.53z",
+              "name": "Республика Карелия"
+          },
+          "vo": {
+              "path": "m215.36,208.76c0.12627,2.5254-1.389,5.0508-1.389,5.0508l-1.5152,1.894s-0.3788,1.0102-0.3788,1.7678c0,0.75762,0.12626,1.389,0.12626,1.389s0.63135,1.389,1.894,2.1466c1.2627,0.75761,2.0203,2.7779,2.0203,2.7779l1.0102,1.894,1.5152,1.2627,1.2627,1.0102,1.1364,1.894,1.2627,0.37881,3.1567,0.50508,1.5152,2.2728,1.0102,1.894,1.7678,0.63135,0.25254,0.63135,1.0102,2.2728,1.2627,0.75761,2.6516,0.25254,1.5152,0.12627,0.50507,2.7779,1.2627,2.0203,2.7779,1.389,1.389,0.12627,1.0102-0.63134,1.389,0.12627,1.0102,0.50507,0.75761,1.0102-0.63134,1.5152-0.75762,1.389,0.25254,0.75762,1.2627,1.1364,0.75761,0.50508,1.0102,0.50507,0.3788,0.63135v1.0102l-1.5152,1.5152-2.0203,0.63135-2.0203,0.75761-4.2931-0.25254-1.2627,0.88389,0.25253,1.1364,0.88389,1.2627v2.6516,1.1364l-1.0102,1.1364-0.75761-0.63134-1.1364-1.0102-0.37881-1.5152-1.0102-0.12626-1.6415,1.0102-1.0102,1.0102h-1.7678l-3.0305-1.5152-2.1466-2.1466-2.0203-1.1364-1.894-1.6415-2.0203-2.7779v-1.894l-1.894-2.7779-2.5254-2.2728-1.5152-2.0203-1.2627-1.7678-0.63135,0.75761-1.6415,0.12627-1.6415-0.25254-2.2728-1.894-0.88388-0.50508-1.2627,0.63135-2.7779,1.7678-0.63135,0.37881-1.2627,0.12627-0.88388-0.50508-0.50508-1.2627-0.63134-1.894,0.25254-4.0406-0.50508-2.5254-0.50508-1.2627-1.2627,0.12627-1.2627,0.37881-0.88388-0.25254-1.389-1.2627-1.6415-1.7678-4.0406-1.0102-1.2627-1.1364-0.50508-1.0102,0.63135-2.0203-0.50508-0.88388-1.0102-0.75761-1.1364-0.63135-1.894-0.37881-0.25254-0.12627,0.50508-2.7779-0.50508-1.6415-0.63134-1.2627-0.88388-0.88389-0.37881-0.50507-0.12627-1.0102-0.25254-1.5152,0.63135-0.88388,0.75761-0.88388,1.389-0.25254h1.6415l0.88388,1.2627,1.0102,0.88388,1.1364-0.50507,0.25253-1.1364,1.2627-0.25254,1.1364-0.63135,0.75761-1.1364,0.12627-1.5152,3.283-3.6618,1.2627-0.88388h1.7678l2.0203-0.37881,1.389-0.75762,0.88388-0.63134h1.1364l1.5152,0.88388h1.2627l0.88389,0.75762,0.50507,0.88388,1.389,0.63134h1.1364l1.389-0.3788,1.5152-0.50508,1.1364-0.37881,0.63135-0.25253,0.88388,0.12627,1.0102,0.88388,1.2627,1.6415,0.50507,1.2627z",
+              "name": "Вологодская область"
+          },
+          "ar": {
+              "path": "M421.06,151.03l-3.56,1.06-2.16,0.91-3.56,0.19-1.59,0.87s-1.26-1.07-1.97-1.25c-0.72-0.18-0.91,1.1-0.91,1.1l-1.78,2.65-2.69,1.63-3.03,0.87-2.31,1.78s-2.15,0.37-3.22,0.72c-1.07,0.36-2.5,0.19-2.5,0.19l-1.59,0.72,1.06,1.78-2.16,1.25,0.38,0.72,1.25,1.44,1.78,1.59,1.78,1.78,0.91,1.63,1.4-0.72,0.91-1.97,2.16-0.72,1.25-0.53,1.93-0.19,0.91-1.59h1.97l1.25,0.87,1.59-1.25,1.1-1.25,2.65-0.15,0.72-0.57,3.41,0.72,1.78-1.06,0.34-1.44,2.69-0.34s1.07-0.01,2.5-1.44l0.72,1.06,2.84-0.68s1.98-0.19,2.69-0.19,3.03-0.38,3.03-0.38h2.31l2.35,1.25,1.78,0.91,1.25-0.72,0.72-0.87,4.28,1.06,1.97-1.44,3.22,0.19,4.09-0.72,1.25-1.59,1.97-2.88s-1.26-0.89-1.97-1.25-2.69-1.44-2.69-1.44l-3.22,0.57-4.43,1.59-4.32-0.91-2.5-0.15-3.18-0.72-1.63-0.91-1.59-1.78-1.44,0.72-1.97,1.06-2.5-0.15-3.22-0.91-2.5-0.72zm-35.53,14.47l-2.5,0.53-1.78,1.63-2.5-0.38s-1.44-1.06-1.44-0.34v1.78l0.72,1.59-2.12,1.25-2.88,1.1-1.06,1.25h-2.16l-0.72-1.1-1.59-0.87-2.69,2.12-0.15,3.03,1.93,2.69,1.44,2.16s1.26,2.14,0.91,3.03c-0.36,0.89-4.28,2.5-4.28,2.5l1.06,2.5,1.25,1.59v1.97l2.31,0.53,2.88,1.97,2.12,2.31,1.97,0.38s1.06-1.07,1.06-1.78c0-0.72-0.15-4.48-0.15-5.38,0-0.89,1.59-8.37,1.59-8.37l0.34-1.44,4.13-2.69s0.88-1.07,2.31-1.97c1.43-0.89,4.66-3.03,4.66-3.03l1.78-1.4s0.71-1.64,0-1.82c-0.72-0.17-1.62-0.53-2.16-1.25-0.53-0.71-3.03-2.65-3.03-2.65l-1.25-1.44zm-132.28,14.34l-0.63,0.63-2.28,0.25-0.87-0.13-1.78,0.91v1.38l-0.63,1.65-1.15,0.75-0.13,1.38,0.91,0.78,0.87,0.87-0.12,1.25-1.25,1.28-1.66,1.5-1.65,0.13-1.38-1-0.62-1.53-1.41-2-1.25-1.03-2.03,0.53h-1l-2.41-1.66-1,0.38-1.66,2.15-1.37,2-1.66,1.78-1.25,2.66,0.38,1,1,1.28,1.78,0.25,0.12,1-0.12,1-2.78,2.41-2.16,0.87-1.87,3.03-2.53,2.53-2.91,0.5-1.13,0.13-0.5,0.91-0.28,1.87-0.87,2.16-1.75,2.03-0.13,1.87,1.25,2.79,1.5,1.28,2.04,3.53,3.78,4.15,1.28,0.75,3.15,0.38,0.38,0.65,1.37,1.38,1.66,2.53,1.38,0.5,0.5,1.66,0.9,1.5,3.28,0.5,1.63,0.25,0.78,1.4,0.37,2.13,0.75,1.15,2.41,0.88,1.5,0.75,1.28-0.5,1.13-0.25,1.37,0.75,0.91,1.66-1.03,1.25-0.13,1.53,0.66,1,1.25,0.75,1,1.03,1.03,0.62,0.75-0.37,1.25-0.25,1.41,0.5,1,1.37,0.5,0.91,0.24,2,0.26,1.03h0.65l0.88-0.16,0.87-0.5,0.63-0.37h1.03l0.75,0.75,0.62,0.91,0.88,0.25,1.4,0.25,1.88-0.5,1.41-0.5,1.37-1.79v-0.87l-0.37-0.66-0.26-0.5,0.26-1,0.5-0.5,2.78-1.28,2.4-1,1.66-1.12,1.87-0.78,0.5-0.75,0.13-1.38-0.75-1.53-1.13-0.87-2.15-0.13h-1.5l-1.53,0.5-1,0.75h-1.28l-0.63-0.12-1-1.13-1.53-0.37-0.75-0.38,0.25-1.53v-1.13l1.66-0.5,0.74-0.78,0.76-0.87,0.62-1.63,0.53-0.37,1.5-0.53,1.78,0.25,1-0.5-0.12-1.38-0.5-0.87-0.5-1.66,0.25-0.88,0.87-0.62,1-0.53,1.41-0.63,1.37-0.75,0.38-0.75v-0.5l-0.88-1.9-0.75-1.41-0.9-1.62-1-0.75-0.63-1.28,0.38-1.88,0.62-0.5h1.28l0.88,0.38,1,0.87,1.41,2.16,2.65,2.37,1,0.91s1.65,0.49,2.28,0.75c0.63,0.25,1.38,1,1.38,1l0.5,0.62,0.37,1.03,0.53,1,1,0.63,1.38,0.37h1.41l1.12,0.53,0.88,0.88,2.03,0.5h1.37l0.28,0.88,1,0.53,1,0.25,0.88-0.54,0.78-0.74-0.13-1.26-1.03-1.03,0.38-0.87,0.78-1,0.37-1.53-0.25-1-1.15-0.75-0.13-1.28,0.91-0.88,3.15-3.28,1.88-1.12,1.91-1.79,0.25-1.25-0.63-0.5-1.65-0.9-1.63-1-2.16-0.25-1.25,0.62h-1.4l-1.5-1.12-1.03-1.78-0.75-1.75-1.5-3.16-1.41-2.28-0.75-1.41-0.88-2.25-0.12-1.15-2.41,0.25-0.75-0.63-1.53-1.12s0.25-0.5,0.88-0.5,1.02-0.41,1.53-0.66c0.5-0.25,0.25-0.87,0.25-0.87s-0.37-1-0.88-1.76c-0.5-0.75-0.77-0.77-1.28-1.15-0.5-0.38-0.75-1.75-0.75-1.75l-1.25-0.41-2.03-0.5-1.66,0.13-1.5,0.53-1.9,0.12-0.88-0.65-1.62-1-2.03-0.13h-2.78-2.53l-1.63,0.75-0.91,0.75-0.37,1.66-1.13,1.37-1.12,2.04-1.28,0.87h-2.41c-0.63,0-1.75-1-1.75-1l-1.03-1c-0.51-0.51,0-2.03,0-2.03s0.13-1.53,0-2.16-1.5-1-1.5-1l-2.03-0.87s1.65-0.78,2.16-1.16c0.5-0.38,0.37-1,0.37-1v-2.28c0-0.63-0.25-2-0.25-2l-0.75-1.91zm110.16,1l-0.19,1.1,0.53,1.78,1.44,0.72,0.53-0.72v-1.63l-0.38-1.25h-1.93zm-28.22,6.19l-2.35,0.78-1.4,2.07-2.88,1.43-0.25,1.07,1.78,1.43,2.13,0.97,3.22-0.44,3.5-0.9,0.25-1.6-0.78-1.96-1.1-1.88-2.12-0.97z",
+              "name": "Архангельская область"
+          },
+          "tu": {
+              "path": "m329.02,389.7,2.0536,0.80357,2.1428,1.1607,1.6072,1.3393,1.6071,1.5179,1.7857,0.71428,2.3214,0.17858,0.89286-1.0714,1.6071-1.875,0.53572-2.3214,0.625-2.1429,2.2321-1.7857,1.875-0.44643,1.25-2.5,1.6964-1.0714,2.9464,0.26786,1.6071-1.6072s0.625-2.3214,0.53571-2.6786c-0.0893-0.35714-0.80357-2.5893-0.80357-2.5893l-0.89285-1.875-0.625-3.3036-0.71429-2.2322v-1.7857l1.5179-1.9643,2.2321-2.5,1.4286-1.4286,3.125-0.26786,0.35714,1.4286-0.89285,1.6071-1.6964,1.6964-0.17857,1.25,2.5,0.35714,4.0178,0.35714,1.9643,1.6072,3.0357,1.7857,1.5179-1.25,2.9464-0.17857,2.1429,1.4286,3.3928,1.0714s2.5-0.98214,2.9464-1.1607c0.44643-0.17857,3.5714-0.44642,3.5714-0.44642l0.89286-0.98215-0.53572-1.0714-1.6964-1.25-2.9464-2.2321-1.0714-1.4286s-1.6964-0.44643-2.3214-0.44643-2.6786-0.80357-2.6786-0.80357l-0.17857-2.6786-0.26786-2.4107-1.3393-1.3393-0.44642-2.2321-0.53572-3.5714-0.35714-0.89286-2.4107-2.7679-1.1607-0.71428s-2.6786-0.26786-2.9464-0.26786h-5.0893l-0.98215-0.26786s-0.625-1.5178-0.625-1.875c0-0.35714-0.98214-1.5178-0.98214-1.5178l-1.875-0.35715-1.25,1.25-2.4107,1.875-2.1429,0.89286h-3.0357l-4.6428,0.0893-2.9464,0.26785s-1.4286,0.53572-1.7857,0.625c-0.35714,0.0893-4.375,0.0893-4.375,0.0893l-3.0357-0.0893-1.4286,0.35715-0.89286,1.5178-0.53571,2.3214-0.89286,1.3393-2.3214,0.71428-1.6071,0.53572-1.5179,0.35714-1.7857-0.17857-1.3393-0.625-1.4286,0.17857c-0.35714,0.17857-1.6964,1.0714-1.6964,1.0714l-1.1607,2.1429-0.35715,2.4107-1.6071,2.3214-2.1429,2.5893-0.98214,1.5179,0.26786,1.25,0.71428,1.3393,1.5179,1.25,1.25,1.6071,1.6964,1.875,1.0714,1.6964s3.0357,0.98214,3.0357,1.5179c0,0.53571,1.6964,2.9464,1.6964,2.9464l0.625,1.875,1.6071,1.4286,1.875,0.71428,1.0714,0.80357,1.4286,2.3214,1.0714,1.4286v1.6072z",
+              "name": "Тюменская область"
+          },
+          "ne": {
+              "path": "m290.27,198.54,1.6071-0.89286,1.4286-1.1607,2.0536-1.0714,1.1607-1.25,0.625-3.3929,1.1607-1.6071s1.4286-0.80358,2.4107-1.0714c0.98215-0.26786,2.3214-0.26786,2.6786-0.26786,0.35714,0,1.5178-0.98214,2.0536-1.5179,0.53571-0.53571,3.0357-2.5,3.0357-2.5l0.71429-1.0714v-2.2321l1.25-1.9643s0.89285,0.17857,0.98214,0.625c0.0893,0.44642,0.26786,1.5178,0.625,1.6964,0.35714,0.17858,1.875,1.4286,1.875,1.4286l1.6964,1.1607,0.98214,0.89286-0.0893,1.3393-0.625,1.4286-0.44643,1.7857v1.6964l-0.26786,1.0714-0.44643,0.80357-0.26786,1.25-1.25,0.71428-1.3393-0.625-1.25-0.98214-0.625-0.80357-2.3214-0.53572h-3.0357c-0.44643,0-2.1429,1.1607-2.1429,1.1607l-0.80357,1.4286,0.17857,1.0714s0.53571,0.89286,0.625,1.25c0.0893,0.35714-0.71429,1.1607-0.71429,1.1607l-0.89285,1.6072s-0.26786,1.1607-0.0893,1.4286c0.17857,0.26785,0.625,0.80357,1.1607,1.25,0.53572,0.44643,1.875,1.5178,2.1429,1.6964,0.26786,0.17857,1.875,0.89285,1.875,0.89285s2.3214,0.17857,2.8571,0.17857c0.53572,0,1.9643-0.26785,1.9643-0.26785s1.5179-0.98215,1.875-1.1607c0.35714-0.17857,1.9643-1.1607,1.9643-1.1607s1.0714-0.44643,1.4286-0.35714c0.35714,0.0893,1.3393,0.98214,1.3393,0.98214l2.3214,0.17857s0.35714-0.44643,0.71429-0.80357c0.35714-0.35714,0.53571-0.71429,0.98214-0.35714,0.44643,0.35714,1.875,1.3393,1.875,1.3393l1.7857,0.44643h5.0893l2.5893,0.0893s0.80357,0.80357,1.25,0.89285c0.44642,0.0893,3.3928,0.53572,3.3928,0.53572l1.5179,1.4286,0.71429,1.9643,1.1607,0.17858,0.71429-1.5179,0.89285-1.0714,1.875-0.17857,0.89286,0.53571,2.1429,0.17857,2.5893,0.44643-0.44643,0.80357-0.98214,0.80358-1.6964,0.625-0.80357,0.98214-0.71428,0.98214-1.6964,0.71429-0.26786,1.0714,1.3393,0.98214,1.25,0.53571,0.625,2.0536,0.71428,0.35715,1.6964-0.80357s1.3393-0.89286,1.6071-0.89286c0.26786,0,3.3036,0.53571,3.3036,0.53571l2.6786,1.3393,1.5178,1.3393,1.4286,0.89286,4.4643,0.17857,0.71429,0.71429,1.5178-0.26786,2.5893-0.35714,1.7857-1.3393,0.625-1.7857s0.53572,0.625,0.53572,1.1607c0,0.53572-1.6964,2.7679-1.6964,2.7679l-0.71429,1.7857v1.0714l-1.1607,1.1607-0.89286,0.625-0.44643,0.98214,0.44643,0.80357h1.4286l0.80357-1.6071,0.17858-0.53572,1.5178-0.0893,1.5179,1.25,2.3214,0.35714,1.1607-0.89286,1.3393-1.1607,0.53571-0.89286-0.71428-1.0714-0.35715-1.4286,1.5179-1.1607,0.71429-1.875-0.53572-1.6964-1.25-0.80357-0.71428-3.3929-0.26786-3.125s-0.26786-0.89286,0.0893-1.25c0.35714-0.35714,2.2321-1.6964,2.2321-1.6964l1.3393,0.17857,1.1607,1.4286,1.0714,1.9643,0.35714,2.1429-0.89286,3.3036,0.89286,1.0714,2.8571,2.4107,2.7679,2.8572,3.3929,2.5893,2.1428,3.3036,1.6964,3.3929,0.80357,1.875,0.17858,1.6071-1.0714,1.1607-0.98215,2.0536-0.98214,1.5179h-2.5c-0.44643,0-3.6607-0.17858-3.6607-0.17858l-2.1429,0.98215-2.7679,0.71428h-3.0357l-1.7857-0.17857-2.4107,1.875-3.0357,2.4107-1.6072,0.53571-2.7678-0.0893-2.0536-0.53571-4.2857-2.4107-23.036-13.929-7.6786-6.875-1.25-1.1607v-1.3393l-0.98214-0.625-2.4107,0.625-5.0893-0.44642-5.625-0.98215-5.1786-0.80357-3.125-0.26786-4.1071-2.3214-2.0536-0.44643-1.7857,0.625-1.7857-0.26786-1.5179-1.7857-4.2857-8.4822-0.98215-2.4107z",
+              "name": "Ненецкий автономный округ"
+          },
+          "om": {
+              "path": "m388.39,368.89,0.71428,2.5-1.25,1.6071-1.25,1.9643,0.53572,1.6071,0.71428,1.9643-1.25,1.9643s-1.0714,1.25-1.0714,2.1429c0,0.89286,0.17857,3.0357,0.17857,3.0357l1.7857,1.6072,0.35714,2.3214-0.53571,3.3929-1.9643,0.89286-1.25,1.6071,0.71429,2.3214-0.35715,1.9643-3.9286,0.17857s-1.4286-0.89286-2.3214-1.0714c-0.89285-0.17857-3.3928,2.8571-3.3928,2.8571l-2.5,2.1429-0.89286,4.2857,0.53571,0.89286,1.9643,2.1429,0.35714,2.6786-1.6071,2.6786-1.0714,1.7857-0.17857,3.0357-2.5,2.1429s-2.3214,1.0714-3.0357,1.0714h-4.8214l-1.6072-0.71428c-2.1428,1.4286-3.75,0-3.75,0l-1.6071-0.71429-1.9643-0.35714h-1.0714l0.35714-1.7857,1.7857-1.0714,0.71429-1.4286-2.3214-1.25-2.1429-2.3214-1.9643,0.89285-0.89286-0.71428v-3.75l-1.4286-0.89286-2.8571,0.35714-2.8572-0.89285-0.89285-0.53572-0.17857-2.1428,2.1428-2.6786,0.71429-2.3214,0.35714-2.6786v-4.1071l0.71429-2.1429,1.4286-3.9286,1.6071-2.5,2.3214-0.53571,1.0714-1.25,1.0714-1.7857,1.6071-0.89285h2.6786l1.6071-1.4286,0.89286-3.9286-1.4286-3.2143-0.71429-3.0357-1.25-3.3928,0.35715-1.6072,4.4643-4.6428,1.0714-0.89286h2.6786l0.17857,1.6071-1.25,1.6072-1.7857,1.25-0.17857,1.4286,1.4286,0.35714,3.2143,0.35714,2.3214,0.17857,2.1429,1.4286,1.9643,1.4286,1.0714,0.35714,1.0714-0.71429,1.9643-0.35714,2.3214,0.35714,3.5714,1.6072h2.5l2.1428-1.0714h2.1429z",
+              "name": "Омская область"
+          },
+          "ht": {
+              "path": "m359.64,260.32,0,3.75-0.53572,3.2143-1.6071,2.3214-2.3214,2.3214-0.89286,1.25,1.9643,1.9643,1.7857,2.3214,5,1.9643,4.8214,0.17857,3.5714,1.4286,2.3214,2.6786,0,1.4286-2.1429,1.7857,1.4286,1.4286,2.3214,2.8572,1.9643,1.0714,2.1428-1.0714,1.7857-0.89286s1.6071,0.71429,1.9643,0c0.35715-0.71429,0.89286-2.1429,0.89286-2.1429l1.6071,2.1429,1.4286,2.8571,1.9643,1.6072s0.35714,2.1428,0.35714,2.8571v4.6429l1.9643,3.3928s0.35714,0.17857,0.71429,0.89286c0.35714,0.71429,0,2.1429,0,2.1429l1.0714,1.25,2.5,0.53571,3.75,0.71429,1.4286,0.89285s2.8571,2.1429,3.5714,2.6786c0.71429,0.53571,1.25,1.6071,2.1429,1.9643,0.89286,0.35714,3.5714,0.53572,3.5714,0.53572l2.8571,0.35714,0.89286,1.0714s0.35714,1.6071,0.71428,2.6786c0.35715,1.0714,1.4286,1.7857,1.4286,1.7857l3.0357,0.17857,1.7857,0.53572,0.35715,1.9643,0.35714,1.4286,1.0714,2.5c1.9643,0.17857,2.5,0.17857,3.5714,0.17857s3.3928,1.0714,3.3928,1.0714l1.9643,0.71428,2.8571,0.35714,2.8572-1.0714,3.2143-1.9643,3.0357,0.53571,1.9643,2.6786s0.35714,1.7857,1.0714,2.1428c0.71429,0.35715,2.8571,0.53572,2.8571,0.53572l2.3214,1.6071,0.71429,2.3214,1.9643,0.71428,2.6786-0.89285,1.9643,1.6071,1.0714,3.0357v2.3214l-0.35714,1.6072-0.53572,1.9643,3.0357,1.9643,2.5,1.7857,0.35714,2.3214v1.0714l-3.75,1.7857-2.6786,0.53572-3.2143,0.17857-3,0.15-1.61-1.07-1.7857-0.71428-2.3214,0.35714-2.3214,1.6071-2.6786,1.0714-2.1429-1.9643s-2.8571-0.35714-3.5714-0.35714c-0.71429,0-2.3214-1.7857-2.3214-1.7857l-0.89286-1.25-3.9286,0.17857h-3.5714l-1.6071-2.5s-1.25-0.89286-2.1429-0.89286c-0.89286,0-4.4643-1.25-4.4643-1.25l-2.5-2.3214h-1.25c-0.71428,0-2.3214,1.25-2.3214,1.25l-2.5,2.1429-1.7857,2.6786-2.8571,2.5-1.6071,3.3929-4.4643,1.6071-3.5714,0.89286-0.35714,2.1429-0.71429,2.1428-2.6786,1.25h-2.8571l-5.8929-5.5357-3.9286-0.89286-1.0714-1.4286-0.53571-4.1071-1.0714-1.25-1.0714-5.3572-0.53571-1.7857-3.5714-3.2143h-5.5357l-3.0357-0.35714-1.9643-2.8571-1.6071-0.53572-4.4643,3.0357-3.3929,0.71428h-5.1786l-5,0.71429-4.2857,0.53571h-3.5714l-1.4286-0.17857-0.53571-2.8571-0.35714-3.2143,0.89285-3.2143-0.89285-3.2143-2.3214-2.1428-1.0714-0.89286-1.0714-1.0714,1.25-2.6786,1.4286-2.3214-0.17857-2.1429-0.71429-3.2143,0.71429-5.5357,1.4286-1.7857,1.4286-2.1429-0.71428-2.3214-1.0714-3.5714-1.9643-2.6786-2.3214-3.3928-3.3928-2.1429-1.7857-1.9643-1.0714-2.6786,3.3929-2.1429,1.6071-2.6786,2.3214-4.8214,2.1429-2.6786,2.5-1.9643,3.5714-3.3929,1.6071-1.7857,1.7857-3.3929-0.17858-1.7857,0.89286-1.0714,2.1429-1.0714,1.4286-1.9643,1.6071-1.0714,1.25,0.17857,0.89286,2.3214,0.35714,1.0714,1.4286,0.35714,2.5-0.71428,3.0357-1.6071,1.4286-1.25,1.25-1.0714,2.5-0.53572z",
+              "name": "Ханты-Мансийский автономный округ"
+          },
+          "ya": {
+              "path": "m396.25,234.25,1.4286,2.6786,1.6071,1.7857,1.6072,2.6786,1.0714,3.0357,0.89286,2.8572,3.0357,0.17857,1.7857-1.6072,1.4286-1.25-0.53571-3.2143s-0.89286-1.4286-0.53572-2.3214c0.35715-0.89286,1.7857-2.5,1.7857-2.5v-2.3214l-2.1429-1.6071-1.25-2.5s0.71429-1.6071,1.4286-1.9643c0.71429-0.35714,3.75-2.3214,3.75-2.3214s1.6071-3.75,1.9643-4.4643c0.35714-0.71429,0.35714-4.8214,0.35714-4.8214l0.89286-1.4286,7.5-2.1429,4.8214-3.5714,5.7143-6.0714,3.2143-2.1429,2.1428-0.71429,1.7857,2.3214,3.3928,0.35714,1.7857,1.25,1.0714,2.6786,0.17857,1.7857-0.89286,3.75-2.1429,2.6786-2.3214,2.8571-3.0357,1.6072-1.25,1.0714-0.35714,1.9643,1.0714,2.1429,0.17857,2.8571-0.89286,2.8571-2.1429,2.6786-1.7857,3.2143-2.6786,4.4643-1.25,3.5714-0.89286,2.1429-0.17857,2.5,0.35714,2.6786,0.71429,2.3214-0.71429,1.4286-3.0357,2.1429-1.0714,3.2143-0.89286,3.2143h-3.2143l-2.3214,1.25-2.1429,3.3929-3.5714,0.53571-2.3214,1.25-1.4286,1.4286h-3.5714l-1.4286-1.0714-1.0714-2.6786-0.71429,0.53572v1.6071l-1.9643-1.4286-0.71428-1.9643-1.0714,0.71429-0.17857,1.9643,1.7857,2.1428,2.5,2.1429,2.5,1.25,3.2143,1.0714,2.1429,1.25,2.1428-0.89286,3.5714-1.7857,3.0357-0.71429,3.75-1.0714,2.3214-3.0357,3.2143-2.6786,3.3929-1.6072,2.1428-1.7857-0.17857-2.1429-0.89286-2.3214-0.17857-1.7857,2.1429-2.1429,4.2857-0.89285h3.3929l1.4286,1.4286,1.25,3.0357v2.8571,3.0357l-1.6071,1.4286-1.25,2.5,0.17857,3.5714,1.7857,1.25,3.2143,0.71428,2.1429,2.8572,1.9643,3.2143,0.53572-0.71428-0.53572-4.1072-2.5-3.2143-3.75-1.0714v-2.8571l2.3214-3.0357s1.7857-0.35714,1.9643-1.0714c0.17857-0.71428,0.17857-3.5714,0.17857-3.5714l-0.89286-3.9286-2.6786-2.6786-2.6786-3.2143-0.89286-1.4286h-2.1428s-0.53572,1.25-1.4286,1.25c-0.89285,0-2.6786-1.25-2.6786-1.25l-1.6071-1.0714-0.53571-2.5,1.4286-3.75,2.3214-3.2143,2.1428-2.6786,3.0357-1.25,0.17857-4.4643-0.17857-3.0357v-3.0357l0.17857-2.3214,1.7857-2.3214,1.4286-1.4286,2.1429-0.35715,3.2143-0.53571,2.3214-2.5,1.7857-1.0714,1.25,2.1429-1.9643,2.3214-0.89285,1.4286-1.0714,4.4643-1.25,2.5,1.25,1.7857,2.6786,2.1429h2.8571l1.4286,2.1428,2.3214,2.5,1.7857,0.35715-1.4286-2.1429v-2.5s-1.25-1.25-1.9643-1.6071c-0.71429-0.35715-3.5714-2.8572-3.5714-2.8572l-1.25-3.5714-0.17857-1.4286s1.9643-0.71428,2.6786-0.71428c0.71429,0,3.2143,0.89285,3.2143,0.89285l0.89285,1.7857,1.6072,0.17857,1.25-0.71429-0.35715-1.9643,0.17858-1.9643,1.4286-0.35714,1.6071,0.71429,1.7857,1.4286,1.25,1.0714,0.89286,1.7857-0.35714,1.7857-2.3214,2.5-3.0357,1.25,1.0714,1.4286,2.6786,2.1428,0.35714,2.8572,0.17857,3.3928-0.71429,2.6786-2.5,1.4286-2.6786,1.4286-3.5714,1.7857-2.1428,2.1429,0.35714,2.6786,1.4286,2.5,1.25,2.5,1.6071,1.0714h3.3929,2.5l1.7857,1.6071,0.53571,3.0357,0.17857,3.3928v2.8572l-1.9643,3.2143-1.7857,2.5h-2.6786l-0.71429,0.53572,0.53572,1.9643,0.71428,1.7857-0.53571,2.5-0.89286,1.25,2.3214,3.3928,0.53572,1.7857,0.35714,1.7857-1.25,1.7857-1.0714,1.25,0.89286,2.1428-0.17857,2.5-1.6072,1.6072,1.6072,1.7857,2.1428,1.9643,1.6072,1.4286-0.17858,3.3928-1.4286,2.3214-0.17857,2.6786,2.3214,2.1429,4.6429,0.89286,0.89285,1.4286-1.4286,2.1429-0.53571,3.3928-0.89286,2.3214-2.6786,1.4286s-0.89286,0.53572-1.6071,1.0714c-0.71429,0.53572-1.7857,2.8572-1.7857,2.8572l1.9643,1.7857,0.17857,2.3214-1.4286,2.1429-1.25,2.5-2.6786,2.3214-2.8572,2.8572-0.89285-1.7857-1.6072-2.1428-1.7857-1.0714-1.9643,0.71428-1.9643-0.71428-0.71429-1.6072-1.25-1.25-2.5-0.89285-2.1428-0.89286-0.71429-1.6071-0.89286-1.7857-1.4286-1.4286-2.8571-0.17857-2.5,1.4286-2.5,1.0714-2.6786,0.17857-4.1072-1.6071-3.5714-0.35714-2.1429-0.17858-0.89286-1.9643-1.0714-2.3214v-1.4286l-3.3928-0.71429-2.3214-0.53571-0.89286-2.5-0.71429-2.3214s1.4286-0.17857-1.0714-0.35714-5.5357-1.0714-5.5357-1.0714l-1.4286-0.53572-3.2143-2.5-2.5-1.6071-2.8572-1.0714-3.2143-1.25-1.25-0.89285-0.17857-2.1429-2.8572-3.9286,0.17857-6.7857-1.25-1.7857-2.3214-2.8571-1.0714-2.1429-0.53572-0.53572-1.0714,1.25-0.53571,0.71429h-1.4286l-2.6786,0.89286-1.25,0.35714-1.6072-0.35714-2.1428-2.3214-1.7857-1.6071,0.53572-0.89286,1.4286-1.6071-0.35714-1.7857-2.5-2.3214-3.0357-1.4286-4.2857,0.35714-3.0357-1.25-2.6786-0.89285-3.3929-4.2857,2.3214-2.5,2.5-3.75,0.17857-5.3571,0.35715-1.4286,3.75-1.0714,2.6786-2.5,1.4286-1.4286h3.75,3.3929l3.9286,0.53571,1.7857-1.25,3.5714-1.6071,3.3929-0.53571,2.5-1.25,2.3214-1.25,0.35714-2.8572-2.1429-2.3214-0.71428-1.25,0.53571-1.6071,2.3214-1.4286,0.35714-1.25,1.92-2.87z",
+              "name": "Ямало-Ненецкий автономный округ"
+          },
+          "kr": {
+              "path": "M531.66,122.41c-0.45,0.04-1,0.37-1,0.37-0.9,0.72-1.25,0.77-0.94,1.13,0.31,0.35,0.19,0.55,0.9,0.78,0.72,0.22,0.91,0.49,1.44,0,0.54-0.49,0.77-1.24,0.41-1.69s-0.37-0.64-0.81-0.59zm11.56,0.65c-0.22,0.02-0.44,0.11-0.6,0.38-0.31,0.53-0.49,1.57-0.62,1.84s-0.2,0.74-0.78,0.88c-0.58,0.13-1.39,0.54-1.75,0.09s-1.03-1.51-1.25-1.69-1.04-0.74-1.13-0.03c-0.09,0.72,0.19,1.51,0.19,1.91s-0.18,0.99-0.4,1.12c-0.23,0.14-1.06,0.25-1.29,0.56-0.22,0.32-0.62,0.49-0.62,1.16s-0.27,1.67-0.31,1.94c-0.05,0.27-0.32,0.26-0.63,0.75s-1.09,1.87-1.09,1.87,0.89,0.62,1.15,0.85c0.27,0.22,0.42,0.77,0.38,1-0.05,0.22-0.13,1.05-0.53,1.19-0.4,0.13-1.43,0-1.78-0.13-0.36-0.13-1.01-0.48-1.5-0.44-0.49,0.05-1.01,0.23-1.19,0.63s-0.71,0.38-0.13,1.18c0.58,0.81,0.87,1.53,1,1.76,0.14,0.22,0.29,1.51,0.07,1.87-0.23,0.36-1,1.13-1.22,1.53-0.23,0.4-0.44,0.71-0.22,1.16,0.22,0.44,0.66,0.8,1.15,0.94,0.5,0.13,3.66,0.71,3.66,0.71s0.28-0.36,0.81-0.71c0.54-0.36,1.36-0.77,1.85-0.41s0.52,0.8,0.65,1.25c0.14,0.45,0.41,2.02,0.5,2.37,0.09,0.36,0.49,0.58,0.94,1.16s1.59,1.37,2.22,1.59c0.63,0.23,1.05,0.55,1.72,0.6,0.67,0.04,2.85,0.82,2.94,1.09s0.31,1,0.31,1,0.54,0.52,0.81,0.56c0.27,0.05,2.22,0.19,2.22,0.19,1.38-0.76,2.23-0.8,2.5-0.94,0.27-0.13,0.84-0.03,1.37-1.06,0.54-1.03,0.76-1.35,0.63-2.06-0.13-0.72-0.34-0.93-0.87-1.6-0.54-0.66-1.5-1.24-1.1-1.56,0.4-0.31,1.56-0.8,1.88-1.15,0.31-0.36,0.54-1.32,0.4-2.35-0.13-1.02-0.15-2.5-0.47-2.9-0.31-0.41-0.73-0.92-1.4-1.19s-1.23-0.67-1.81-0.53c-0.59,0.13-1.92,0.25-2.19,0.03s-0.62-0.83-0.85-1.5c-0.22-0.67-0.5-1.13-0.5-1.53s1.16-3.63,1.16-3.63,0.71-0.29,0.84-0.56c0.14-0.27,0.36-0.76,0.22-1.66-0.13-0.89-0.39-1.55-1.28-2.09s-2.09-1.72-2.09-1.72v-0.97c0-0.35-0.15-1.73-0.28-2-0.14-0.27-0.48-0.72-0.97-0.72-0.25,0-0.5-0.05-0.72-0.03zm17.72,22.91c-0.13,0.02-0.25,0.07-0.35,0.19-0.4,0.44-0.72,1.12-0.9,1.34s-0.51,0.09-0.91,0-0.89-0.43-1.16-0.03c-0.26,0.4-0.67,0.74-0.71,1.19-0.05,0.44,0.09,1.75,0.09,2.46,0,0.72,0.09,1.8,0,2.6s-0.2,1.3-0.78,1.66c-0.58,0.35-0.91,0.4-1.31,0.93-0.41,0.54-1.13,1.25-1.13,1.88,0,0.62,0.06,1.45-0.66,2.03-0.71,0.58-1.14,0.56-0.96,1.4,0.17,0.85,0.22,0.93,0.84,1.38s2.79,0.63,3.28,0.5,1.26-0.77,1.66-1.22,1.61-0.99,2.28-1.12c0.67-0.14,1.17-0.08,2.16-0.13,0.98-0.04,1.54-0.39,2.03-0.65,0.49-0.27,0.54-0.54,1.43-0.54,0.9,0,1.74,0,2.1-0.31,0.35-0.31,1.35-1.19,1.62-1.5s0.88-1.05,0.97-1.5,0.18-1.3,0-1.75,0.15-1.15-1.19-1.28-1.57,0.07-1.84-0.38c-0.27-0.44-1.03-0.88-1.03-1.37s0.08-1.02-0.19-1.37c-0.27-0.36-0.79-0.81-1.28-0.72s-1.31,0.58-1.53,0.62c-0.22,0.05-0.71-0.09-0.85-0.4-0.13-0.32-0.21-1.11-0.21-1.91s-0.25-1.63-0.25-1.63c-0.34-0.13-0.83-0.43-1.22-0.37zm5.22,20.03c-0.62,0.05-1.16,0.75-1.16,0.75s-1.62,1.95-2.16,2.84c-0.53,0.9-0.86,1.08-1.93,1.25-1.08,0.18-1.82,1.63-1.82,1.63s-0.51,1.23-0.68,2.12c-0.18,0.9-1.25,3.07-1.25,3.07v1.93l0.87,1.63s1.6,1.05,1.78,2.12c0.18,1.08-2.12-0.68-2.12-0.68s-2.14-0.73-3.03-0.91c-0.9-0.18-1.64,0.01-3.07,0.19-1.42,0.18-1.25,0.34-1.25,0.34l0.72,1.63s1.61,1.4,1.25,2.65c-0.35,1.25-1.4-0.53-1.4-0.53l-1.97-0.87s-1.98,0.16-2.88,0.87c-0.89,0.72-1.25,0.91-1.97,0.91-0.71,0-1.59-0.71-2.12-1.78-0.54-1.08-0.91-0.91-1.63-1.44-0.71-0.54-3.2,0-4.09,0s-2.32,1.79-3.75,1.97-1.78,0.53-1.78,0.53l0.34,2.12-1.97,1.1-2.12,0.53-2.16,0.53c-0.71,0.18-2.12-0.19-2.12-0.19l-1.97-0.34-1.44,0.87-0.53,0.57-2.84,0.15-2.16,0.91s-2.49,2.13-4.09,2.31c-1.61,0.18-0.19,0.53-0.19,0.53s1.06,0.91,1.06,1.63c0,0.71-0.7,0.87-0.87,1.4-0.18,0.54-1.45-0.33-2.35-0.68-0.89-0.36-1.25,0-1.25,0s0.2,1.04,0.38,1.93c0.18,0.9,1.06,1.28,1.06,2.35s-0.19,2.12-0.19,2.12,0.53,2.69,0.53,3.41v2.69c0,0.89-0.87,1.59-0.87,1.59s-1.25,0.72-3.03,0.72c-1.79,0-0.91-0.72-0.91-0.72l0.72-0.91-0.53-1.4-1.97-0.38-2.31,1.25-1.78-0.53h-3.22-3.94c-1.43,0-1.95-1.07-2.84-1.25-0.9-0.18-2.88-0.34-2.88-0.34s-2.14-0.02-3.03,0.34-1.97,1.06-1.97,1.06v3.07,3.03s-1.6,0.69-1.78,1.4c-0.18,0.72,0.01,2.68,0.19,3.75,0.18,1.08,1.05,0.72,2.12,1.25,1.07,0.54,2.16,1.25,2.16,1.25l0.53,0.57,0.34,1.78s0.57,1.94,0.57,2.65c0,0.72,1.25,1.97,1.25,1.97s0.68,1.63,0.68,2.35c0,0.71-0.51,1.22-0.87,1.93-0.36,0.72-0.73,1.61-0.91,2.5-0.18,0.9,0,2.16,0,2.16l0.38,2.84s-0.2,2.88-0.38,3.6c-0.18,0.71-0.89,1.42-1.78,1.78s-1.25,2.12-1.25,2.12,0.01,2.7,0.19,3.6c0.18,0.89,0.88,1.42,1.59,1.78,0.72,0.36,1.25,1.78,1.25,1.78l-0.87,1.78-1.78-0.34-1.44-1.78-0.91-1.82v-2.5s-0.54-1.76-1.97-2.65c-1.42-0.9,0.19-1.63,0.19-1.63s1.08-1.25,1.44-1.97c0.36-0.71,1.06-1.78,1.06-1.78s1.8-1.6,2.16-2.5c0.35-0.89-0.38-1.4-0.38-1.4l-1.06,0.68-1.78,1.82-1.78-0.91s0.69-1.25,0.87-1.78c0.18-0.54,0.54-1.79,0.72-2.5,0.18-0.72,0.35-1.6,1.06-2.31,0.72-0.72,2.35-0.19,2.35-0.19l1.25-1.25v-1.63l-1.1-1.59s-1.4-0.17-3.9-0.34c-2.5-0.18-0.72-1.25-0.72-1.25l-0.72-1.82s-0.72-1.76-1.44-2.12c-0.71-0.36-1.94-3.04-2.65-3.75-0.72-0.72-1.1-1.44-1.82-2.16-0.71-0.71-2.11-1.78-3.18-2.5-1.08-0.71-1.97-1.4-1.97-1.4l-1.63,0.34s-1.05,1.07-0.15,2.5c0.89,1.43,1.06,1.44,1.06,1.44l1.25-0.28,0.97,0.18,1.22,0.5,1.15,1.07,1.06,0.71,0.91,1.07,0.53,0.9,0.1,0.94-0.6,1.63-1.68,1.84-1.29,0.81-1.93,0.88,0.81,1.15s2.04,1.71,2.22,1.85c0.18,0.13,0.69,0.9,0.69,0.9l0.31,2.85,0.09,2.59s-0.33,2.1-0.37,2.28c-0.05,0.18-0.63,0.88-0.63,0.88l-7.09,3.97-1.44,0.9-1.25,0.94-0.66,0.81s0.3,2.37,0.35,2.6c0.04,0.22,0.64,1.18,0.69,1.4,0.04,0.23,1.28,2.69,1.28,2.69s1.15,1.2,1.46,1.69c0.32,0.49,2.16,0.31,2.16,0.31h3.44c0.4,0,1.34,0.5,1.34,0.5s1.3,0.98,1.35,1.16c0.04,0.17,0.37,1.31,0.37,1.31l0.38,3.34s0.09,3.42,0.09,3.69-0.5,1.56-0.5,1.56l-0.34,1.22c-0.04-0.01-0.07-0.03-0.1-0.06l-1.15,2.06-1.82,1.69-1.68,0.28-1.6,0.28,0.16,1.41s1,1.98,1,2.34-0.01,1.68-0.19,2.13c-0.18,0.44-0.81,1.68-0.81,1.68l0.47,1.19,1.15,1.69,0.88,2.41,0.47,1.68-1.16,1.97-1,1.63,0.72,1.93s0.08,1.53-0.09,1.97c-0.18,0.45-1.07,1.16-1.07,1.16l-0.43,1.19s4.1,3.63,5,4.53c0.89,0.89,0.15,1.52,0.15,2.06s-0.72,2.5-0.72,2.5l-1.25,2.22,0.1,1.87s1.54,1.46,1.72,1.82c0.17,0.35,1.68,0.78,2.22,0.87,0.53,0.09,2.78,0.38,2.78,0.38l1.25,1.31-0.19,0.81-1.16,1.63-0.72,3.28s-0.8,2.07-1.15,2.34c-0.36,0.27-1.44,1.16-1.44,1.16l-2.22,1.15-1.72,2.41,0.38,0.97,1.34,1,0.25,1.78-0.81,1.78-1.25,2.78-1.5,1.41-2.31,2.34-1.72,1.6-1.5,2.25s-0.9,2.92-0.81,4c0.08,1.07,0.96,0.72,0.96,0.72s1.62,1.07,2.16,1.34,1.51,0.99,1.78,1.34c0.27,0.36,1,1.24,1,1.69v1.53l-0.81,0.88-1.25,0.81-3.41,1.25-1.69,0.34-2.4-0.25s-1,0.43-0.91,0.78c0.09,0.36,0.72,1.63,0.72,1.63s0.45,1.24,0.63,1.69c0.17,0.44,0.27,0.88,0.72,1.06,0.44,0.18,0.09,2.97,0.09,2.97s-0.89,2.3-1.16,2.75c-0.27,0.44-0.46,1.25-0.37,1.87,0.09,0.63,0.72,1,0.72,1s1.7,0.69,2.06,0.78,2.94,1.1,2.94,1.1,3.13,0.72,3.84,0.72,2.58,0.06,3.56,0.15,2.5,1,2.5,1,1,0.87,1.53,1.41c0.54,0.53,0.25,4.64,0.25,5s2.88,0.19,3.5,0.28c0.63,0.09,2.32,0.81,2.32,0.81s0.43,1.33,0.43,1.69-0.43,1.88-0.43,1.88l-1.78,0.9-3.47,1.5-0.57,1.06s-1.13,4.74-1.4,5.19,0.53,1.88,0.53,1.88l1.5,0.62,2.25,1.06s3.47,2.25,4.09,2.79c0.63,0.53-0.09,0.96-0.09,0.96l-0.97,1.82-5.44,4.72-0.72,1.96-0.18,1.5s-0.44,3.58-0.44,3.94,0.34,1.53,0.34,1.53,1.81,1.15,2.25,1.5c0.45,0.36,1.88,1,1.88,1l0.72,1.41s0.79,1.54,1.06,2.34c0.27,0.81-0.72,0.97-0.72,0.97l-3.56,2.94-1.97,0.91s-1.35,1.33-1.44,1.87,0.81,0.97,0.81,0.97l0.97,1.44,1,1.34s1.95,0.73,2.75,0.91c0.81,0.17,1.63-0.57,1.63-0.57s1.42-1.95,2.4-2.22c0.99-0.26,0.53,0.46,1.07,0.72,0.53,0.27,1.96,0.61,2.59,0.88s2.22,1.34,2.22,1.34l0.81,2.06,1.78,7.41,0.82,2.5-1.26,4.13s0.1,2.05,0.19,2.4c0.09,0.36,0.8,1.24,1.07,1.6,0.26,0.35,0.43,2.15,0.43,2.15l-0.97,1.35-2.4,1.5-1.1,1.78s-2.3,3.32-2.65,3.59c-0.36,0.27-2.06,1.14-2.6,1.41-0.53,0.27-2.06,1.44-2.06,1.44s0.27,1.06,0.63,1.15c0.35,0.09,0.53,2.16,0.53,2.16l0.81,1.06,1.88-0.44,3.21,0.78,2.5,0.91s1.25,0.88,1.79,1.06c0.53,0.18,3.4-0.44,3.4-0.44s5.87-2.32,6.31-2.59c0.45-0.27,1.72-1.06,1.72-1.06s2.5-1.89,3.03-2.25c0.54-0.36,3.74-2.14,4.1-2.41,0.35-0.27,1.44-1.78,1.44-1.78l0.9-2.12s0.16-1.99,0.25-2.44,0.53-1.5,0.53-1.5l0.72-1.25,2.16-0.19,3.12,0.44,2.32,0.19s3.57,0.1,4.37-0.35c0.8-0.44,0.45-0.72,0.63-1.34,0.17-0.63-0.27-0.9-0.63-1.35-0.36-0.44-1-1.33-1.53-1.78-0.54-0.44-1.25-1.15-1.25-1.15s-2.31-4.22-2.31-4.75c0-0.54,0.81-1.15,2.15-1.69s3.91-0.97,3.91-0.97l2.06-1.19-0.09-2.65,0.47-1.78s1.16-2.8,1.25-3.07c0.09-0.26,1.51-2.93,1.68-3.56,0.18-0.62,0.62-1.79,1.07-2.59,0.44-0.81,1.62-1.68,2.15-2.03,0.54-0.36,1.68-1.91,2.13-2.44,0.44-0.54,1.09-2.22,1.09-2.22l-0.19-4.09s-2.13-2.42-2.4-3.22c-0.27-0.81,0.07-1.43,0.34-1.78,0.27-0.36,1.61-1.88,1.97-2.5,0.36-0.63,0.81-2.53,0.81-2.97,0-0.45,0.98-1.5,1.88-2.13,0.89-0.62,2.83-0.18,3.28,0s1.09,0.81,1.72,1.35c0.62,0.53,3.28,0.68,3.28,0.68s1.07-1.42,1.25-1.87,0.98-1.77,1.25-2.22,1.53-1.07,2.25-1.16c0.71-0.09,1.69,0.63,1.69,0.63s0.97,1.78,1.15,2.31c0.18,0.54,1.18,1.61,1.53,1.97,0.36,0.36,1.26,1.8,1.35,2.16,0.09,0.35,1.06,0.33,2.22,0.15s0.09-1.4,0.09-1.4v-2.16s-0.62-2.16-0.62-2.78c0-0.63,0.71-1.78,0.71-1.78s2.5-0.8,3.03-1.06c0.54-0.27-0.08-1.17,0.1-1.97,0.18-0.81,1.33-1.7,1.69-1.88,0.35-0.18,2.96-0.61,3.4-0.87,0.45-0.27,1.41-1.25,1.41-1.25l0.62-2.69,0.28-2.88s-0.02-0.11-0.03-0.12c0.09-0.06,0.32-0.22,0.32-0.22l1.31,0.19s0.6-0.58,1.31-0.94c0.72-0.36,0.79,0.03,0.97,0.03s0.68,1.11,0.81,1.47c0.14,0.36,0.36,1.26,0.41,1.53,0.04,0.27,1.38,0.68,1.56,0.72s1.55,0.47,1.81,0.56c0.27,0.09,1.66,1.08,1.97,1.44,0.32,0.36,1.04,0.45,2.38,0.94s1.53-0.28,1.53-0.28l0.65-0.63s0.23-1.4,0.32-1.94c0.09-0.53,0.72-0.87,0.72-0.87s1.51-1.22,1.87-1.63c0.36-0.4,0.5-0.87,0.5-0.87s0.34-2.99,0.16-3.13c-0.18-0.13-1.38-0.71-1.78-0.84-0.41-0.13-1.6-1.46-2-2.13-0.41-0.66,0.3-1.16,0.43-1.43,0.14-0.27,1.41-1.06,1.63-1.28,0.22-0.23,1.06-0.78,1.59-1,0.54-0.23,0.27-2.9,0.22-3.35-0.04-0.44-0.7-0.44-1.81-0.62-1.12-0.18-1.97-0.85-1.97-0.85s-1.52-1.52-2.19-2.28-0.22-2.76-0.22-3.03,0.17-4.1,0.13-4.9c-0.05-0.81,0.54-1.63,0.72-1.85s2.37-0.49,2.59-0.53,1.9-0.99,2.35-1.34c0.44-0.36,0.59-1.19,0.59-1.19s-0.37-1.3-0.5-1.75c-0.14-0.45,0.72-1.65,1.03-1.88,0.31-0.22,1.91-1.37,1.91-1.37s1.07-6.86,1.25-7.13c0.17-0.26-0.32-1.59-0.32-1.59s-1.19-3.62-1.28-3.84c-0.09-0.23-0.68-1.65-0.5-2.32s1.27-1.02,1.41-1.25c0.13-0.22,0.07-0.97-0.16-1.15-0.22-0.18-1.03-1.16-1.03-1.16s0.58-3.41,0.63-3.81c0.04-0.4,0.28-1.69,0.28-1.69l1.22-0.84s3.79-0.07,4.06-0.07,2.03-0.79,2.44-1.06c0.4-0.27,0.13-1.66,0-1.84-0.14-0.18-1.19-1.94-1.19-1.94h-2.28l-2.5,0.06-2.1-0.43-1.03-0.41s-2.49-0.25-2.72-0.25c-0.22,0-1.5-0.16-1.5-0.16l-0.65-0.25s-0.13-1.6-0.13-1.87,0.48-0.55,1.07-0.91c0.58-0.35,0.93-0.94,0.93-0.94s-0.17-0.98-0.43-1.34c-0.27-0.36-0.1-0.97-0.1-0.97s2.29-2.76,2.38-2.93c0.09-0.18,0.62-1.04,0.62-1.04s0.89-1.56,1.06-2.18c0.18-0.63-0.59-1.16-0.59-1.16s-3.42-4.04-3.78-4.44-1.14-1.64-1.31-1.9c-0.18-0.27-0.91-1.24-1-1.69s0.31-1.41,0.31-1.41l1.09-3.47-0.56-1.06s-1.07-0.96-1.16-1.09c-0.09-0.14-1-0.75-1-0.75s-0.63-0.55-0.5-0.91c0.14-0.36,1.36-0.56,1.63-0.56s2.31-0.69,2.31-0.69,1.39-0.56,1.56-0.78c0.18-0.22-0.03-1.16-0.03-1.16s-1.56-17.7-1.56-18.06-0.65-1.56-0.78-1.78c-0.14-0.22-2.19-2.34-2.19-2.34l-0.72-5.16h0.06s1.85,0.06,2.47,0.06c0.63,0,0.97-0.84,0.97-0.84l2.5-2.06,1.53-1.38s0.57-0.52,0.88-0.56c0.31-0.05,1.26,0.58,1.44,0.62,0.17,0.05,1.47,0.6,1.47,0.6s0.99-0.52,1.43-0.66c0.45-0.13,0.75-0.62,0.75-0.62l-0.31-5.94,4.16-2.16s0.93-1.1,0.93-1.28,0.57-1.87,0.57-1.87l4.47-3.1s1.78-2.23,2.18-2.5-0.03-0.62-0.03-0.62l-1.25-1.85s-1.07-1.29-1.78-1.47c-0.71-0.17-0.91-1.09-0.91-1.09l0.29-5-0.6-0.47-2.84-2.31-3.41-2.69-0.72-1.97-0.34-1.4-1.06-1.78,0.15-0.91,1.25-2.69-1.4-1.4-1.63-1.97-0.72,1.59s-1.43-0.53-2.5-0.53-1.06,1.44-1.06,1.44-1.95,0.71-2.84,1.25c-0.9,0.53-1.25,1.78-1.25,1.78s-1.45,1.25-2.16,1.25-2.14,0.01-3.03,0.19c-0.89,0.17-1.43,1.41-1.97,2.12-0.54,0.72-1.44,2.33-2.16,2.69-0.71,0.36-0.71,0.34-1.78,0.34s-0.16-0.7,0.38-2.31c0.53-1.61,1.95-1.79,2.31-2.5s0.72-1.78,0.72-1.78l2.5-0.91s0.54-3.02,1.44-3.37c0.89-0.36,3.75-0.53,3.75-0.53s1.22-1.63,1.4-2.35c0.18-0.71,1.44-1.58,1.97-2.65,0.54-1.08,0.72-1.79,0.72-2.5,0-0.72,0.91-1.82,0.91-1.82l2.5-2.12s1.58-1.6,1.93-2.31c0.36-0.72,2.16-1.97,2.16-1.97l2.16-1.97,2.31-2.5s0.19-1.44,0.19-2.16c0-0.71-0.72-1.78-0.72-1.78s-1.26-0.9-1.97-1.44c-0.72-0.53-1.78-0.7-1.78-1.59s0.16-0.72,0.34-1.44c0.18-0.71,0.72,0,0.72,0l1.44,1.1,0.15-1.25-0.15-2.35-0.53-1.97-2.69-0.68-1.78-1.1h-2.16c-0.71,0-0.52-0.69-0.87-1.4-0.36-0.72-0.37-1.62-0.91-2.69s-2.31-0.19-2.31-0.19l-1.78,0.91c-0.72,0.35-0.73,0.52-1.44,1.06-0.72,0.54-1.61-0.37-3.22-0.91-1.61-0.53-1.77,0.02-2.84,0.38-1.08,0.36,0.17,0.88,0.53,1.59,0.35,0.72,0,1.44,0,1.44l-2.35-0.19s-1.06-0.35-1.78-1.25c-0.71-0.89,0.19-1.06,0.19-1.06s1.25-1.43,1.25-2.5-0.72-1.25-0.72-1.25h-2.69c-1.25,0-1.96-0.17-3.03-0.34-1.07-0.18-1.25-0.37-1.97-1.44-0.71-1.07,0.57-0.53,0.57-0.53l1.4-1.25,1.25-0.72,2.69,0.34s0.9,0.56,1.97,0.38,0.19-0.72,0.19-0.72l-1.63-1.06s-1.77,0.34-2.84,0.34-2.16-0.72-2.16-0.72l-1.97-0.87s-1.41-1.45-2.12-1.63c-0.09-0.02-0.2-0.04-0.28-0.03zm-45.94,3.34c-0.85,0.32-1.23-0.03-1.5,0.82-0.27,0.84-0.34,0.96,0.16,1.18,0.49,0.23,0.87,0.53,1.4,0.44,0.54-0.09,1.24-0.47,1.06-1.09-0.17-0.63-1.12-1.35-1.12-1.35zm20.84,3.82c-0.33,0-0.47,0.12-0.94,0.56-0.62,0.58-1.62,1.37-1.71,1.9-0.09,0.54,0.12,0.96-0.19,1.54s-1.55,1.81-2,2.12-2.51,0.16-2.6,0.47c-0.08,0.31-0.37,0.52,0.04,0.87,0.4,0.36,2.91,0.63,3.72,0.54,0.8-0.09,3.3-0.3,3.74-0.35,0.45-0.04,0.71,0.28,0.66-0.43-0.04-0.72-0.72-1.36-0.4-1.85,0.31-0.49,0.6-0.65,0.78-0.97,0.17-0.31,0.49-1.06,0.31-1.47-0.18-0.4-0.72-0.95-0.72-1.53s-0.28-1.37-0.28-1.37c-0.18-0.01-0.3-0.04-0.41-0.03zm-45.53,6.62c-0.49,0-2.1,0.86-2.19,1.13-0.09,0.26-0.56,0.38,0.07,0.97,0.62,0.58,0.39,0.88,1.15,0.84,0.76-0.05,1.55-0.67,2.22-0.63,0.67,0.05,1,0.79,1.31,0.79,0.32,0,0.62-0.23,0.66-0.72s-0.42-0.89-0.59-1.07c-0.18-0.17-0.54-0.18-0.54-0.18-0.31-0.45-1.6-1.13-2.09-1.13zm-2.06,6.25c-0.54,0.18-1.01,0.45-1.5,0.63-0.49,0.17-0.81,0.17-1.13,0.43-0.31,0.27-0.72,0.46-0.72,0.82,0,0.35,0.15,0.5,0.6,0.81s0.52,0.62,1.19,0.62,1.89-0.5,2.03-0.81c0.13-0.31,0.48-0.94,0.53-1.25,0.04-0.31-1-1.25-1-1.25zm-51.31,9.13l-2.35,2.12-0.34,1.78,1.97,0.38,1.25,0.87h2.5l1.25-0.87v-1.78l-1.63-2.16-2.65-0.34zm59.09,4.4c-0.49,0.14-1.47,0.59-1.25,1.03,0.22,0.45,0.5,0.8,0.91,0.75,0.4-0.04,0.74-0.01,0.87-0.5,0.14-0.49-0.22-1.25-0.22-1.25l-0.31-0.03zm97.34,1.78c-0.09,0.01-0.18,0.07-0.28,0.22-0.38,0.6-0.53,1.69-0.4,2.1,0.12,0.41-0.42,0.87,0.12,1.31s0.62,1.22,1.53,1.25c0.92,0.03,1.9,0.47,2.63-0.06,0.72-0.54,1.43-1.69,1.65-2.19,0.22-0.51,0.32-1.22,0.07-1.53-0.26-0.32-0.62-0.81-1.13-0.88-0.5-0.06-1.19,0.16-1.19,0.16-1.07,0.31-0.99,0.66-1.78,0.31-0.59-0.26-0.92-0.72-1.22-0.69zm-135.37,0.22l-1.97,0.19-1.44,1.44,0.53,1.06,1.63-0.91,1.44,0.57,0.34,1.59,1.25,0.34,0.72-0.87-0.53-1.06-1.97-2.35zm27.09,1.13c-0.49,0.01-1.04,0.1-0.9,0.5,0.17,0.53,1.09,0.75,2.03,0.75s2.97,0.08,3.06,0.44c0.09,0.35,0.68,1.56,0.91,1.65,0.22,0.09,0.92,0.13,0.97-0.41,0.04-0.53-0.44-1.13-0.76-1.4-0.31-0.27-2.09-1.25-2.09-1.25-0.45-0.09-2.24-0.28-2.78-0.28-0.13,0-0.27-0.01-0.44,0zm10.31,1.12c-0.71,0.23-0.93,0.25-0.93,0.88,0,0.62-0.1,1.06,0.43,1.15,0.54,0.09,0.85,0.33,1.26,0.07,0.4-0.27,0.59-0.91,0.37-1.22s-1.13-0.88-1.13-0.88zm-44.71,1.16l-1.44,1.25,0.72,0.87,1.78-1.06-1.06-1.06zm6.4,2.31v1.78l2.35-0.53v-1.25h-2.35zm133.35,1.5c-1.05,0.29-1.25,0.28-2.07,0.6-0.82,0.31-1.49,0.24-1.87,0.74-0.38,0.51-0.44,0.28-0.66,1.29s-0.69,0.99,0.1,1.31c0.79,0.31,1.39,0.29,2.31-0.41,0.91-0.69,1.71-1.09,2.19-1.65,0.47-0.57,0.84-1.19,0.84-1.35s-0.84-0.53-0.84-0.53zm-122.41,0.5c-0.4,0.63-0.65,1.16-0.87,1.56-0.23,0.41-0.68,0.77-1.13,1.66s-0.81,1.32-0.81,2.03c0,0.72,0.24,1.18,0.68,1.41,0.45,0.22,0.34,0.5,0.57,0.5,0.22,0,0.82,0.09,1.31,0s1.03-0.19,1.03-0.5v-1.88c0-0.53-0.31-3.37-0.31-3.59s-0.47-1.19-0.47-1.19zm-16.47,0.69l-1.06,0.87v1.25l1.44,0.57,0.87-1.25-1.25-1.44z",
+              "name": "Красноярский край"
+          },
+          "tm": {
+              "path": "m454.64,359.43,1.25,3.2143,1.25,2.3214s-0.53571,2.3214-0.71428,3.0357c-0.17857,0.71429-1.6071,3.0357-1.6071,3.0357s0.53571,1.25,1.6071,1.9643c1.0714,0.71429,5.8929,1.7857,5.8929,1.7857l5.3571,0.17857s3.75,0.89285,4.1071,1.6071c0.35714,0.71429,0.89286,1.0714,0.89286,2.1429,0,1.0714,0.35714,4.2857,0.35714,4.2857s1.25,0.35714,2.6786,0.35714,3.0357,0.35715,3.0357,0.35715,0.35714,2.1428,0.35714,2.6786c0,0.53571-0.89286,1.7857-1.9643,1.7857s-3.75,1.6072-3.75,1.6072-1.25,2.6786-1.25,3.75-0.89285,3.5714-0.53571,4.2857c0.35714,0.71429,4.4643,1.7857,5.1786,2.1429,0.71429,0.35714,3.2143,2.6786,3.2143,2.6786s-0.71429,1.6071-1.6072,2.6786c-0.89285,1.0714-4.1071,3.0357-5.3571,4.6429-1.25,1.6071-0.35714,2.8571-0.35714,2.8571l-0.71429,1.6071-3.2143,0.53572-3.2143,0.35714-1.4286-1.6071-1.9643-0.17857-4.66-0.57h-2.3214l-1.25,1.0714s-2.1429,1.0714-3.2143,1.25c-1.0714,0.17857-5.3571,1.25-6.0714,1.25-0.71428,0-6.4286,0.71429-6.4286,0.71429l-3.3928,1.4286h-2.3214l-0.35715-1.9643,0.71429-2.1429-0.35714-2.3214,1.7857-2.3214-0.53571-1.4286s-1.0714-0.17858-1.9643,0.53571c-0.89286,0.71429-4.4643,1.0714-4.4643,1.0714l-4.2857-0.17857-1.9643-2.3214-0.89286-3.0357s-1.25-1.0714-2.6786-0.71428c-1.4286,0.35714-1.6072,1.25-2.6786,1.25s-2.5,0-3.0357-0.89286c-0.53571-0.89286-0.89285-3.0357-0.89285-3.0357l-0.9-2.33s-1.6071-0.89286-2.5-1.6071c-0.89286-0.71429-3.2143-2.3214-3.2143-2.3214l-5.1786-2.3214-4.2857-1.9643-4.6429-1.7857-2.6786-1.0714-1.7857-2.5v-3.0357l1.6072-2.8572,0.35714-1.7857-0.53571-2.3214,1.25-3.0357,0.71428-3.3929,1.9643-1.0714,3.3928-2.8571s0-2.1429,0.71429-2.3214c0.71429-0.17857,5.7143-1.6071,5.7143-1.6071l1.9643-1.7857,1.25-2.6786,2.5-1.6071,1.6071-3.2143s1.0714-1.0714,1.7857-1.7857c0.71428-0.71429,2.1428-1.4286,2.1428-1.4286l1.9643-0.35715,2.1429,1.7857,2.1428,1.0714,2.5,0.35714,2.8572,1.4286,1.0714,1.6071,3.0357,0.89286h3.3929l2.1428,0.35714,1.25,1.6072,2.6786,0.71428,2.3214,0.71429,2.1429,1.7857,1.25-0.89286,1.7857-0.53571,2.1428-1.4286,2.1429-0.17857,1.6071,0.71428,1.7857,0.89286z",
+              "name": "Томская область"
+          },
+          "nv": {
+              "path": "m371.43,421.57,4.1071,0.71429l4.4643-0.17858c1.25-0.17857,2.1429-0.71428,2.1429-0.71428l-2.14,3.4h-3.0357l-0.89285,2.1428s1.0714,1.9643,1.7857,2.5c0.71429,0.53572,2.6786,3.0357,2.6786,3.0357l0.53572,2.1428,2.3214,0.35715h1.4286s2.6786,0.35714,3.3928,0.35714c0.71429,0,0.89286,0,1.9643-0.35714,1.0714-0.35715,3.2143-0.71429,4.6429-0.71429h3.5714s2.6786,0.17857,3.5714-0.35714c0.89286-0.53572,0.89286-1.0714,2.3214-1.25,1.4286-0.17857,3.0357-0.17857,3.9286-0.17857,0.89286,0,1.9643-0.17857,1.9643-0.17857s0,1.6071,0.89286,2.1428c0.89285,0.53572,4.1071,2.6786,4.1071,2.6786l0.71428,0.71429c0.17858,0.71429-0.17857,2.5-0.17857,3.2143,0,0.71428-1.0714,0.71428-0.17857,1.6071,0.89286,0.89286,1.9643,1.4286,1.9643,1.4286l2.3214-1.9643,2.3214-2.3214s2.1429-0.53572,2.8572-0.53572c0.71428,0,3.0357,0,3.75-0.17857,0.71428-0.17857,1.4286-0.71429,2.6786-0.17857,1.25,0.53571,2.3214,0.71428,3.3929,0.71428,1.0714,0,3.5714-1.25,3.5714-1.25s1.7857-2.1428,1.9643-2.8571c0.21-0.7-0.33-4.45-0.33-4.45v-3.75c0-0.71429,0.71428-2.3214,1.25-2.6786,0.53571-0.35714,1.7857-0.89285,1.7857-1.7857,0-0.89286-0.89286-1.6071-0.89286-1.6071s-0.89285-0.53572-0.89285-1.4286c0-0.89286,0.35714-3.2143-0.53572-3.0357-0.89285,0.17857-4.1071,1.7857-4.1071,1.7857s0,0.17857-1.4286,0.17857-2.5,0-2.6786-0.71429c-0.17857-0.71428,0.35714-5,0.35714-5l0.53571-2.6786,0.17858-2.1429-2.8572,1.4286s-1.6071,0.53572-2.5,0.71429c-0.9,0.18-4.47-0.71-4.47-0.71l-2.1429-0.71428-1.4286-2.1429-1.4286-2.8571s-2.5,0.53571-3.2143,0.71428c-0.71428,0.17858-1.9643,0.53572-1.9643,0.53572l-2.3214-1.25-1.0714-3.3929v-1.25l-3.0357-1.7857s-1.9643-1.6072-2.6786-2.1429c-0.71428-0.53571-3.3928-1.7857-3.3928-1.7857s-3.3929-1.25-4.1072-1.6072c-0.71428-0.35714-1.9643-1.25-2.6786-1.6071-0.71428-0.35714-3.9286-1.4286-3.9286-1.4286l-1.9643,0.17857s-0.35715,1.0714-0.53572,1.9643c-0.17857,0.89285-1.0714,2.3214-1.0714,2.3214l-1.4286,1.0714-0.89286,1.6072,0.17858,2.1428-0.71429,1.4286h-3.2143l-2.5-0.35714-2.1428,0.89286-2.1429,2.3214-1.4286,1.9643-0.71429,2.6786,0.71429,1.9643,1.7857,2.6786v1.7857l-2.1428,3.5714z",
+              "name": "Новосибирская область"
+          },
+          "al": {
+              "path": "m381.25,435.14,1.7857,5,1.7857,5.1786,1.6071,6.7857,0.89286,8.5714,0.35714,8.2143,0.35714,2.8571,2.3214-0.53571,1.7857-0.53572,0.89285-0.53571,0.17857-1.9643,1.25-1.6071,1.25-0.35714,1.7857,0.53571,0.89286,1.9643,0.89285,2.8571,2.3214,2.8571,1.9643,1.6071,4.6428,0,3.3929-0.35714,2.5-0.89286,2.3214,0,3.3929,1.4286,1.0714,1.9643,2.3214,0.53572,2.3214-0.53572-0.17857-1.4286-1.6071-1.0714-1.0714-0.89286,0.35714-1.6071,0.71429-0.35714,2.5-0.35714,4.4643-0.71429,3.75-0.17857,2.6786-0.71429,2.3214-1.9643,1.0714-1.9643s0.53572-0.71428,1.25-0.71428c0.71429,0,3.3929-0.17858,3.3929-0.17858l1.9643-0.17857,1.0714-1.7857s0.53572-2.1429,1.25-2.5c0.71429-0.35714,0.89286-2.3214,0.89286-2.3214l0.71429-2.1429-0.35715-1.0714-0.71428-1.0714,0.71428-0.89286,1.25-0.53571-0.17857-1.0714-1.4286-1.6072-1.0714-1.0714c-0.17857-0.71429-0.89286-2.8572-0.89286-2.8572l-1.7857-1.7857-0.17857-0.89286-0.53572-2.1429-1.6071-1.4286-2.5-1.9643-1.74-1.79s-1.6072,1.0714-2.3214,1.4286c-0.71429,0.35715-1.7857,0.71429-1.7857,0.71429l-2.5,0.17857-2.5-0.35714-3.0357-0.17857-4.8214,0.71428-2.5,1.6072-1.6071,1.7857-1.0714,0.71429-0.89286,0.35714-1.4286-1.25-0.35714-0.89286,0.35714-0.89286,0.17857-1.7857-0.17857-1.4286-2.3214-1.6071-1.9643-1.25-1.0714-1.25-0.17857-0.89286-1.9643-0.17857-4.2857,0.17857-1.25,1.25-2.1429,0.53571-3.75-0.53571-4.2857,0.17857-2.6786,1.25h-2.5l-3.3929-0.17857z",
+              "name": "Алтайский край"
+          },
+          "km": {
+              "path": "m472.14,414.79-0.71428,2.3214,0.89286,1.6072,2.5,1.4286,1.7857,1.6071,1.25,2.5,0.17857,0.89286s-0.89286,1.4286-1.6071,2.1429c-0.71429,0.71428-4.2857,2.3214-4.2857,2.3214l-1.7857,1.7857-1.7857,1.7857v1.6072l1.0714,1.7857,0.17858,1.7857-1.9643,2.5s-1.25,1.0714-1.0714,1.7857c0.17857,0.71428,1.0714,1.4286,1.7857,1.6071,0.71428,0.17857,2.8571,0.89286,2.8571,0.89286l-0.71429,1.4286-1.25,1.7857-0.53571,1.6072-1.7857,0.71428-1.4286,1.6072,0.71429,1.25,1.25,1.25-0.89286,2.5-1.25,1.6071,0.53572,1.25,1.7857,1.7857-0.35714,1.6072-1.6072,1.9643-2.5,2.1429h-1.9643l-0.71429-1.7857-1.9643-1.25-2.6786-0.35714-1.4286,1.0714-2.1428-1.4286-0.71429-2.3214-1.0714-0.71429,0.17857-2.5-0.53571-2.5,0.89286-1.9643,0.71428-1.6071-2.1428-2.6786-1.6072-2.6786-1.25-1.4286-0.71428-2.3214-0.89286-1.7857-2.3214-2.1429-1.7857-1.6071-0.71429-1.25v-1.7857l-0.35714-4.6428,0.17857-2.5,0.71429-2.3214,1.25-1.4286,0.71428-1.25-1.4286-1.9643v-0.89286l-0.35714-2.5,1.6071-0.35714,4.4643-0.53571,2.5-0.89286,3.0357-0.89286,1.0714-0.35714,0.71428-0.89286h1.6072,1.9643,2.5l1.7857,0.35715,1.4286,0.35714,0.89286,0.89286,1.9643,0.53571,1.6071-0.17857,2.5-0.71429z",
+              "name": "Кемеровская область"
+          },
+          "lt": {
+              "path": "m422.32,478.89-0.44643,2.1428s-0.17857,1.875,0,2.5893c0.17857,0.71429,1.1607,2.3214,1.1607,2.3214l3.3036,0.89286s0.98215,1.1607,1.0714,1.6071c0.0893,0.44643,0.0893,3.3036,0.0893,3.3036s0.17857,0.89286,0.53571,1.6071c0.35715,0.71429,1.25,1.875,1.7857,2.2322,0.53571,0.35714,1.6071,1.25,2.4107,1.3393,0.80357,0.0893,3.125,0.0893,3.5714,0.0893,0.44643,0,4.0179,0.0893,4.0179,0.0893s1.0714,0.53572,1.6071,0.89286c0.53571,0.35714,1.4286,1.25,1.7857,1.875,0.35715,0.625,1.5179,1.6964,2.0536,1.9643,0.53571,0.26785,1.1607,0.80357,1.7857,1.1607,0.625,0.35714,1.6964,0.71429,2.4107,0.80357,0.71429,0.0893,2.9464-0.44643,3.3929-0.71428,0.44643-0.26786,2.3214-0.89286,3.4821-0.89286s4.7322-0.35714,5-0.44643c0.26786-0.0893,3.5714-1.3393,4.1964-1.3393s1.4286-0.89285,1.6071-1.25c0.17858-0.35714,0.625-1.9643,0.17858-2.7678-0.44643-0.80357-0.80358-1.0714-1.4286-1.4286-0.625-0.35715-1.4286-1.25-1.25-1.7857,0.17858-0.53571,1.9643-1.1607,2.4107-1.1607,0.44643,0,2.5,1.0714,2.5,0.26785,0-0.80357-1.6964-2.2321-1.6964-2.2321s-0.98214-1.3393-1.25-1.7857c-0.26786-0.44643-1.875-1.9643-1.875-1.9643s-2.2321-2.7679-2.0536-4.1071c0.17857-1.3393-0.0893-3.3929-0.0893-3.3929s-0.625-1.3393-0.71428-1.6964c-0.0893-0.35714-1.3393-0.17857-1.3393-0.17857l-1.5179,1.5179s-1.4286-0.26786-1.5178-0.80357c-0.0893-0.53572-0.71429-2.5893-0.71429-2.5893s-0.35714-1.7857-0.44643-2.1429c-0.0893-0.35714-0.17857-1.9643-0.17857-1.9643l1.6964-1.3393,2.8571-1.3393,0.35715-1.1607-1.3393-1.6071-0.80357-0.625-2.1429-0.53571-1.9643,0.98214s-1.0714-0.625-1.4286-0.80357c-0.35714-0.17857-1.0714-0.89286-1.0714-0.89286l-0.89286-1.7857s0-1.0714-0.71429-0.89286c-0.71428,0.17857-0.89285,0.71428-0.89285,0.71428s-1.1607,1.1607-1.1607,1.5179c0,0.35714-0.625,1.4286-0.625,1.4286l-0.98214,1.0714s-1.6071,0.44643-1.9643,0.44643h-3.0357c-0.35714,0-1.1607,0.71429-1.5179,1.0714-0.35714,0.35714-1.1607,1.9643-1.1607,1.9643l-1.5179,1.0714-0.98214,0.625-2.3214,0.71429h-2.3214l-4.1071,0.71428-4.1071,0.625-1.0714,0.625-0.0893,0.98215s0.0893,0.89285,0.53572,0.98214c0.44642,0.0893,1.6071,0.80357,1.6071,0.80357l0.44643,0.89286-0.0893,0.89286-1.875,0.625z",
+              "name": "Республика Алтай"
+          },
+          "tv": {
+              "path": "m461.96,477.02,0.26786-1.6964s0.89286-0.625,1.6071-0.625c0.71429,0,1.6964,0.71428,2.4107,0.89286,0.71428,0.17857,2.7678,0.71428,3.0357,0.71428,0.26786,0,1.0714-0.80357,1.3393-1.25,0.26785-0.44643,1.9643-2.6786,1.9643-2.6786s0-1.25,0.625-1.6071c0.625-0.35715,1.875-0.35715,2.3214-0.35715,0.44643,0,1.6071-0.17857,2.3214,0.26786,0.71429,0.44643,1.1607,3.0357,1.1607,3.0357s0.89286,0.89285,1.1607,0.89285c0.26786,0,2.1429-0.80357,2.1429-0.80357s1.4286,0.17857,1.7857,0.44643c0.35714,0.26786,3.0357,0.89286,3.0357,0.89286s1.6964,1.6071,2.2322,1.6071c0.53571,0,1.6964,0.26786,2.6786-0.0893,0.98214-0.35714,2.8571-0.80357,3.3929-1.25,0.53571-0.44642,5.5357-1.9643,5.9821-2.5,0.44643-0.53571,7.0536-5.9821,7.0536-5.9821l2.1429-2.8571s-0.17857-1.875-0.17857-2.9464,1.0714-2.3214,1.4286-2.5893c0.35714-0.26785,2.8571,0.0893,3.3036,0.17858,0.44643,0.0893,4.375,0.89285,4.7321,0.80357,0.35714-0.0893,4.2857-0.44643,4.2857-0.44643l2.4107-2.2321s1.5179-0.35715,2.4107,0.0893c0.89286,0.44643,3.6607,2.5,4.1964,2.7679,0.53572,0.26786,3.75,2.3214,3.75,2.3214l1.6072,1.5178s1.25,0.71429,1.7857,0.44643c0.53571-0.26785,2.3214-0.89285,2.3214-0.89285l1.6071,0.53571,0.35714,1.25s0.53572,0.89286,0.53572,1.25-0.89286,1.6071-0.89286,1.6071-0.71428,0.53572-0.80357,1.1607c-0.0893,0.625-0.26786,4.1071-0.26786,4.1071s-0.0893,2.3214-0.0893,2.7679c0,0.44643-0.71429,2.1428-0.71429,2.1428l-1.4286,2.4107s-1.5179,1.3393-1.875,1.875c-0.35714,0.53571-2.2321,1.3393-2.4107,1.6964-0.17858,0.35714-0.71429,1.875-0.71429,1.875s-0.71429,1.875-0.71429,2.4107c0,0.53572-0.0893,3.3929-0.0893,3.9286,0,0.53572,0.53571,2.5,1.0714,3.2143,0.53571,0.71428,1.25,1.6071,1.25,2.0536,0,0.44643-0.80357,2.3214-1.1607,2.7679-0.35714,0.44643-4.8214,4.1964-4.8214,4.1964l-2.0536,1.25-2.1428,0.17857s-1.7857-0.98215-2.1429-0.89286c-0.35714,0.0893-2.3214,0.17857-2.6786,0.17857-0.35715,0-1.7857-0.89286-1.7857-0.89286s-1.6964-0.35714-2.1428-0.625c-0.44643-0.26785-1.7857-1.1607-1.7857-1.1607s-2.7679-0.26786-3.2143-0.26786c-0.44643,0-2.8572-0.17857-3.2143-0.53571l-2.0536-2.0536s-0.71429-1.4286-0.80357-1.9643c-0.0893-0.53571-0.17857-2.5-0.17857-2.5s-0.80358-0.80357-1.3393-1.25c-0.53571-0.44643-2.1429-0.89286-2.9464-0.89286-0.80357,0-3.9286,0.17858-3.9286,0.17858s-1.9643,0.53571-2.2321,0.625c-0.26786,0.0893-1.25,0.71428-1.875,0.80357-0.625,0.0893-2.0536,0.0893-1.9643-0.80357,0.0893-0.89286,1.25-1.6964,1.3393-2.0536,0.0893-0.35714-0.0893-1.0714-0.71429-1.3393-0.625-0.26786-2.1429-0.17857-3.0357,0.0893-0.89286,0.26786-2.3214,0.80358-2.8572,0.89286-0.53571,0.0893-3.3928,0.71429-3.3928,0.71429s-2.1429,0.89285-2.6786,1.0714c-0.53572,0.17857-3.8393,1.1607-3.8393,1.1607l-3.0357,1.5179-2.4107,1.1607-2.5893-0.26786-2.1429-0.98214-1.5179-0.71428-1.25-1.25c0-0.44643,0.35714-0.98215,0.35714-0.98215l2.4107-0.44643,1.7857,0.53572s1.25-0.35714,0.17857-1.0714c-1.0714-0.71429-4.4643-5.0893-4.4643-5.0893l-1.48-2.44s-1.0714-1.4286-1.0714-1.7857v-2.5893z",
+              "name": "Республика Тыва"
+          },
+          "hk": {
+              "path": "m470.27,432.11c0.53572,0.35715,1.9643,1.875,1.9643,1.875l1.3393,1.6072s0.26785,0.625,1.1607,0.80357c0.89286,0.17857,2.0536,0.17857,2.0536,0.17857s0.35714-0.35714,0.80357-0.80357,0.625-0.98214,0.98215-1.25c0.35714-0.26786,0.89285-0.89286,1.3393-0.80357,0.44643,0.0893,0.71429,0.26785,1.3393,0.71428,0.625,0.44643,1.3393,1.25,2.2321,1.25,0.89286,0,2.5,0.80357,2.5,0.80357s0.44643,1.875,0.625,2.3214c0.17857,0.44643,0.53571,2.9464,0.53571,2.9464s0.35715,1.5179,0.71429,2.4107c0.35714,0.89285,0.98214,2.0536,1.0714,2.4107,0.0893,0.35714-0.0893,3.125-0.17857,3.3929-0.0893,0.26785-0.80357,1.875-0.89286,2.2321-0.0893,0.35714,0,2.5893,0,2.5893l1.5179,1.5179,0.625,1.875s-1.25,1.4286-1.4286,1.6964c-0.17858,0.26786-2.2322,1.3393-2.5893,1.875-0.35714,0.53571-1.4286,3.0357-1.4286,3.0357s-1.6071,1.9643-2.1429,2.2322c-0.53571,0.26785-2.8571,1.0714-3.125,1.5178-0.26786,0.44643-1.6964,1.6964-1.6964,1.6964l-2.7678,0.0893s-1.3393,0.17857-1.6072,0.625c-0.26785,0.44643-0.53571,1.4286-1.0714,1.875-0.53571,0.44643-1.0714,1.25-1.1607,1.6071-0.0893,0.35714-0.89286,1.0714-0.89286,1.0714s0.0893,0.71429-1.0714,0.625c-1.1607-0.0893-2.9464-0.35714-2.9464-0.35714l-1.7857-1.1607-1.6071,0.44643-0.625,0.80357-0.26786,0.89286-2.5,1.0714s-0.625,0.89286-1.1607,0.35714c-0.53572-0.53571-1.25-2.3214-1.25-2.3214l-0.625-2.5893v-1.5179s0.17857-1.0714,0.53571-1.25c0.35714-0.17857,2.5-1.6071,2.5-1.6071s1.3393-0.98215,1.6964-1.0714c0.35714-0.0893,2.1429-0.44643,2.1429-0.44643l1.9643-1.0714,1.5179-2.0536,1.3393-1.0714-0.44643-1.6071s-1.25-1.25-1.4286-1.6071c-0.17858-0.35715-0.44643-1.25-0.44643-1.25l1.6071-2.2322,0.0893-1.875s-1.0714-1.1607-1.1607-1.5178c-0.0893-0.35715-0.0893-1.25-0.0893-1.25l2.5893-1.5179,1.0714-1.875,1.1607-1.9643,0.53572-1.6964-3.5714-1.1607s-0.89286-1.25-0.71429-1.7857c0.17858-0.53572,1.7857-2.4107,1.7857-2.4107s0.89286-1.875,0.89286-2.3214c0-0.44642-1.0714-2.8571-1.0714-2.8571s0-0.71428,0.26785-1.1607c0.26786-0.44643,1.25-0.98215,1.25-0.98215z",
+              "name": "Республика Хакасия"
+          },
+          "ir": {
+              "path": "M599.41,325.78c-0.12,0.03-0.22,0.12-0.22,0.34,0,0.45,0.53,1.54,0.53,1.54l0.37,1.06s-0.26,0.88-0.62,1.06-1.78,0.63-1.78,0.63l-2.69,0.09s-1.61,0.26-1.88,0.44c-0.26,0.18-0.9,0.73-0.9,1.09s-0.44,1.96-0.53,2.31c-0.09,0.36-0.16,1.97-0.16,1.97s0.18,0.78,0.63,1.41c0.44,0.62,0.43,1.81,0.43,1.81l-1.25,1.16s0.26,1.67,0.35,2.03,1,3.4,1,3.4l0.43,2.5s-0.28,1.42-0.28,1.69-0.96,4.57-0.96,4.57-0.09,0.98-0.54,1.24c-0.44,0.27-2.06,1.88-2.06,1.88s-0.19,0.99-0.19,1.34c0,0.36,0.37,1.06,0.19,1.5-0.18,0.45-1.97,1.72-1.97,1.72l-2.59,0.72-1.31,0.88-0.29,3.84-0.09,2.22v1.81c0,0.36,0.27,1.34,0.72,1.78,0.45,0.45,2.16,1.97,2.16,1.97l2.21,0.53,1.16,0.78,0.1,2.25s-0.37,1.33-0.82,1.5c-0.44,0.18-2.75,1.82-2.75,1.82l-0.53,1.15,0.97,1.16,1.97,1.59s0.78,0.1,0.87,0.72c0.09,0.63-0.15,2.6-0.15,2.6l-0.47,1.43-1.25,1.07-1.41,1.43-0.19,1.6-1.24,0.81-2.79-0.28-1.59-1.35-1.78-0.68-2.25-0.63s-0.45-0.74-0.63-1.19c-0.17-0.44-0.34-1.68-0.34-1.68l-1.25-0.72-1.87,1-1.26,0.09-0.18,1.69-0.35,2.41-0.53,1.53-0.9,0.97-1.6,0.53s-1.89,0.28-2.25,0.37c-0.35,0.09-1.34,1.41-1.34,1.41s-0.53,0.8-0.44,1.15c0.09,0.36,0.19,1.25,0.19,1.25l-1.16,0.91-2.06,0.81s-0.44,0.9-0.44,1.25c0,0.36,0.16,1.97,0.16,1.97l0.37,1.5,0.1,1.63s0.7,0.7,0.43,1.06c-0.26,0.36-2.78,0.62-2.78,0.62l-1.93-2.78-1-1.5-1.07-2.34-1.06-0.69h-1.72l-1.59,1.69s-0.89,0.81-1.16,1.44c-0.27,0.62,0.01,1.78-1.15,1.78s-3.22-0.38-3.22-0.38l-1.25-1.15-1.97-0.44-1.34-0.19s-0.62,0.64-0.97,0.91c-0.36,0.27-1.35,1.25-1.35,1.25v0.62l-0.72,1.88-1.15,2.22-0.81,0.9-0.29,1.35,0.63,1.68s0.45,0.9,0.81,1.25c0.36,0.36,0.63,0.35,0.72,0.97,0.09,0.63,0.19,2.6,0.19,2.6l-0.38,2.4-0.97,1.88s-1.88,1.79-2.15,2.06-2.13,1.61-2.13,1.97-1.62,4.19-1.62,4.19l-1.25,2.25s-0.69,2.11-0.78,2.56-0.63,3.59-0.63,3.59-0.09,1.33-0.62,1.6c-0.54,0.26-3.69,0.81-3.69,0.81s-2.12,1.07-2.56,1.34c-0.45,0.27-0.72,0.63-0.72,0.63s-0.19,0.52-0.1,0.87c0.09,0.36,1.16,2.25,1.16,2.25l1.44,2.66,1.06,0.56,0.97,1.06,1.09,1.69v0.81l1.25-0.43s0.9-0.91,1.25-1c0.36-0.09,1.78,0.28,1.78,0.28l1.44,0.87s1.43,0.91,1.78,1c0.36,0.09,2.03,1.41,2.03,1.41l4.32,2.87s0.34,0.82,1.06,0.82c0.71,0,2.41-0.38,2.41-0.38l1.78-0.34,1.06,1.15,0.28,1.16,0.28,1.53,2.56-0.81,2.44-2.41s2.14-2.16,3.13-2.34c0.98-0.18,2.12,1.19,2.12,1.19s0.72,1.58,1.25,2.03c0.54,0.44,2.43,2.32,2.78,2.59,0.36,0.27,3.03,1.53,3.03,1.53l2.22,2.66c0.45,0.53,2.52,3.22,2.97,3.22s2.84,0.18,3.38,0.09c0.53-0.09,1.96,0.63,2.5,1.25,0.53,0.63,1.78,2.69,1.78,2.69s1.27,1.69,1.62,1.78c0.36,0.09,1.16,1.88,1.16,1.88s0.89,1.62,1.25,1.53,2.31-0.63,2.31-0.63,0.73,0.15,0.91,0.69c0.18,0.53,0.87,2.59,0.87,2.59s1.18,0.62,1.53,0.53c0.36-0.09,1.88-1.25,1.88-1.25s1.77-0.26,2.12-0.43c0.36-0.18,1.44-0.82,0.82-1.44-0.05-0.04-0.11-0.06-0.16-0.09,0.05-0.01,0.34-0.07,0.34-0.07l1.69-0.62,8.75-2.88s1-1.76,1-2.03,0.63-2.06,0.63-2.06l0.06-2.06,0.81-0.82,1.78-0.96,2.25-0.82,1.16-1.68,1.06-0.82,5.44-2.59,1.62-1.31,0.82-1.1,0.62-2.5,1.94-1.15s1.27-0.9,1.62-1.35c0.36-0.44,0.35-0.97,0.35-0.97l-0.63-0.81-1.25-1.25-0.34-0.81s0.18-0.96,0.62-1.41c0.45-0.44,0.71-0.63,1.07-0.72,0.35-0.09,1.25,0.35,1.25,0.35l1,1.09,0.87-0.47,0.63-1.78s0.81-2.14,0.9-2.5,0.25-1.69,0.25-1.69-0.25-3.05-0.25-3.5v-2.5s0.44-4.01,0.53-4.37,0.35-2.13,0.35-2.13l-0.1-1.87s-0.44-1.17-0.62-1.44-0.16-0.81-0.16-0.81,0.63-1.05,0.72-1.41c0.09-0.35-0.37-0.81-0.37-0.81s-0.54-0.71-0.72-1.06c-0.18-0.36-0.88,0.15-0.88,0.15l-1.44,0.91s-0.79,1.26-1.15,1.53-0.44,1.31-0.44,1.31l-0.28,4.38-0.81,1.34-1.53-0.09c-0.34-0.63-0.73-1.32-0.79-1.6-0.08-0.44-0.43-2.67-0.34-3.65s0.97-4.38,0.97-4.38l1.25-1.25s0.09-1.52-0.53-2.06c-0.63-0.53-1.87-1.07-2.41-1.34-0.53-0.27-1.72-1.35-1.72-1.97,0-0.63,0.92-1.77,1.19-2.13,0.27-0.35,3.93-1.51,4.28-1.78,0.36-0.27,3.57-2.15,3.57-2.15l3.65-1.07,2.78,0.25,2.13-0.34,1.34-2.5,2.88-0.81s1.87,1.25,2.4,1.25c0.54,0,2.22-0.72,2.22-0.72s1.07,0.64,1.25,1,1.63,1.34,1.63,1.34l1.93-0.37s1.35-0.44,2.07-0.35c0.71,0.09,1.7,0.98,2.06,1.07s2.75-0.72,2.75-0.72l1.09-1.5,2.5-1.16s1.35-1.08,1.35-1.53,0.15-3.22,0.15-3.22,1.25-0.61,1.88-0.97c0.62-0.35,2.15-0.18,2.15-0.18s0.17-1.34,0.35-1.79c0.18-0.44,1.33-1.34,1.78-1.43s2.44,0.37,2.44,0.37l1.15,0.97-1.34,1.44-0.72,1.15,0.72,0.72s2.31-0.45,2.94-0.72c0.62-0.26,2.24-0.44,2.78-0.53,0.53-0.09,2.84-1.15,2.84-1.15s0.91-1.08,0.91-1.44-0.2-1.71-0.38-2.16c-0.18-0.44-2.21-1.14-2.65-1.59-0.45-0.45-0.54-2.58-0.72-2.94s-0.9-1.9-0.63-2.44c0.27-0.53,1.06-1.78,1.06-1.78l-0.62-2.5s-0.01-2.48,0.34-2.84c0.36-0.36,2.07-1,2.07-1l2.93,0.81s0.9,1.15,1.35,1.06c0.44-0.09,2.15-0.53,2.15-0.53l0.25-3.56-0.87-1.16s-1.27-1.42-1.63-1.68c-0.35-0.27-1.25-1.25-1.25-1.25l-1.68-2.97-0.25-2.6-0.72-1.68-2.25-0.54-1.78,0.97-3.13,1.53-1.97,0.44-0.72-0.72-0.78-2.84-1-1.59-2.75-2.35-2.34-1.68-2.66-0.91-2.78-0.06s-2.49,0.8-2.84,1.15c-0.36,0.36-1.45,1.52-1.72,1.88-0.27,0.35-0.88,2.5-0.88,2.5l-0.28,2.12v2.5s-0.17,1.36-0.43,1.72c-0.27,0.36-3.94,2.03-3.94,2.03l-1.16,1.72-0.19,2.66-0.97,2.25-2.15,2.22s-0.6,0.63-0.69,0.09-0.62-2.22-0.62-2.22l-2.16-2.34s-0.44-1.23-1.06-0.78c-0.63,0.44-1.63,1.31-1.63,1.31l-3.28,1s-0.89,0.43-1.25,0.87c-0.36,0.45-2.97,0.72-2.97,0.72l-2.03,0.28-2.16,2.5s-0.62,1.26-1.24,0.82c-0.63-0.45-2.22-2.35-2.22-2.35l-0.82-1.59-0.53-2.94,0.16-5.56-0.06-2.56,1.5-2.6,1.87-3.03s0.44-1.61,0.44-2.06-0.53-3.03-0.53-3.03l-2.03-2.25-4.94-3.66s-0.63-0.71-0.63-1.25c0-0.53,0.1-2.31,0.1-2.31l1.15-1.97s0.63-0.35,0-1.06c-0.62-0.72-3.18-4.57-3.18-4.57l0.15-5.34s0.02-0.65-0.34-1.09c-0.36-0.45-2.59-3.28-2.59-3.28l-1.54-1.88s-0.24-0.62-0.68-0.62c-0.45,0-2.16,0.68-2.16,0.68s-1.17,0.82-1.44,0.29c-0.27-0.54-0.25-2.6-0.25-2.6s-0.29-1.16,0.16-1.25,1.62-0.44,1.62-0.44h1.5l0.29-1.43-1.79-1.97-1.53-1.35-1.4-0.06s-0.14-0.03-0.25,0z",
+              "name": "Иркутская область"
+          },
+          "br": {
+              "path": "m543.39,476.39s1.6072,0.98214,2.3214,1.1607c0.71429,0.17857,2.8572,1.25,3.3929,1.3393,0.53571,0.0893,1.7857,0.71428,2.5,0.98214,0.71429,0.26786,1.875,0.98214,2.5893,1.3393,0.71428,0.35714,2.2321,0.53571,3.2143,0.625,0.98214,0.0893,2.8571,0.89285,3.4821,1.0714,0.625,0.17858,2.1429,1.0714,2.9464,1.1607,0.80357,0.0893,1.5179,0,2.7679,0.625s2.7679,1.3393,3.125,1.5179c0.35714,0.17857,0.71429,0.26785,0.80357,0.98214,0.0893,0.71428,0,2.6786,0.0893,3.0357,0.0893,0.35715,0.26785,1.6964,0.625,2.0536,0.35714,0.35715,1.6071,1.9643,2.5893,2.5893,0.98215,0.625,1.4286,1.6964,1.9643,2.1429,0.53571,0.44643,2.3214,1.875,2.8571,1.9643,0.53572,0.0893,2.3214,0.625,2.7679,0.625,0.44643,0,5.0893,0.44643,5.0893,0.44643s1.7857-0.80357,2.7679-1.25c0.98214-0.44643,4.0179-1.25,4.4643-1.5179,0.44643-0.26785,1.5178-0.98214,2.6786-1.0714,1.1607-0.0893,4.1964-0.0893,5.0893-0.0893,0.89286,0,4.1072,0.0893,4.1072,0.0893s2.3214-0.0893,3.125,0.44642c0.80357,0.53572,1.6071,1.6072,1.9643,2.1429,0.35715,0.53572,0.625,1.4286,1.0714,1.6071,0.44643,0.17858,1.4286,0.35715,1.875,0.35715,0.44643,0,2.1429-0.26786,2.5-0.35715,0.35714-0.0893,2.2321-0.44642,2.2321-0.44642l0.0893-2.6786s-0.0893-1.7857,0.53571-2.0536c0.625-0.26785,4.4643-1.5178,4.8214-1.6964,0.35715-0.17857,1.25-1.6071,1.25-1.6071s-2.5-0.625-3.3036-0.625c-0.80357,0-1.25-1.4286-1.25-1.4286l1.0714-1.5179,0.17857-1.9643,0.98214-1.0714,0.80358-1.3393s-0.625-0.98214-0.80358-1.3393c-0.17857-0.35715-0.0893-1.4286-0.0893-1.4286l2.2321-1.1607,3.125-0.35714,2.4107-1.1607,3.4821-2.4107,1.7857-0.625s1.4286,0.0893,1.875,0.26786c0.44643,0.17857,2.4107,0.53571,2.5893,0.17857,0.17857-0.35714,1.6071-1.9643,2.0536-2.3214,0.44643-0.35714,2.6786-2.1429,2.6786-2.1429l1.4286-1.1607s0.98215-1.25,1.4286-1.5179c0.44643-0.26786,1.875-1.0714,2.4107-1.0714,0.53571,0,0.98214,0,1.3393-0.26785,0.35715-0.26786,1.1607-1.25,1.3393-1.6072,0.17857-0.35714,1.0714-0.80357,1.6071-0.89285,0.53572-0.0893,5-1.3393,5-1.3393l2.6786-1.5179s1.875-1.5178,2.0536-1.875c0.17857-0.35714,1.6071-2.8571,1.6071-2.8571l0.98214-1.875s-0.26786-1.4286-0.71428-1.7857c-0.44643-0.35715-2.1429-1.6072-2.1429-1.6072l-2.5-1.25s-1.25-0.80357-1.1607-1.6071c0.0893-0.80357,7.5-5.625,7.5-5.625s0.98215-1.6964,1.0714-2.0536c0.0893-0.35714,0.89286-1.9643,1.25-2.3214,0.35715-0.35714,2.5-2.0536,2.5-2.0536s1.4286-0.625,1.875-0.71429c0.44643-0.0893,3.5714-1.5178,3.5714-1.5178l1.25-0.98215s0.44643-2.0536,0.44643-2.5893c0-0.53572-0.80357-3.8393-0.80357-3.8393s-1.0714-0.53571-1.4286-0.89285c-0.35715-0.35715-1.25-0.80358-2.1429-0.80358-0.89286,0-2.6786,0-3.125-0.625-0.44643-0.625-1.3393-1.25-1.6964-1.875-0.35714-0.625-1.1607-1.7857-1.25-2.2321-0.0893-0.44643-0.80357-2.4107-0.98214-2.7679-0.17857-0.35714-1.0714-2.3214-1.0714-2.3214l-2.0536-3.5714-1.0714-2.7679,0.26786-2.0536,1.0714-0.625,0.80357-1.25,1.4286-1.875,0.625-0.98214-2.3214-1.25s-1.875,0.44642-2.2321,0.71428c-0.35715,0.26786-0.98215,1.3393-0.98215,1.3393s0.35715,0.625,0,0.80357c-0.35714,0.17857-2.3214,0.44643-2.3214,0.44643l-1.25,0.89285-0.71429,1.9643v1.6071l-0.98214,0.98215-2.0536,1.0714-1.3393,0.98215-1.1607,1.3393s-1.6964,0.0893-2.0536,0.0893c-0.35714,0-2.0536-0.625-2.0536-0.625l-2.6786,0.17857-2.3214-0.0893-1.9643-1.4286-1.4286,0.26786-2.0536-0.35714s-0.80357-0.71429-1.1607-0.71429c-0.35714,0-2.1429,0.625-2.1429,0.625l-1.5178,1.3393-0.98215,1.0714-2.6786,0.26785-1.9643-0.0893-2.3214,0.44643-2.2322,1.1607-3.3928,1.7857-2.3214,0.98215-1.3393,0.89285-0.89285,1.1607s-0.0893,0.35714,0.0893,0.71428c0.17857,0.35715,0.98214,1.4286,0.98214,1.4286l1.6072,0.80357,0.98214,0.89285,0.83,0.91,0.0893,1.1607-1.6071,2.1428-0.35714,2.2322-0.35715,1.875v2.6786l0.80358,1.6071,1.1607,1.4286s0.26786-0.44643,0.71429-0.80357c0.44642-0.35714,1.1607-2.3214,1.1607-2.3214v-2.0536l0.0893-2.0536,0.98214-1.875,1.6964-1.25,1.1607-0.17857,0.89286,1.1607s-0.0893,1.25-0.26786,1.6964c-0.17857,0.44643-0.53571,0.98214-0.35714,1.3393,0.17857,0.35714,0.89286,1.4286,0.89286,1.4286l-0.17858,2.7678s-0.35714,2.3214-0.35714,2.6786c0,0.35714-0.26786,2.5893-0.26786,3.0357v2.5893c0,0.89285,0,1.5178,0.0893,2.1428s0.0893,1.6964-0.0893,2.1429c-0.17857,0.44643-0.44642,1.25-0.71428,1.9643-0.26786,0.71428-0.35714,1.25-0.44643,1.9643-0.0893,0.71429-1.0714,1.6964-1.0714,1.6964s-0.71428,0.26786-0.98214-0.625-1.6071-0.98214-1.6071-0.98214-0.71429,0.44642-1.0714,0.98214c-0.35715,0.53571-0.89286,1.25-0.35715,1.6964,0.53572,0.44643,1.5179,1.6071,1.5179,1.6071s0.625,0.35714,0.26786,1.1607c-0.35714,0.80358-1.1607,1.0714-1.6964,1.4286-0.53571,0.35714-1.5179,0.89285-1.6964,1.25-0.17857,0.35714-0.71428,1.4286-0.71428,1.7857,0,0.35714-0.44643,2.0536-0.44643,2.0536l-1.3393,0.98214-1.875,1.3393s-2.2321,0.71429-2.6786,0.98214c-0.44643,0.26786-2.5,1.4286-2.8571,1.7857-0.35715,0.35714-0.53572,1.25-1.4286,1.6071-0.89286,0.35714-3.125,1.3393-3.125,1.3393l-0.98215,0.26785s-0.35714,0.80357-0.35714,1.1607c0,0.35714-0.26786,2.2321-0.26786,2.7678,0,0.53572-0.26785,0.98215-0.625,1.6964-0.35714,0.71429-0.98214,1.6964-1.6071,1.7857-0.625,0.0893-2.7679,0.71428-3.2143,0.89285-0.44642,0.17858-2.5,0.89286-3.0357,0.98215-0.53571,0.0893-2.8571,1.0714-2.8571,1.0714l-0.71429,0.80357-1.5179,1.1607-2.0536,0.71429-1.4286,0.80357-1.6964-1.0714-0.35714-0.98214-0.44643-1.25s-0.35714-0.35715-1.25-0.26786c-0.89286,0.0893-2.0536,0.44643-2.0536,0.44643s-1.3393-1.4286-1.6071-1.875c-0.26786-0.44643-1.875-3.125-1.875-3.125l-1.54-1.99-1.34-1.61s-1.1607-0.71429-1.6964-0.71429c-0.53571,0-2.6786-0.17857-3.0357-0.17857-0.35715,0-1.6072-0.89285-1.7857-1.1607-0.17857-0.26786-3.4821-4.2857-3.4821-4.2857l-1.875-0.89285-2.8571-1.9643-1.9643-2.2321-1.0714-1.6964-0.89286-0.625s-0.89285-0.26786-1.25,0.0893c-0.35714,0.35714-0.80357,0.53571-1.3393,0.89285-0.53572,0.35715-1.875,1.4286-1.875,1.4286l-1.3393,1.25-1.9643,1.1607-1.4286,0.89286s-0.89286,1.0714-0.98215,1.6071c-0.0893,0.53571-0.26785,1.1607-0.26785,2.0536,0,0.89286-0.35715,3.3036-0.35715,3.3036z",
+              "name": "Республика Бурятия"
+          },
+          "zb": {
+              "path": "m618.41,500.07s1.1364,1.1364,1.6415,1.5152c0.50508,0.3788,1.6415,1.6415,2.2728,1.894,0.63134,0.25254,2.6516,1.6415,2.6516,1.6415s2.9042,1.0102,3.4093,1.0102h5.5558c1.1364,0,3.283,0.75762,3.283,0.75762s0.88388,0.63134,2.0203-0.25254c1.1364-0.88389,2.3991-1.6415,2.3991-1.6415s0.75762,0.25254,1.6415,0.63135c0.88388,0.3788,1.5152,1.2627,2.1466,1.2627,0.63135,0,3.4093-1.7678,3.4093-1.7678s2.6516-2.2728,3.1567-2.7779c0.50507-0.50508,2.5254-0.88388,3.5355-1.2627,1.0102-0.37881,5.4296-0.50508,5.4296-0.50508s1.894-1.2627,2.2728-1.894c0.37881-0.63135,1.7678-3.4093,1.894-3.9143,0.12627-0.50508,2.7779-2.3991,3.4093-2.9042,0.63135-0.50508,4.9245-2.5254,5.177-3.0305,0.25253-0.50508,2.0203-1.5152,2.0203-1.5152l3.1567,1.2627,2.9042,1.2627s2.2728,0.25254,2.9042,0.25254c0.63135,0,2.2728-0.50508,2.7779-0.88388,0.50508-0.37881,3.1567-1.7678,3.1567-1.7678s3.283,0.25254,3.7881,0.50508c0.50508,0.25253,1.7678,0.88388,2.3991,1.1364,0.63135,0.25254,3.9144,1.389,3.9144,1.389s3.6618,0.3788,4.4194,0.25254c0.75762-0.12627,2.5254-1.7678,2.7779-2.3991,0.25254-0.63134,0.75762-2.3991,1.6415-2.9042,0.88388-0.50507,4.2932-1.5152,4.2932-1.5152s1.389-0.12627,1.5152-1.6415c0.12627-1.5152,0.37881-2.9042-0.25254-3.5355-0.63135-0.63134-1.389-0.88388-1.7678-1.7678-0.3788-0.88389,0.88389-8.9651,0.88389-8.9651l1.6415-3.7881,1.2627-4.2932s1.389-2.2728,1.2627-2.9042c-0.12627-0.63134-0.37881-3.9143-0.37881-3.9143l-1-2.41s-1.1364-0.88388-1.5152-1.389c-0.37881-0.50507-1.0102-0.37881-1.5152-1.0102-0.50508-0.63135-1.7678-1.1364-1.7678-1.7678,0-0.63134-0.25254-1.5152,0.37881-2.0203,0.63134-0.50508,3.0305-3.0305,3.7881-3.4093,0.75761-0.37881,4.5457-2.5254,4.9245-3.0305,0.37881-0.50507,1.389-1.6415,1.7678-2.1466,0.37881-0.50508,0.88388-0.50508,0.63135-1.6415-0.25254-1.1364-2.6516-3.5355-2.6516-3.5355s-0.63135-0.88389-1.5152-0.88389c-0.88389,0-3.1567-0.3788-3.1567-1.0102,0-0.63134-0.37881-1.2627-0.12627-2.0203,0.25254-0.75762,2.0203-2.2728,2.2728-2.9042,0.25254-0.63135,0.37881-1.894,0.37881-1.894l-2.3991-1.6415-2.6516,0.12627s-0.25254-0.25253-0.25254-0.88388c0-0.63134,0.63135-2.7779,0.88388-3.283,0.25254-0.50507,0.50508-1.5152,0.63135-2.1466,0.12627-0.63134-0.25254-1.7678-0.75761-2.3991-0.50508-0.63135-1.5152-1.389-1.5152-1.389s-1.1364-0.50508-1.6415,0.12627c-0.50508,0.63134-1.1364,1.5152-1.1364,1.5152s-1.1364,0.12627-1.6415-0.25254c-0.50508-0.37881-0.88388-4.1669-0.88388-4.1669s-0.88389-1.2627-1.6415-1.389c-0.75762-0.12627-1.6415-0.12627-2.1466,0.50508-0.50507,0.63134-1.0102,1.0102-1.7678,1.5152-0.75762,0.50508-1.2627,1.1364-1.894,0.75762-0.63134-0.37881-1.389-0.75762-1.2627-1.389,0.12627-0.63135,0.75761-1.6415,0.88388-2.1466,0.12627-0.50507-1.7678-2.1466-1.7678-2.1466l-3.283-0.12627-1.1364-1.1364c-0.12627-0.75761,0.25254-2.5254,0.25254-2.5254l-1.389-1.5152-2.7779-4.0406-1.2627-1.894-3.1567-0.3788-1.1364-2.0203-0.25254-2.9042-1.2627-0.3788h-1.2627l-1.6415,0.63134-1.6415-1.0102-3.0304-0.63135-1.894,0.75762-0.37881,1.0102-0.12627,1.894,0.37881,1.894-0.25254,1.5152-0.50507,2.0203,0.75761,2.0203,0.50508,1.389,1.7678,1.5152,0.88389,0.88388,0.25254,1.894s-0.25254,1.0102-0.75762,1.389c-0.50507,0.37881-3.0305,1.2627-3.0305,1.2627s-2.3991,0.63134-2.9042,0.75761c-0.50508,0.12627-3.4093,0.75762-3.4093,0.75762l-1.389,1.5152-0.25254,1.6415,0.75762,2.5254,1.7678,3.283,1.6415,3.7881,0.75762,2.9042,2.0203,2.2728,1.2627,1.1364,2.1466,0.25254,2.2728,0.50507,1.7678,1.389,0.50507,1.6415,0.12627,1.894v2.3991l-1.894,1.6415-3.0305,1.2627-2.5254,1.2627-2.1466,2.0203-1.0102,1.7678-0.75761,2.1466-2.6516,1.6415-1.894,1.389-2.0203,1.5152-0.88388,0.88388v0.75762l0.88388,0.88388c0.50508,0.12627,2.1466,1.2627,2.1466,1.2627l1.894,1.0102s0.75762,0.88389,0.88389,1.389c0.12627,0.50508,0,1.5152-0.12627,2.1466-0.12627,0.63134-2.0203,3.6618-2.0203,3.6618l-1.894,1.6415-3.6618,2.0203-3.1567,0.63135-2.1466,1.0102s-0.75761,0.37881-1.1364,1.0102c-0.3788,0.63135-1.6415,1.2627-1.6415,1.2627l-2.2728,0.50507-1.0102,0.88388s-1.2627,0.88389-1.6415,1.389c-0.37881,0.50508-3.5355,2.9042-3.5355,2.9042l-0.88389,1.389s-0.75761,1.1364-1.389,1.2627c-0.63134,0.12627-2.2728,0.12627-2.2728,0.12627l-2.3991-0.88388-1.6415,1.389s-1.6415,0.37881-2.1466,0.88388c-0.50508,0.50508-2.7779,1.7678-2.7779,1.7678l-2.3991,0.63134s-1.894-0.25253-2.5254,0.12627c-0.63134,0.37881-1.2627,1.5152-1.2627,1.5152l0.63135,1.5152,0.25254,0.88388-0.88389,1.894s-1.0102,0.75762-1.0102,1.2627-0.88388,2.0203-0.88388,2.0203-0.50508,0.88388,0.25253,1.389c0.75762,0.50507,2.5254,0.88388,2.5254,0.88388s1.389-0.12627,1.5152,0.50508c0.12627,0.63134-1.1364,1.6415-1.1364,1.6415l-2.6516,0.75762-2.0203,1.2627-0.88389,1.6415z",
+              "name": "Забайкальский край"
+          },
+          "am": {
+              "path": "m692.32,397.46,4.6429-0.17857,2.3214-0.17858,3.5714-1.7857,2.6786,0.35714,3.5714,1.0714,2.1429,1.0714,2.6786,0.53571,4.4643-0.53571,3.0357,0,2.3214,0.53571,2.8571,2.1429,2.1429,0.89286,2.8571,0.35714,2.3214-1.7857,2.3214-0.71429,1.9643,0,2.1429,1.4286,2.1429,0.71429,2.5-0.71429,1.7857-1.9643,1.7857-1.25,4.1072,0,2.5-1.4286,2.1428-0.89286,3.75,0,1.4286,0,1.25-0.71429,0.53571-2.5,1.6071-1.0714,4.2857-2.3214,2.3214-0.89286,3.5714-1.9643,2.8572-1.4286,5-0.89286,3.0357,0,1.6071,1.4286l-0.37,3.2s-1.25,1.6071-1.9643,2.6786c-0.71429,1.0714-1.6072,2.6786-1.9643,3.3929-0.35714,0.71429-1.25,2.1429-1.25,2.1429s-0.53571,2.8571-0.71429,3.5714c-0.17857,0.71428-1.0714,2.8571-1.0714,2.8571s-1.25,1.7857-1.0714,2.5c0.17857,0.71428,1.25,1.25,1.25,1.25l0.89285,0.71428,3.2143-0.71428s1.7857-0.17857,2.6786-0.17857c0.89286,0,2.5,0.89285,2.5,0.89285l0.53572,1.9643,0.89285,2.6786s0.17857,0.53572,1.6072,0.53572,2.6786-1.4286,2.6786-1.4286l0.17857-2.3214s1.0714-0.89286,1.9643-0.89286c0.89286,0,2.5-0.53572,2.5-0.53572l1.25-2.1428,0.35715-2.5,1.9643-1.7857,2.3214,0.17857c0.71,0.19,3.03-1.6,3.03-1.6l1.4286-1.4286s0.89285-1.0714,1.9643-0.35714c1.0714,0.71428,2.3214,2.5,2.3214,2.5v2.8571l0.53572,1.6071,1.9643,1.7857s1.6071,0.71428,1.25,1.6071c-0.35714,0.89286-2.8571,1.9643-3.5714,1.9643-0.71428,0-3.5714,0.89285-3.5714,0.89285l-1.6071,0.17857-1.96,0.89s-0.71429,0.17857-0.17858,1.0714c0.53572,0.89286,1.9643,1.7857,1.9643,1.7857l1.25,0.89286,0.35714,1.9643-3.2143,2.3214-1.6072,3.0357-0.17857,2.1429-1.6071,2.3214-2.6786,0.89285-1.6071,1.4286,1.9643,1.9643,0.35714,1.7857-2.3214,2.3214-1.25,3.5714,1.6071,2.8571s3.5714,1.4286,4.2857,1.6072c0.71429,0.17857,4.8214,0.71428,4.8214,0.71428s1.4286,0.71429,1.9643,1.25c0.53571,0.53572,0.71428,3.2143,0.71428,3.2143l0.35715,2.5s0,0.53571,0.71428,1.0714c0.71429,0.53571,0,3.5714,0,3.5714l-0.71428,2.8571-0.53572,1.7857-1.25,1.7857-3.2143,0.35714-4.1072-0.17857-2.8571-1.4286-1.77-0.53-3.04,1.07h-3.3929-2.5l-3.2143,0.89286s-2.6786-0.35714-3.5714-0.53572c-0.89286-0.17857-3.5714-2.1428-3.5714-2.1428l-3.22-2.67-1.07-2.15-1.43-2.14-1.7857-1.0714-1.0714-1.9643s0-1.0714-0.71428-1.6072c-0.71429-0.53571-2.6786-0.71428-2.6786-0.71428l-0.89286-1.25-1.7857-2.8571-1.9643-2.5s-1.25-1.4286-1.9643-1.6072c-0.72-0.18-1.79-0.36-2.15-1.43-0.35715-1.0714-2.3214-2.6786-2.3214-2.6786l-2.8572-1.4286-2.6786-1.4286-3.0357-0.17857-2.6786-0.17858s-0.71429,0.89286-1.6072,1.0714c-0.89285,0.17857-4.4643-0.35714-4.4643-0.35714l-3.5714-1.25-2.3214,0.35714-1.9643,0.89286-1.6072,1.4286-3.75,0.71429s-3.2143,0.71428-3.3928,0c-0.17858-0.71429-2.8572-4.1072-2.8572-4.1072l-1.7857-1.4286h-1.6071l-1.0714-1.0714v-2.1428l2.1428-2.1429,0.17858-1.4286-0.89286-1.4286-1.25-0.89286-2.1429-0.17857s-0.71428,1.0714-0.71428,0,0.71428-3.3929,0.71428-3.3929l0.89286-2.3214-0.35714-1.9643-1.25-1.7857-1.7857-0.71428-1.25,0.71428-1.25,0.71429-1.25-0.17857s-0.35714-0.71429-0.35714-1.4286c0-0.71429-1.25-2.6786-1.25-2.6786l-0.71429-0.71428-1.7857-0.17857-0.89286,0.89285-1.4286,0.89286-2.5,0.53572s-0.35714-0.35715-0.17857-1.0714c0.17857-0.71429,0.71428-2.5,0.71428-2.5l-1.25-1.4286-0.51-0.52-1.79-0.18h-2.1429l-0.35714-1.0714v-2.1429z",
+              "name": "Амурская область"
+          },
+          "ch": {
+              "path": "M906.72,53.094c-0.34,0-0.66,0.094-0.66,0.094l-1.78,2.124-4.47,1.969s-6.05,2.853-7.12,3.031c-1.07,0.179-1.44,1.969-1.44,1.969s0.37,2.514,0.19,3.407c-0.18,0.892-1.44,1.406-1.44,1.406s-2.32,1.428-2.5,2.5c-0.18,1.071,0.91,2.156,0.91,2.156s2.66,0.906,3.37,0.906c0.72,0,2.85-0.375,3.56-0.375,0.72,0-0.34,1.625-0.34,1.625l-0.91,1.782-2.31-0.907-3.03-0.719s-2.14,0.554-3.03,0.376c-0.89-0.179-2.31-1.438-2.31-1.438l-2.69,0.531-2.88,0.375h-1.06s-0.53,2.656-1.25,2.656c-0.71,0-2.12,1.782-2.12,1.782l-3.41,0.187-2.84,2.875s-2.86,2.496-3.75,3.032c-0.9,0.535-1.61,0.531-2.5,0.531-0.9,0-2.5,1.062-2.5,1.062l-4.85,3.219-5.15,1.062-3.07,0.907s-1.04,2.861-1.93,3.219c-0.9,0.357-2.88,1.968-2.88,1.968l-3.22,1.938-2.12,1.966-2.16,3.03-1.25,1.97-1.06,2.5v3.22s-0.91,0.72-1.63,0.72c-0.71,0-2.84,1.25-2.84,1.25s-0.9,2.51-1.44,3.41c-0.53,0.89-2.85,1.76-3.56,2.12s0.34,1.25,0.34,1.25l2.35,0.53,0.53,2.16,2.69,0.53h2.65,3.75s1.44,1.07,1.97,1.78c0.54,0.72,1.63,1.78,1.63,1.78l-1.82,2.5-2.5,1.1-2.31-0.72s-1.6,1.25-2.31,1.25c-0.72,0-2.16,1.59-2.16,1.59s-1.42-0.71-2.31-1.25c-0.89-0.53-1.96,0-3.03,0s-1.26,1.26-1.44,1.97-0.87,2.84-0.87,2.84-1.09,1.79-1.63,2.5c-0.53,0.72-2.66,2.69-3.37,3.22-0.72,0.54-1.81,0.54-4.13,0.72s-1.07,1.26-1.25,2.16c-0.18,0.89-1.06,3.03-1.06,3.03s-2.15,1.24-2.69,2.31c-0.53,1.07-0.53,2.67-0.53,3.56,0,0.9,0.53,1.82,0.53,1.82h1.06l0.19-0.72,0.19-1.97,0.72-1.06,0.72,0.53,3.9,1.59,5,3.41,0.38,0.87-0.38,5.19-1.06,2.84-4.09,4.47-2.88,3.94-0.34,2.5,1.25,0.19h1.59s-0.17,1.42-0.53,2.31,0.34,1.59,0.34,1.59l2.88,1.25,3.75,0.38,4.62-0.19,2.69,3.41,2.16,1.78h4.47c1.25,0,1.06,2.5,1.06,2.5l1.06,1.59,3.94-0.34s5.36-1.44,6.25-1.44,3.2-0.53,3.56-1.25c0.36-0.71,2.69-1.59,2.69-1.59l1.97-0.91h3.75s2.66-1.24,3.37-1.59c0.72-0.36,0.74-1.98,1.1-2.69,0.35-0.71,0.87-3.03,0.87-3.03l1.25-2.5h1.63l1.78-1.06,1.06-1.63,1.44-0.34,2.31-1.44,1.06-1.25s0.91-0.89,1.63-1.78c0.71-0.89,0.87-1.6,1.4-2.31,0.54-0.72,2.51-1.44,3.22-1.97,0.72-0.54,2.15-2.14,2.5-3.03,0.36-0.9,1.63,0,1.63,0l4.09,0.68s3.22-1.04,5.72-1.93c2.5-0.9,1.08,1.06,0.91,1.78-0.18,0.71,0,3.2,0,4.09s0.88,3.22,1.78,4.47c0.89,1.25,3.9-1.44,3.9-1.44s3.05-1.78,3.94-2.5c0.89-0.71,3.94,0,3.94,0h6.06v-2.84c0-0.72,1.43-3.23,1.97-4.13,0.54-0.89,1.25-3.56,1.25-3.56l0.72-2.5-0.19-4.81s1.79-1.97,3.22-1.97,2.69,1.59,2.69,1.59l4.28,0.91,1.44-0.53s-0.19-3.22-0.19-3.94c0-0.71-0.19-2.84-0.19-2.84l-0.53-3.22s-0.54-2.51-0.72-3.41c-0.18-0.89-0.87-2.12-0.87-2.12l-2.5-1.63,1.25-0.87,4.09-0.38s1.96-2.66,2.5-3.37c0.54-0.72,2.84-2.35,2.84-2.35v-2.5s-1.04-2.13-1.93-3.03c-0.9-0.89-2.35,0.18-3.07,0.53-0.71,0.36-3.03-0.34-3.03-0.34s-1.41-0.88-2.12-0.34c-0.72,0.53-1.63,1.06-1.63,1.06l-1.4-1.06-1.97,1.78-1.44-0.72s-2.84-1.79-4.09-1.25c-1.25,0.53-1.97-0.72-1.97-0.72h-2.5s-0.56,1.25-1.1,1.97c-0.53,0.71-3.03,0.87-3.03,0.87l-2.84,0.91-2.69,3.75-2.69,0.53,1.25-2.5,0.19-1.59-3.03-0.38s2.13-0.88,2.84-1.06c0.72-0.18,3.41-1.06,3.41-1.06l1.97-0.91,0.34-1.59s1.78-3.41,1.78-4.13c0-0.71-0.68-3.22-0.68-3.22l-0.91-2.31s-2.5-4.63-3.22-5.34c-0.71-0.72-1.05-1.78-2.12-1.78-1.08,0-3.07,0.68-3.07,0.68l-1.4,0.91-1.25-1.06s-2.17-1.98-3.6-2.159c-1.42-0.178,0.38-0.719,0.38-0.719l0.87-1.593s-0.16-1.973,0.38-2.688c0.53-0.714,1.97,1.25,1.97,1.25s2.67,1.438,3.56,1.438,1.78,0.531,1.78,0.531,3.41-0.371,4.13-0.906c0.71-0.536,0.68-2.313,0.68-2.313l0.19-2.687,0.72-1.25,1.25-1.782s0.36-1.964,1.25-2.5c0.89-0.535,1.79,0,2.69,0,0.89,0,2.31,1.626,2.31,1.626l1.59,0.718,2.5-1.437s1.28-2.139,1.82-3.031c0.53-0.893,2.84-1.782,2.84-1.782l2.84-2.156,1.44-3.219s2.14-1.973,2.5-2.687c0.36-0.715-0.34-1.782-1.59-1.782h-1.78l-1.82-1.062-1.93-0.188-3.07-1.781-3.18-0.187h-3.75c-0.9,0,0-0.875,0-0.875l2.5-1.625,0.68-2.5-1.06-1.25-2.5-0.532,1.78-1.25,0.53-1.25-2.31-0.531v-2.5s-0.35-1.785-0.53-2.5c-0.09-0.357-0.45-0.437-0.78-0.437zm-77.19,16.062c-0.22-0.01-0.48,0.081-0.78,0.282-1.61,1.071-3.94,2.312-3.94,2.312-1.07,0.357-1.79,1.42-1.97,2.312-0.17,0.893-0.53,2.88-0.53,3.594,0,0.715,0.2,2.496,1.1,3.032,0.89,0.535,3.03,1.598,3.03,2.312s-0.56,2.321,0.15,2.5c0.72,0.179,1.44-0.522,1.97-1.594,0.54-1.071,0.36-3.419,0.72-4.312s1.45-2.491,1.63-3.563c0.17-1.071-0.19-5.187-0.19-5.187s-0.24-1.644-1.19-1.688z",
+              "name": "Чукотский автономный округ"
+          },
+          "ha": {
+              "path": "m809.82,276.93c0.53572-0.71428,1.4286-1.4286,1.9643-2.3214,0.53571-0.89285,1.7857-2.5,1.7857-2.5s1.7857-0.17857,4.1072,0.17858c2.3214,0.35714,4.4643,1.4286,5.7143,2.1428,1.25,0.71429,2.6786,1.25,3.0357,2.3214,0.35714,1.0714,1.6071,2.1429,1.6071,3.3929s-1.4286,3.5714-1.4286,4.2857c0,0.71429-0.17857,2.5,0.71428,3.3929,0.89286,0.89286,0.71429,1.6071,1.7857,1.4286,1.0714-0.17857,3.9286-1.0714,5-1.25,1.0714-0.17857,3.3929,0,5,0.53572,1.6071,0.53571,2.8571,0.89285,3.2143,1.6071,0.35715,0.71428,1.0714,1.4286,0.89286,2.5-0.17857,1.0714-2.5,2.8571-2.5,2.8571l0.17857,1.4286,0.89286,1.6072s1.6071,0.71428-0.35714,0.89285c-1.9643,0.17857-3.0357-0.71428-3.0357-0.71428s0.17857-0.17857,0-1.0714c-0.17857-0.89286-0.71428-1.7857-1.7857-1.4286-1.0714,0.35714-2.3214,1.9643-3.0357,2.5-0.71428,0.53571-2.8571,3.0357-2.8571,3.0357s-1.9643,0.71429-2.8571,1.7857c-0.89286,1.0714-4.1071,4.6428-4.1071,4.6428s-0.17858,1.25-1.0714,2.5c-0.89286,1.25-2.3214,2.3214-2.5,3.5714-0.17857,1.25,0,4.1071,0,4.1071s1.4286,1.0714,1.6071,2.3214c0.17857,1.25-0.89286,1.9643-1.25,2.8572-0.35714,0.89285-1.4286,0.53571-1.4286,1.7857s0.17857,5.7143,0.17857,5.7143l-0.35714,4.8214-0.35715,4.1072s-1.0714,1.9643-1.25,3.2143c-0.17857,1.25-0.35714,2.6786-0.35714,3.3929,0,0.71429-0.17857,3.0357-0.17857,3.75,0,0.71429-0.71429,1.9643-0.89286,2.6786-0.17857,0.71429-1.0714,1.25-0.17857,1.9643,0.89286,0.71428,1.9643,1.9643,1.9643,1.9643l-1.7857,3.3929-0.17857,1.9643-1.7857,3.3928-1.25,3.75-0.35715,4.1072-0.71428,1.6071-3.2143,4.1071,0.35715,2.6786s2.1428,1.0714,2.8571,1.0714c0.71428,0,3.3929,0.53572,4.4643-0.17857s2.5-1.4286,3.2143-1.7857c0.71429-0.35715,1.6071-0.89286,2.8571,0.35714s2.5,4.4643,2.5,4.4643,0.17857,1.4286,1.4286,1.0714c1.25-0.35714,1.9643-2.1428,1.9643-2.1428l-1.0714-2.1429,0.53572-2.6786-0.53572-1.7857-1.6071-2.5s-1.7857-1.4286-2.5-1.4286c-0.71429,0-3.75,1.4286-3.75,1.4286s-1.9643,2.3214-1.6071,1.4286c0.35714-0.89285,1.9643-3.3928,1.9643-3.3928l1.6071-0.35715,1.25-1.7857s0.89286-0.71429,1.9643-0.71429,3.2143-1.25,3.2143-1.25,1.25-2.6786,1.0714-0.89285c-0.12,1.78-1.72,4.28-1.72,4.28l1.0714,2.1429,1.9643,2.1429,0.53572,1.7857-0.17857,2.6786,2.3214,1.4286v1.6072,2.8571l1.7857-0.71429c0.71429-0.71428,2.1429-4.2857,2.1429-4.2857l0.89285-3.2143v-2.1428s-1.6071-1.7857-0.89285-1.9643c0.71428-0.17857,4.6428-2.1429,4.6428-2.1429s2.1429-0.53571,3.0357-0.53571c0.89286,0,4.1071,0.17857,4.8214,0.35714,0.71428,0.17857,4.4643,1.6071,4.4643,1.6071s4.4643,1.25,5.1786,1.25c0.71429,0,1.9643,1.7857,1.9643,1.7857s-0.89286,1.9643,0.53571,2.8571c1.4286,0.89286,4.8214,3.0357,4.8214,3.0357l3.75,2.1428s1.4286,3.3929,1.4286,4.2857c0,0.89285-0.17857,4.6428-0.17857,5.7143,0,1.0714,0,5,0.53572,5.7143,0.53571,0.71428,1.0714,2.3214,2.1428,3.2143,1.0714,0.89286,3.2143,4.2857,3.2143,4.2857l2.5,1.25,3.0357,6.9643s1.4286,1.4286,1.6072,2.3214c0.17857,0.89286,1.6071,3.0357,1.7857,3.75,0.17857,0.71429,1.6071,5,1.7857,5.7143,0.17857,0.71428-0.53572,8.5714-0.53572,8.5714l0.53572,3.3928s0,1.25-0.89286,1.9643c-0.89286,0.71429-3.5714,1.6071-3.5714,1.6071l-1.4286,0.17857-1.4286-1.7857-0.53572-2.6786-3.0357-3.0357s-1.9643-1.25-2.6786-0.71428c-0.71429,0.53571-2.3214,1.9643-2.3214,1.9643s-0.89286,1.7857-1.25,2.5c-0.35714,0.71429-1.4286,1.25-0.89286,2.3214,0.53572,1.0714,1.9643,2.6786,1.9643,2.6786s0.35714-0.71428,2.1428-0.53571c1.79,0.18,2.14,2.68,2.14,2.68l-0.89286,3.2143s-1.9643,1.25-2.6786,1.6071c-0.71428,0.35714-2.8571,1.25-1.7857,2.1429,1.0714,0.89285,2.3214,1.25,2.3214,1.25s0.71428,1.25,0,1.9643c-0.71429,0.71429-2.3214,2.1429-2.3214,2.1429s-1.7857,0.35714-3.0357,1.25-3.2143,1.4286-4.2857,1.6071c-1.0714,0.17857-2.8571,1.25-4.1071,0s-2.1429-0.89285-2.5,0.17857c-0.35715,1.0714-1.6072,0.89286-1.7857,1.9643-0.17857,1.0714,0,2.8571,0.35715,3.5714,0.35714,0.71428,0,3.0357,0,3.0357s-2.3214,1.9643-2.5,1.25c-0.17858-0.71428,0.17857-2.3214-0.35715-3.2143-0.53571-0.89286-2.3214-2.5-2.3214-2.5s-2.8571-1.4286-1.7857-2.3214c1.0714-0.89286,2.8571-2.6786,3.2143-3.2143,0.35714-0.53571,0.35714-3.0357,0.35714-3.0357s-2.1429-0.89286-2.6786-1.7857c-0.53572-0.89285-1.0714-3.3928-1.0714-4.1071,0-0.71428-0.71429-3.3929,0.17857-3.75,0.89286-0.35714,2.8571-1.9643,2.8571-1.9643l0.53572-1.9643s-0.53572-0.35714-2.1429-0.35714c-1.6071,0-2.5-0.17857-3.9286,0.89285s-1.4286,1.0714-2.5,2.5-2.1429,2.6786-3.2143,3.2143c-1.0714,0.53571-2.6786,0.71429-2.6786,0.71429s-4.1071-0.71429-4.2857-1.4286c-0.17857-0.71428-1.6072-1.9643-2.5-1.9643-0.89286,0-2.1429,0.35714-3.2143,0.89286-1.06,0.55-1.95,0.73-2.84,0.73-0.89286,0-4.2857,1.0714-4.2857,1.0714s-2.1428,1.7857-3.2143,1.7857c-1.0714,0-2.1014,0.40945-2.28-0.66198-0.17857-1.0714-1.0823-3.4216-1.0823-3.4216l-1.5332-4.3507s-2.6677-0.69261-3.7392-0.87119c-1.0714-0.17857-3.8221-0.85138-3.8221-0.85138l-2.4892-1.1525s-2.1249-2.2078-1.7678-2.9221c0.35714-0.71428,1.7028-4.0044,2.4171-4.5401,0.71428-0.53572,1.2608-1.4069,1.2608-1.4069l-1.25-2.3214s-1.7965-1.2085-0.90368-1.7442c0.89286-0.53571,3.7608-2.0058,3.7608-2.0058l2.0906-4.0892,1.5025-3.2341,3.5498-2.6767-0.89285-1.9643-2.4171-1.7118-0.11357-1.6288,2.5306-1.1237,4.1071-0.71428,2.6786-0.89286,1.0714-1.25-0.53571-1.6071-1.986-1.47-1.0083-2.5108-0.0631-2.4477-1.47-2.0058-1.7226-0.67282-2.2583,1.7442s-1.6703,1.0823-2.3846,1.4394c-0.73,0.34-2.87,0.19-2.87,0.19l-2.3214,1.25-0.44008,2.5-0.80992,2.3214-2.5,1.0714-2.1429,0.53571-0.53571,2.4585-1.4809,1.4286-2.3431-0.17857-0.99746-2.4585-1.0714-2.5s-1.2608-0.51404-1.9751-0.69262c-0.71428-0.17857-4.4534,0.51405-4.4534,0.51405l-1.7857-0.17857-1.7857-1.25,1.9643-5.5357,0.89286-4.1072s1.25-2.3214,1.9643-3.0357c0.71428-0.71429,3.0357-5,3.0357-5l0.35714-2.6786s-0.53571-1.25-1.6071-1.6072c-1.0714-0.35714-5.3571,0.17858-5.3571,0.17858l-2.6786,0.53571s-3.3424,2.5325-4.0567,1.8182c-0.71428-0.71429-1.1219-3.9611-1.1219-3.9611s-3.0376-1.6288-3.0376-2.5217c0-0.89286,1.9662-1.5855,1.9662-1.5855s0.53571-1.0714,0.71428-2.1429c0.17857-1.0714-0.20024-2.8138-0.20024-2.8138l-2.6281-0.77741s-1.4069-0.89472-2.1212-1.0733c-0.71428-0.17857,1.1996-2.2998,1.1996-2.2998l0.89286-1.6072-0.35714-1.0714s-2.2493-0.54655-2.2493-1.2608c0-0.71429,1.6505-3.3604,1.6505-3.3604l-1.5873-1.6703-2.5415-0.82971-0.80806-1.618s0.69262-0.73594,1.5855-1.0931c0.89286-0.35714,1.0498-0.61866,1.0498-0.61866l-1.3852-0.89286v-2.4062c0-0.71429-0.074-2.3304-0.074-2.3304s-1.2718-1.1078-1.4502-2.345c-0.1894-1.3131,2.6371-1.7532,2.6371-1.7532l-0.93619-0.82972-0.49238-1.4917,0.2417-2.1339,2.7525-0.86037,2.9094-0.89285,2.4477,0.1371,0.70345-1.8922,3.2034,0.21106,2.9203,0.0108s0.35715-1.7749,0.35715-2.4892c0-0.71428-1.8705-1.618-1.4286-2.2691,0.40112-0.59101,1.5657-0.89285,2.4585-1.0714,0.89286-0.17858,3.9286-0.71429,4.1072-1.4286,0.17857-0.71428,2.5829-6.1562,2.5829-6.1562s0.96683-1.0083,1.6811-1.1869c0.71429-0.17857,3.9286-0.93432,3.9286-0.93432l-1.764-2.794-3.0051-2.8246-1.6378-4.8539-2.3214-2.1428-1.4286-1.7857v-5.3571l3.0357-6.7857-1.0714-3.2143-0.72512-5.8585,0.81889-2.85s3.5498,0.11543,4.264,0.29401c0.71428,0.17857,7.7634,0.22004,7.7634,0.22004s0.95599-4.0152,1.3131-4.7295c0.35714-0.71428,1.3871-0.826,2.28-1.0046,0.89286-0.17857,3.3495-0.62051,3.3495-0.62051l2.5433,1.1562,1.6071-1.0714z",
+              "name": "Хабаровский край"
+          },
+          "eu": {
+              "path": "m811.96,462.82c0.98214,1.875,1.1607,1.875,1.875,2.5893l2.6786,2.6786s0.80357,1.1607,1.0714,1.7857c0.26786,0.625-0.0893,1.6964,0.625,1.9643,0.71429,0.26785,2.3214,0.53571,2.7679,0.625,0.44643,0.0893,1.4286,1.0714,2.3214,1.1607,0.89285,0.0893,1.6071,0.0893,2.1428-0.35714,0.53572-0.44643,1.0714-1.25,1.6964-1.7857,0.625-0.53571,2.5893-1.4286,3.125-1.6964,0.53572-0.26785,1.875-0.625,2.3214-1.0714,0.44643-0.44643,1.1607-0.98215,1.1607-2.0536s0.26785-2.7678,0.71428-3.125c0.44643-0.35714,2.9464-1.9643,3.5714-2.5,0.625-0.53571,1.6964-2.2321,2.1429-2.8571,0.44643-0.625,1.875-2.6786,2.2321-3.2143,0.35714-0.53572,2.1429-2.0536,2.1429-2.0536l2.0536-2.3214,0.98214-1.0714,2.6786-1.875,0.71429-0.80357,0.17857-1.1607,0.0893-0.35714-1.5179-0.17857-1.875-0.0893-1.6964,0.44643-1.6964,1.1607-1.3393,1.25-0.80358,1.0714-1.25,1.6072-1.4286,0.98214-1.7857,0.625s-1.25,0.17857-1.7857,0c-0.53571-0.17857-2.1428-0.71429-2.1428-0.71429l-1.4286-0.625-0.80358-0.98214-0.89285-0.625s-0.80357-0.26786-1.1607-0.17857c-0.35714,0.0893-1.7857,0.625-1.7857,0.625l-2.0536,0.71429-2.4107,0.17857s-1.0714,0.44643-1.7857,0.625c-0.71429,0.17857-2.4107,0.80357-2.4107,0.80357l-1.4286,0.89285-1.875,0.26786-0.80357,0.17857-0.35714,0.98215-0.0893,1.4286s-0.44643,1.1607-0.44643,1.5178c0,0.35715-0.53571,1.875-0.53571,1.875l-0.53571,1.1607-0.71429,1.4286z",
+              "name": "Еврейская автономная область"
+          },
+          "pr": {
+              "path": "m852.68,473.71c0,0.53571,0.53571,1.25,0.53571,1.25l1.4286,1.4286s0.35715,1.0714,0.44643,1.4286c0.0893,0.35714-0.625,2.0536-0.625,2.0536l-1.1607,2.7679s-0.0893,2.2321,0,2.5893c0.0893,0.35715,0.625,1.0714,0.89285,1.5179,0.26786,0.44643,0.80358,1.1607,0.80358,1.5179,0,0.35714-0.80358,1.9643-0.80358,1.9643v1.9643c0,0.44643-0.44642,1.9643-0.44642,1.9643s-0.17858,0.0893-0.17858,1.0714v2.7679c0,0.71429-0.26785,3.0357-0.35714,3.3929-0.0893,0.35714-1.9643,0.53571-2.3214,0.53571-0.35714,0-1.3393-0.98214-1.3393-0.98214s-0.98215-1.6071-1.1607-2.0536c-0.17857-0.44643-1.3393-1.5179-1.3393-1.875,0-0.35715-0.26786-1.6072-0.89286-1.7857-0.625-0.17857-1.5179,0.26786-1.5179,0.26786s-0.53571,0.89286-0.625,1.25c-0.0893,0.35714,0,0.98214-0.0893,1.4286-0.0893,0.44643-0.71429,2.5-0.71429,2.5s-0.625,0.625-1.1607,0.89286c-0.53572,0.26786-2.2322,1.0714-2.2322,1.6071,0,0.53572,1.0714,0.71429,2.1429,2.0536,1.0714,1.3393,3.125,4.6429,3.125,4.6429l2.5,4.2857,1.4286,4.9107s0.44643,1.6071,0.625,2.1429c0.17857,0.53571,0.89286,1.1607,0.98215,1.9643,0.0893,0.80357,0.53571,2.5-0.35715,2.8571-0.89285,0.35715-4.0178,1.0714-4.0178,1.0714l-0.71429,0.625,1.1607,0.71429s0.625,0.44643,1.0714,0.53571c0.44643,0.0893,0.53572,1.4286,0.98215,1.4286,0.44642,0,1.875-0.35714,2.4107-0.71428,0.53571-0.35714,1.3393-0.625,2.1429-0.625,0.80357,0,1.4286-0.44643,1.4286-1.0714,0-0.625-0.625-3.3929-0.625-3.8393,0-0.44642,1.5179-2.5893,1.5179-2.5893v-2.1429c0-0.35714-0.17858-1.4286,0.35714-1.5179,0.53571-0.0893,2.9464-0.71428,2.9464-0.71428s0-1.1607,1.0714-0.26786c1.0714,0.89286,1.5178,2.9464,1.5178,2.9464s1.875,0.35714,2.2322,0.17857c0.35714-0.17857,0.98214-0.625,1.5178-0.98214,0.53572-0.35714,2.5893-0.53572,3.3929-0.53572,0.80357,0,2.1429-0.44642,2.1429-0.44642l-0.26786-1.1607s2.0536-1.25,2.5-1.5179c0.44643-0.26785,2.2321-1.1607,2.8571-1.7857s1.5179-1.4286,1.9643-2.4107c0.44643-0.98215,1.3393-3.125,1.5179-3.4822,0.17857-0.35714,1.1607-2.5,1.4286-3.2143,0.26785-0.71429,0.89285-2.3214,1.3393-3.125,0.44643-0.80357,1.5179-2.8572,1.5179-2.8572s-0.0893-2.3214-0.0893-2.8571c0-0.53571-0.26785-1.875-0.625-2.8571-0.35714-0.98214-0.53571-1.1607-0.44642-2.1429,0.0893-0.98214,0.98214-1.6071,1.6071-2.0536,0.625-0.44643,1.0714-1.4286,1.0714-1.9643,0-0.53571-1.25-2.9464-1.25-2.9464s0.0893-1.1607,0.35714-1.6964c0.26786-0.53572,1.5179-1.7857,1.5179-1.7857l0.17857-2.9464s0.80357-2.2321,0.80357-2.6786c0-0.44643,0.26786-3.9286,0.26786-3.9286l0.89285-2.1429s0.26786-3.3928,0.26786-3.9286c0-0.53571-0.53571-5-0.53571-5.5357,0-0.53572-0.17857-4.1071-0.17857-4.7321s-0.71429-2.1429-0.71429-2.5893c0-0.44643,0.0893-2.1429,0.26786-2.5893,0.17857-0.44643,0.98214-1.9643,0.98214-1.9643s-0.0893-2.0536-0.0893-2.5893c0-0.53571,0.17858-1.6964-0.44642-1.7857s-2.3214,0.80357-2.3214,0.80357l-1.7857,0.71429-1.5178,0.17857-0.71429-0.44643-1.0714-1.4286s-0.26786-1.4286-0.26786-1.7857c0-0.35714-0.53571-1.1607-0.53571-1.1607l-1.25-1.3393-1.3393-1.3393-1.4286-0.71429-1.0714,0.17857s-0.98214,0.17858-1.0714,0.53572c-0.0893,0.35714-0.53572,0.44643-0.80358,0.80357-0.26785,0.35714-1.1607,1.3393-1.1607,1.3393l-0.53571,1.0714-0.44643,1.0714-0.80357,0.80357-0.17858,0.71429,0.35715,0.80357,0.89285,0.98214s0,0.71429,0.53572,0.80358c0.53571,0.0893,1.0714,0.0893,1.0714,0.0893h1.3393l1.25,0.625,0.71429,0.80357,0.0893,1.3393-0.26785,1.4286-0.44643,1.25-0.53572,0.71429-1.5178,0.89285-1.7857,0.89286-0.89285,0.89286,0.26785,0.80357,1.9643,0.80357,0.80357,0.98214-0.0893,0.71429-0.80357,1.0714-1.0714,1.0714-1.875,0.89286-1.7857,0.98214-3.64,1.44-1.6964,0.44643-1.9643,0.26786-0.89286-0.44643-1.25-0.71429s-0.53571-0.26786-0.89285,0c-0.35715,0.26786-0.625,0.98214-0.625,0.98214l-1.5179,1.0714-0.53571,1.6964,0.0893,1.3393s0.35714,0.71428,0.44643,1.1607c0.08,0.44,0.08,1.33,0.08,1.33l-0.0893,1.6071-0.98214,1.0714z",
+              "name": "Приморский край"
+          },
+          "ma": {
+              "path": "m859.64,182.46s1.0714,0.71428,2.1429,1.25c1.0714,0.53571,3.0357,2.1429,3.2143,2.8571,0.17857,0.71429,0.17857,2.3214,1.0714,2.8571,0.89286,0.53572,3.5714,1.0714,3.5714,1.0714l1.9643,0.89286,1.0714,1.7857,3.0357,1.6072s0.71429,1.0714,0.17857,1.9643c-0.53571,0.89286,0,2.6786,0,2.6786l2.5-0.35714,2.8572,0.35714,1.6071,2.3214,1.9643,2.6786,2.1429,1.0714,1.9643,2.1429,1.0714,1.9643,0.17857,2.5s-0.35715,2.5,0,3.2143c0.35714,0.71429,1.0714,3.75,1.0714,3.75l1.0714,1.7857s0.53572,1.0714,0.53572,1.7857c0,0.71428-0.89286,2.1429-0.89286,2.1429l0.17857,1.7857-1.9643-0.53571-0.35715-1.9643s0.35715-0.71429-0.53571-0.35714c-0.89286,0.35714-1.7857,1.4286-1.7857,1.4286s-0.35715,0.89286-1.0714-0.53572c-0.71429-1.4286-1.7857-1.9643-1.7857-1.9643s-1.6071-0.71429-1.6071-1.9643-1.7857-2.3214-1.7857-2.3214l-1.6072-1.4286s-0.35714,1.7857-0.35714,2.5c0,0.71429,1.4286,1.4286-0.35714,1.4286s-4.1072,0.71429-4.1072,0.71429l-0.89285,1.0714-0.35715,2.6786-1.25,1.25-2.6786,2.8571-0.35714,2.3214-1.0714,1.9643,0.53572,2.3214,1.4286,1.4286s0.53571,0.71428,0.53571,1.4286v2.6786l0.17857,1.6071,1.6072,1.4286,0.17857,4.4643v4.4643l0.17857,3.0357,1.7857,2.6786,1.0714,3.0357,0.35714,0.89285,1.9643,0.35715,1.0714-1.25,1.9643-1.0714s1.6072-0.17857,2.3214-0.17857c0.71429,0,1.6072,0.89285,1.6072,0.89285l0.17857,0.89286-1.7857,1.4286-1.7857,0.71429v1.0714l-0.71429,0.89285-1.7857,0.89286-1.25,0.53571-0.53572,0.71429-0.17857,2.6786v2.3214l-0.89285,0.71429-1.7857-0.89286-0.71428,1.4286-0.53572,2.5-1.0714,1.25-3.2143,0.71429-1.25-0.17858-0.53572-1.6071,2.5-1.6071,1.25-1.9643s1.9643-1.7857,0.53572-1.7857-2.6786,1.0714-2.6786,1.0714l-0.89286,1.25-0.89286,0.53571s-0.89286,0.35714-1.7857-0.17857c-0.89286-0.53571-2.3214-0.71429-2.3214-0.71429s-1.25,0.89286-1.25,1.4286c0,0.53571,0.35714,1.4286-0.53572,1.4286-0.89285,0-3.2143,0.17857-3.2143,0.17857l-2.5,1.6071-2.5,0.89286-1.0714,2.1429,0.35714,1.7857,0.53572,1.9643,0.35714,0.89285,1.6071,1.0714s0.17857,0.89286-1.7857,0.89286h-4.4643l-1.0714,2.1429-1.0714,1.25-2.5,0.35714-2.1429-2.8571-2.6786-1.25s-1.9643-0.71429-2.6786-0.71429c-0.71429,0-3.3929,0.17857-3.3929,0.17857l-2.1429,0.89286-1.7857,0.17857-1.25-0.89286-1.0714-1.7857-0.17857-2.3214,1.25-1.9643,0.17857-2.5-2.5-3.9286-2.3214-1.4286-2.3214-1.25-2.6786-0.71428-2.6786-0.71429-2.1429,0.71429-1.0714,1.4286-1.0714,1.9643-0.89285,1.25h-1.25l-1.25-1.9643-0.17857-0.89286,1.25-0.71429,0.35714-1.4286v-1.25l-1.25-1.25-5.7143-6.7857s-0.35714-1.0714-0.35714-1.7857v-3.2143l-1.78-0.88-0.89286-0.35714-0.17857-3.0357-0.53572-1.4286-1.0714-0.35714-0.35714-1.25,1.6071-1.4286,2.1429-0.17857,1.0714-0.53572,1.0714-1.0714,2.1429-0.17857,1.9643,0.17857,0.53572-1.0714-1.25-1.9643-1.4286-1.25-0.35714-2.1429s1.25-0.53571,1.9643-0.53571c0.71428,0,3.5714-1.0714,3.5714-1.0714l-0.17858-2.6786s0.53572-0.35714,1.25-0.35714c0.71429,0,3.9286,0.35714,3.9286,0.35714l2.1428-1.7857,4.1072-6.4286-0.17858-3.0357-1.4286-1.4286-2.6786-2.8572s-1.25-0.89285-1.4286-1.6071c-0.17857-0.71428-0.35714-1.7857-0.35714-1.7857l2.1428-2.3214,0.17858-1.6071-1.25-1.25-2.5,0.17857-0.71429-0.53572-1.0714-1.0714v-0.71429l3.06-0.86,1.25-1.0714-0.53572-1.4286-1.25-0.89285-0.17857-1.6072,2.1429-3.0357,3.75-1.25,2.1428-1.25-1.25-2.5s0.17858-0.35714,0.89286-0.35714c0.71429,0,3.3929,0.71428,3.3929,0.71428l1.0714-0.17857-0.53572-3.5714v-1.6071l1.4286-0.53572,0.2-2.66-0.17858-0.53571h2.5l1.6072,0.53571,0.53571,1.9643,1.0714,1.0714s0.53571,0.53571,1.25,0.53571,3.75-0.71428,3.75-0.71428l3.5714-0.71429,2.3214-0.35714,2.6786-1.0714,2.3214-1.4286,2.3214-0.89286,1.9643-0.17857,2.8571-0.35714,2.5-1.6072z",
+              "name": "Магаданская область"
+          },
+          "sh": {
+              "path": "M973.16,321.59c-0.45,0.19-0.81,0.37-1.19,0.94s-0.31,1.53-0.5,1.85c-0.19,0.31-1.53,1.12-1.53,1.12-0.51,0.51-0.87,1.06-2,1.25-1.14,0.19-2.59-0.23-2.85,0.66-0.25,0.88,0.06,2.12,0.69,2.25,0.63,0.12,1.53,0.44,2.1,0.25,0.56-0.19,1.56-1.25,1.56-1.25s0.62,0.3,1,0.93c0.38,0.64,0.97,1.78,0.97,2.03,0,0.26,0.19,1.06-0.07,1.57-0.25,0.5-0.81,2.78-0.56,3.03s1.24,0.9,1.94,0.9c0.69,0,1.09,0.17,1.78-0.78,0.69-0.94,0.93-1.74,1.25-2.56s0.78-1.9,1.09-2.16c0.32-0.25,0.48-1.02-0.22-1.65-0.69-0.63-0.93-1.75-1-2.06-0.06-0.32-0.56-1.09-0.24-1.53,0.31-0.45,1.12-1.31,1-1.69-0.13-0.38-1.38-1.09-1.82-1.47s-0.96-1.82-1.4-1.63zm2.15,20.44s-0.43,0.15-0.69,0.85c-0.25,0.69-0.5,1.74-0.31,2.31s0.56,1.4,0.81,1.78c0.26,0.38,0.75,1.31,0.88,1.62,0.13,0.32,0.53,0.72,1.03,0.91,0.51,0.19,1.12,0.07,1.25-0.44,0.13-0.5,0.19-1.4,0.19-2.03s-0.19-2.15-0.19-2.53,0.07-0.87-0.31-1.31-2.66-1.16-2.66-1.16zm2.53,9.22c-0.56,0.19-1.9,0.5-2.15,0.69-0.26,0.19-0.63,0.52-0.5,1.03,0.12,0.5-0.2,1.24,0.5,1.69,0.69,0.44,2.15,0.96,2.53,1.09s0.55,0.44,1.19,0.13c0.63-0.32,1.09-0.59,1.03-1.41-0.07-0.82-0.59-1.62-0.78-1.88-0.19-0.25-1.5-1.34-1.5-1.34h-0.32zm-117,4.5l-1.87,1.25s0.5,1.12,0,1.12h-1.78s-1.26,0.78-0.5,1.29c0.76,0.5,2.4,0.87,3.03,1,0.63,0.12,1.52,0.65,2.16,1.15,0.63,0.51,1.49,0.87,1.74,1.63,0.26,0.76,0.63,2.28,0.63,2.28l0.91,1.62-0.54,2.16-1.74,0.13s-0.91-1.14-1.41-0.13c-0.51,1.01-0.5,1.77-0.5,2.41,0,0.63,0.27,1.24,0.91,1.37,0.63,0.13,1.48,0.4,2.74,1.41,1.27,1.01,2.03,2.9,2.29,3.53,0.25,0.63,0.24,2.65,0.5,3.41,0.25,0.75,1.4,2.02,2.03,2.53,0.63,0.5,2.03,2.52,2.28,3.03,0.25,0.5,1.25,2.4,1.5,2.9,0.25,0.51,1.78,1.75,1.78,1.75s1.24,1.15,2,1.66,3.8,1.37,4.56,1.37,3.03,0.66,3.28,1.16c0.26,0.51,2.78,5.66,2.78,5.66l5.57,8.34s2.52,2.15,3.15,2.66c0.64,0.5,2.4,3.9,2.91,4.65,0.51,0.76,2.12,4.44,2.5,4.94,0.38,0.51,3.69,5.06,3.69,5.06s2.77,1.88,3.4,2c0.64,0.13,3.41,1.91,3.41,1.91s2.65,2.9,2.78,3.41c0.13,0.5,0.75,3.53,0.75,3.53l2.16,3.4,3.15,2.66,2.5,5.19,0.53,2.25s0,2.15,0.5,2.53c0.51,0.38,5.29,4.06,5.29,4.06l1.65,0.88,1.78,0.25v-2.54s-0.9-1.65-1.15-2.15c-0.26-0.51-0.88-3.03-0.88-3.03s-0.5-0.74-0.5-1.63c0-0.88,0.75-2.4,0.75-2.4s1.53-0.25,2.16-0.25,1.24-0.12,2.25-0.63c1.01-0.5,2.41-0.37,2.41-0.37l2.28,2,1.37,0.78s0.5-1.4,0.5-2.03c0-0.64,0.01-1.53-0.62-2.41-0.64-0.88-1.63-1.88-1.63-1.88l-2.03-1.65s-0.99-1.38-1.75-1.25-1.15,0.24-1.41,0.75c-0.25,0.5,1.52,2.66,0,2.28-1.51-0.38-2.4-0.9-2.78-1.41-0.38-0.5-1.62-1.87-1.62-1.87s-2.4-1.28-3.03-1.53c-0.64-0.26-2.4-0.88-3.04-0.88-0.63,0-4.06-1.15-4.06-1.15l-2.12-2.38-2.41-6.31s-1.12-1.65-1.25-2.41-1.03-3.15-1.16-3.65c-0.12-0.51-0.37-2.28-0.62-2.78-0.25-0.51-1-2.29-1-2.29l-0.53-3.28,1.78-1.62s2.77-1.03,3.41-1.03c0.63,0,5.06-0.13,5.06-0.13l2.4,0.63s2,0.25,2.5,0.25c0.51,0,1.03,0.51,1.16-0.5s-1.53-2-1.53-2l-3.53-0.53-3.66-1.26-2.4-1.78-18.57-15.25-1.5-1.28-1.78-0.12s-0.87,0.13-1.25-0.63-0.4-1.27-1.15-1.9c-0.76-0.64-2.5-1.88-2.5-1.88s-1.52-0.25-2.66-0.5-3.66-1.4-3.66-1.4l-0.4-2.79-1.38-1.25-0.62-1.28,1.25-1.62-0.25-1.91-2.53-2.12-3.54-0.79s-2.4-0.99-2.65-1.5c-0.25-0.5,0.12-2.15,0.12-2.15s-0.62-1.12-1.12-1.5c-0.51-0.38-4.28-1.91-4.28-1.91l-2.91-1.9-1.03-2.63s0.01-1.91-0.63-1.91c-0.63,0-2.78-0.87-2.78-0.87zm119.16,7.94c-0.88,0.25-1.53,0.4-1.72,0.97-0.19,0.56,0.06,1.24,0.31,1.43,0.26,0.19,0.84,0.69,1.47,0.57,0.63-0.13,1.56-0.19,1.82-0.57,0.25-0.38-1.13-1.46-1.32-1.78-0.19-0.31-0.56-0.62-0.56-0.62zm1.75,4.06c-0.51,0.25-1.19,0.56-1.37,1.06-0.19,0.51,0.36,1.37,1,1.75,0.63,0.38,1.05,0.63,1.56,0.06,0.5-0.56,1.09-1.62,1.03-1.93-0.06-0.32-2.22-0.94-2.22-0.94zm0.19,6.97c-0.18,0.01-0.34,0.06-0.5,0.16-0.63,0.37-0.82,1.18-0.82,1.56s0.88,3.09,0.88,3.47-0.87,2.4-1,2.9c-0.13,0.51-0.01,1.33,0.62,2.6,0,0,1.13-0.25,1.38-0.25s1.72-0.94,1.84-1.19c0.13-0.25,0.44-2.28,0.44-2.91s-0.06-2.02-0.12-2.47c-0.07-0.44-0.63-1.4-0.63-1.78s-0.31-1.43-0.69-1.69c-0.28-0.18-0.87-0.44-1.4-0.4zm-4.41,14.53s-1.28,0.03-1.53,0.16c-0.25,0.12-0.69,0.49-0.81,0.75-0.13,0.25-0.57-0.07,0.06,0.62,0.63,0.7,1.02,1.38,1.66,1.38,0.63,0,2.06,0.65,2.31,0.65s1.03-0.21,1.22-0.47c0.19-0.25,0.75-0.49,0.31-1.18-0.44-0.7-0.97-1.06-1.22-1.19s-2-0.72-2-0.72zm1.81,6.47c-0.19,0.31-1.37,1.18-1.43,1.44-0.07,0.25-0.32,0.74-0.38,1.25-0.06,0.5-0.31,1.77-0.31,2.09s-0.53,1.59-0.78,2.16c-0.26,0.56-0.5,1.49-0.44,2.12s-0.07,1.09,0.19,1.66c0.25,0.57,0.24,1.18,0.56,1.37s-0.04,1.29,1.09,0.6c1.14-0.7,1.63-1.34,1.82-1.79,0.19-0.44,0.53-2.09,0.72-2.34,0.18-0.25,0.56-1.43,0.68-1.81,0.13-0.38,0.63-1.9,0.63-2.22s0.06-1.59-0.25-2.22c-0.32-0.63-1.19-1.31-1.19-1.31l-0.91-1zm-4.9,15.4c-0.26,0.07-0.97,0.19-1.28,0.44-0.32,0.26-0.63,0.56-0.69,0.75s-0.5,0.94-0.5,1.19,0.06,1.15,0,1.41c-0.06,0.25,0,0.56-0.56,0.81-0.57,0.25-1.22,0.43-1.6,0.56s-0.81,0.44-1.06,0.69-0.94,0.72-0.94,0.72-0.53,0.18-0.53,0.5c0,0.31,0.41,0.99,0.53,1.25,0.13,0.25,0.75,1.22,0.75,1.22l-0.18,0.75s-1.04,0.74-1.1,1.06c-0.06,0.31-0.12,1.59-0.12,1.97s0.06,1.74,0.06,2c0,0.25,0.19,1.84,0.19,2.09s0.15,1.34,0.28,1.97c0.12,0.63,0.12,1.06,0.43,1.44,0.32,0.38,0.56,1.03,0.88,1.22s0.5,0.68,0.88,0.62c0.37-0.06,1.71-1.03,1.71-1.03s0.63-0.62,0.75-1.06c0.13-0.44,0.44-2.16,0.44-2.16s0.19-1.37,0.13-1.69c-0.07-0.31-0.69-0.65-0.75-1.22-0.07-0.56-0.07-0.8,0-1.68,0.06-0.89,0.87-2.09,1.06-2.35,0.19-0.25,0.84-1.18,0.97-1.93,0.12-0.76-0.07-1.84,0.19-2.16,0.25-0.32,0.8-0.75,1.06-1.06,0.25-0.32,1.06-1.65,1.18-2.03,0.13-0.38,0.13-1.4,0.13-1.91s-0.31-1.37-0.56-1.56c-0.26-0.19-1.75-0.82-1.75-0.82zm-8.35,23.69c-0.31-0.01-0.62,0-0.75,0.03-0.25,0.07-0.56,0-0.81,0.32-0.25,0.31-0.78,0.71-1.22,0.84s-0.87,0-0.93,0.31c-0.07,0.32-0.26,0.87-0.26,1.13,0,0.25,0.06,0.74,0.32,1,0.25,0.25,0.62,0.21,0.75,0.78,0.12,0.57,0.19,1.18,0.12,1.44-0.06,0.25-0.31,1.12-0.37,1.43-0.07,0.32-0.19,0.4-0.38,1.03-0.19,0.64-0.31,1.38-0.31,1.76v1.15c0,0.38-0.06,1.19,0.13,1.44,0.18,0.25,0.62,0.56,0.87,0.81s1.47,0.47,1.72,0.47,0.5-0.28,0.75-0.66,0.56-0.99,0.56-1.56-0.12-2.96-0.06-3.28,1.12-0.84,1.19-1.41c0.06-0.56,0.03-1.74,0.09-2,0.06-0.25,0.31-1.15,0.31-1.15s0.75-0.44,0.88-0.81c0.12-0.38,0.25-1.13,0.25-1.5,0-0.38-0.19-1.54-0.19-1.54h-1.84c-0.19,0-0.5-0.02-0.82-0.03zm7.85,1.88c-0.57,1.01-0.72,0.99-0.78,1.75-0.07,0.76-0.88,1.53-0.88,1.53s-0.31,0.31-0.44,0.62c-0.12,0.32-0.69,0.81-0.06,1s1.72,0.19,1.97,0.07c0.25-0.13,0.75-0.69,1-0.82,0.25-0.12,0.44-0.49,0.44-1.37,0-0.89-0.19-1.9-0.31-2.16-0.13-0.25-0.94-0.62-0.94-0.62z",
+              "name": "Сахалинская область"
+          },
+          "ka": {
+              "path": "M918.56,146.75l-1.65,0.84c-0.26,0.13-1.25,0.88-1.25,0.88l-0.13,1,0.13,2.78,0.25,1.16-0.88,2.43-1.72,4.69-0.93,1.56-0.44,1.41-0.06,1.81s-0.22,1.03-0.47,1.22c-0.26,0.19-0.82,0.13-0.82,0.13h-1.81-2.59l-1.6-0.19-1.68-0.31s-0.53,0.25-0.85,0.25c-0.31,0-0.68,0.56-1,0.75-0.31,0.19-1.37,0.74-1.56,1-0.19,0.25-1.28,0.78-1.59,0.9-0.32,0.13-1.38,1-1.63,1.19s-0.78,0.56-1.22,0.63c-0.44,0.06-0.94-0.32-0.94-0.32s-0.62-0.99-0.74-1.25c-0.13-0.25-0.97-1.72-0.97-1.72s-0.07-1.31-0.13-1.62c-0.06-0.32-0.06-1.47-0.12-1.72-0.07-0.25-0.13-1.06-0.13-1.06s0.25-1.22,0.31-1.66c0.07-0.44,0.38-0.75,0.38-0.75s0-0.56-0.19-0.87c-0.19-0.32-0.81,0.06-0.81,0.06l-1.75,0.44-1.97,0.81-1.66,0.5-1.18,0.19-2.04-0.25s-1.62-0.38-1.87-0.57-1.03-0.12-1.03-0.12l-0.63,0.56-0.87,1.16-0.63,0.81-0.84,0.88s-1.31,0.74-1.56,0.87c-0.26,0.13-0.94,0.59-0.94,0.59l-1.22,1.32-1.44,2.28s-2.27,2.28-2.59,2.47-1.18,0.87-1.44,1.12c-0.25,0.25-1.34,0.38-1.72,0.44s-0.74,0.62-1,0.94c-0.25,0.31-1.15,1.28-1.15,1.28l-0.81,0.56s-0.75-0.31-1.13-0.31-0.44,0.31-0.44,0.31l-0.97,1.91-1,2.18s-0.5,1.59-0.5,1.91,0.63,0.44,0.88,0.63c0.25,0.18,1.65,0.8,2.03,1.06,0.38,0.25,1,0.84,1.31,1.15,0.32,0.32,1.41,1.32,1.41,1.32s-0.13,0.43-0.06,0.68c0.06,0.26,0.37,1.15,0.68,1.66,0.32,0.51,0.94,0.81,0.94,0.81s4.09,1.16,4.35,1.28c0.25,0.13,1.09,1.32,1.09,1.32l0.37,0.68s1.13,0.85,1.44,1.04c0.32,0.18,1.22,0.31,1.22,0.31l0.62,0.62,0.44,1.19s-0.31,1.59-0.37,1.97c-0.07,0.38-0.07,0.99,0,1.37,0.06,0.38,1.12-0.06,1.12-0.06s1.4-0.31,1.97-0.25,1.56,0.25,1.56,0.25,1.22,0.4,1.35,0.66c0.12,0.25,0.75,1.18,0.75,1.18l1.15,1.5,1.25,1.72,1.85,1.32,2,1.65,1,1.31s0.84-0.99,1.03-1.31c0.19-0.31,0-0.74,0-1.19,0-0.44-0.37-0.71-0.75-0.96-0.38-0.26-0.97-1.19-1.35-1.63-0.37-0.44-0.56-0.84-0.56-0.84s-0.81-1.06-1.06-1.31c-0.25-0.26-1.09-0.94-1.34-1.19-0.26-0.26-1.25-1.34-1.69-1.97s0-0.75,0-1.06c0-0.32,0.87-1.04,0.87-1.04s0.94-1.3,1.19-1.62,0.44-1.21,0.5-1.59,0.47-1.31,0.85-1.5c0.37-0.19,1.18-0.38,1.68-0.44,0.51-0.06,1.84,0.5,1.97,0.81,0.13,0.32-0.62,0.69-0.75,0.94-0.12,0.25,0,1.59-0.06,2.16-0.06,0.56,0.12,1.71,0.12,2.28,0,0.56,0.75,1.37,0.75,1.37s1.13,1.4,1.44,1.72c0.32,0.32,1.28,0.93,1.59,1.19,0.32,0.25,1.57,1.65,1.57,1.65l3.34,2.32,0.97,0.59s0.75,1.25,0.81,1.69c0.07,0.44,0.44,0.93,0.44,0.93s1.03,0.22,1.34,0.47c0.32,0.26,0.63,1.31,0.63,1.69s-0.12,1.03-0.44,1.47c-0.31,0.44-1.21,0.93-1.53,1.25s-0.69,0.75-0.69,0.75-0.06,5.68-0.06,6.25,0.75,1.78,1,2.16,1.21,2.14,1.72,2.9c0.5,0.76,0.69,1.12,0.69,1.44s0.25,1.66,0.25,1.66,0.56,10.46,0.62,11.09,0.59,1.03,0.78,1.41,0.75,0.93,1,1.18c0.26,0.26,0.75,0.84,0.88,1.16,0.12,0.32,0.97,1.62,0.97,1.62s0.74,2.78,0.87,3.54c0.13,0.75,0.13,1.72,0.13,1.72s1.31,3.96,1.31,4.4v1.47s-0.81,1.75-1.13,2.13c-0.31,0.37-0.06,1.77-0.06,2.09,0,0.31-1.34,2.46-1.84,2.84-0.51,0.38-1.31,1-1.44,1.38s0.25,1.03,0.25,1.03l1.81,0.87,2.28,0.94s1.09,2.15,1.47,2.66c0.38,0.5,0.56,1.59,0.56,1.9,0,0.32,0.32,3.47,0.44,4.16,0.13,0.69,0.38,1.65,0.56,2.09,0.19,0.45,1.79,1.5,1.79,1.5s2.21,3.94,2.34,4.25c0.13,0.32,0.81,1.69,1.06,2,0.08,0.1,0.29,0.25,0.53,0.41,0.62,0.78,3.07,1.94,3.07,1.94l0.93,0.62s4.63,4.25,4.69,4.5c0.06,0.26,2.78,2.32,2.78,2.32s2.34,0.84,2.6,1.03c0.25,0.19,1.68,0.75,1.68,0.75l14.91,10.22,2.03,1.21,3.03,0.94s1.19,1.59,1.44,1.72,3.15,1.19,3.59,1.19c0.45,0,1.47,1,1.47,1s2.59,2.78,2.97,3.03,2.56,1.91,2.56,1.91,2.09,1.18,2.47,1.18,2.85-0.5,2.85-0.5l0.68-0.62v-2.03s-0.06-1.69-0.06-1.88,0-1.21-0.25-1.53-0.81-0.88-0.81-0.88,0.18-1.52,0.44-1.96c0.25-0.45,0.43-0.69,0.43-1.07s-0.31-1.15-0.56-1.4c-0.25-0.26-0.5-1.19-0.5-1.19s-0.06-2.34-0.31-2.66c-0.25-0.31-1.09-0.99-1.28-1.62s-0.5-1.03-0.63-1.41c-0.12-0.38-1.37-1.62-1.62-2.06-0.26-0.44-1.53-1.59-1.72-1.84-0.19-0.26-0.31-1.28-0.5-2.1s-1.02-0.75-1.78-0.75-1.12-0.06-1.38-0.25c-0.25-0.19,0.5-0.43,0.75-0.56,0.26-0.13,1.09-0.9,1.28-1.22,0.19-0.31,0.5-1.37,0.5-1.37l0.69-4.22,1.91-1.6c0.38-0.31,0.25-0.93-0.19-1.31s-1.09-0.25-1.41-0.31c-0.31-0.06-0.8-0.84-1.31-1.16-0.5-0.31-0.84-0.81-1.28-1s-1.24-0.31-2.06-0.56-1.4-1.03-1.91-1.47c-0.5-0.44-0.44-1-0.5-1.25s-0.06-1.96-0.06-2.84v-1.22s-0.97-2.78-0.97-3.1c0-0.31,0.03-1.05,0.16-1.43,0.12-0.38,0.49-0.69,0.75-0.94,0.25-0.25,1.43-0.78,1.43-0.78l1.47-0.88s0.38-1.71,0.38-2.59-0.5-2.25-0.63-2.56c-0.12-0.32-1.34-0.72-1.34-0.72s-1.5-1.19-1.94-1.19-2.46-0.56-2.9-0.69c-0.45-0.12-1.6-0.78-1.85-0.9-0.25-0.13-1.71-1.25-2.09-1.56-0.38-0.32-1.25-1.1-1.5-1.41-0.26-0.32-0.75-1.44-0.88-1.75-0.12-0.32-0.84-1.66-0.84-1.66s0-0.55-0.13-1.12c-0.12-0.57-0.18-1.65-0.18-2.41s1.02-0.62,1.28-0.62c0.25,0,1.68-0.25,2-0.32,0.31-0.06,1.03-0.74,1.22-1,0.19-0.25,0.37-1.77,0.31-2.09s-0.65-0.81-1.22-1-0.94-0.78-1.12-0.84c-0.19-0.07-2.16-0.88-2.16-0.88s-2.06-0.69-2.5-0.75-0.59,0.44-0.84,0.63c-0.26,0.19-0.5,0.37-1.32,0.37s-1.22-0.44-1.22-0.44l-0.87-1.18s-1.18,0.06-1.81,0.06c-0.64,0-0.91-0.59-1.16-0.91-0.25-0.31-1.06-0.56-1.06-0.56s-0.47-0.19-0.69-0.28c0-0.06,0.19-3.44,0.13-3.69-0.07-0.25-0.66-1.21-0.91-1.47-0.25-0.25-1.37-0.44-1.94-0.44s-1.4,0.6-1.84,0.85-1.06,0.75-1.31,0.94c-0.26,0.19-0.13,1.12-0.13,1.68,0,0.57-0.34,1.03-0.72,1.35-0.38,0.31-0.68,0.25-1.31,0.25s-1.12-0.19-1.63-0.31c-0.5-0.13-0.77-0.56-1.03-0.82-0.25-0.25-1.06-0.96-1.37-1.47-0.32-0.5-0.19-1.05-0.25-1.62-0.07-0.57-0.84-1.65-1.1-2.16-0.25-0.5-1.24-2.34-1.37-2.59s-0.56-1.28-1-1.91-0.9-1.99-1.28-2.62-0.74-1.09-1.5-2.1-0.78-0.56-1.35-0.68c-0.56-0.13-0.99-0.78-1.5-1.35-0.5-0.57-0.84-0.93-1.15-1.75-0.32-0.82-0.37-0.83-0.94-2.15-0.57-1.33-0.07-1.09,0.19-1.66,0.25-0.57,1.06-0.62,1.06-0.62l0.47-0.88s-0.38-1.59-0.31-2.09c0.06-0.51,0.36-0.56,1.06-0.75,0.69-0.19,1.56,0.75,1.94,0.75s1.59-0.5,1.9-0.82c0.32-0.31,0.32-1.08,0.32-1.71,0-0.64-0.62-1-1.13-1.13s-0.94-0.56-0.94-1.06c0-0.51,0.25-1.21,0.25-1.91,0-0.69,0-0.74-0.06-1.25-0.06-0.5-0.12-0.53-0.25-0.91-0.13-0.37,0.06-1.18,0.19-1.68,0.12-0.51,0.56-0.44,0.94-0.38,0.37,0.07,1.24,0.69,1.62,0.94s0.65,0.62,0.84,1,1,1.09,1.63,1.16c0.63,0.06,1.15-0.38,1.15-0.38s-0.09-0.52-0.34-1.09-0.81-1.44-1-1.81c-0.19-0.38-0.5-1.22-0.75-1.6s-0.44-0.5-0.44-0.75,0.69-2.09,0.69-2.41v-3.78c0-0.82,0.19-1.4,0.38-1.72,0.19-0.31,0.87-1.24,1.25-2.06s0.84-1.15,1.09-1.9c0.25-0.76,0.87-1.4,1.44-2.16s0.77-1,1.15-1.12c0.38-0.13,2.91,0.06,3.29,0.06,0.37,0,1.96-0.44,2.65-0.56,0.7-0.13,2.71-0.31,3.41-0.57,0.69-0.25,0.25-0.59,0.18-0.84-0.06-0.25-1.27-0.94-1.65-1.06-0.38-0.13-1.12-0.69-1.38-0.94-0.25-0.25-0.5-1.16-0.5-1.16s-0.59-2.96-0.65-3.28c-0.07-0.31-0.75-1.56-0.75-1.56s-0.13-5.18-0.13-5.63c0-0.44-0.68-2.02-1.37-2.34-0.7-0.32-0.91-0.99-0.91-1.5s0-0.96-0.12-1.59c-0.13-0.64-0.75-1.37-1-1.88-0.26-0.5,0.12-0.78,0.12-1.22s-0.12-1.18-0.5-1.5c-0.38-0.31-0.68-0.49-0.94-0.75-0.25-0.25-0.46-0.9-0.46-1.53s0.28-1,0.34-1.31c0.06-0.32,0.06-1.09-0.06-1.53-0.13-0.44-0.35-1.06-0.41-1.31-0.06-0.26-0.37-1.22-0.37-1.22s-0.5-0.44-0.69-0.44-0.94-0.19-0.94-0.19l-1.78-0.31s-1.69-0.44-1.81-0.69c-0.13-0.25-1.04-0.69-1.04-0.69l-1.56-0.59zm7.25,70.22c-0.88,0.44-1.12,0.43-1.06,1s0.37,1.09,0.63,1.47c0.25,0.38,0.44,0.93,0,1.44-0.45,0.5-1.45,0.52-1.19,1.15,0.25,0.63,0.49,1.06,0.75,1.31,0.25,0.26,0.81,0.9,0.94,1.41,0.12,0.51-0.01,1.06,0.31,1.56,0.31,0.51,0.31,0.69,0.69,0.69,0.37,0,0.59,0.32,0.65-0.5s-0.06-0.95,0-2.84c0.06-1.9,0-2.84,0.06-3.41,0.07-0.57,0.26-1.37,0-1.75-0.25-0.38-1.28-0.9-1.4-1.22-0.13-0.31-0.38-0.31-0.38-0.31zm58.91,12.47c-1.07,0.71-1.16,0.62-1.16,1.15,0,0.54-0.18,0.9,0.53,0.72,0.72-0.18,0.91-0.18,1-0.62,0.09-0.45-0.37-1.25-0.37-1.25zm-10.97,4.53c-0.63,0.45-1.08,0.2-0.81,1.09,0.27,0.9,0.44,1.16,1.15,1.25,0.72,0.09,0.73,0.1,2.07,0.1s2.31,0.06,3.03,0.06c0.71,0,0.99,0.36,1.43,0,0.45-0.36,0.63-0.07,0.54-0.78-0.09-0.72-1.24-0.9-2.22-0.81-0.98,0.08-1.52,0.34-3.13-0.19-1.6-0.54-2.06-0.72-2.06-0.72z",
+              "name": "Камчатский Край"
+          },
+          "in": {
+              "path": "m63.393,395.68,0.08929,5.2679,17.946-8.5714-1.3393-1.25-2.9464-1.25-1.5179-1.9643-2.4107,2.4107-4.1071-2.6786-1.875,1.0714,0.08929,5.8929-1.5179,1.0714z",
+              "name": "Республика Ингушетия"
+          },
+          "cc": {
+              "path": "m63.482,401.04,1.0714,2.5,3.125,1.6964,3.4821,0.44642,2.1429-1.9643,2.1429,1.7857,2.5-1.5178-0.08929-1.6072,1.875-2.1428,2.8571,0.44642,3.8393-2.8571-0.625-1.9643-4.4643-0.53572,0.44643-2.7679z",
+              "name": "Чеченская Республика"
+          }
+      }
+  });
+/* Start:"a:4:{s:4:"full";s:85:"/local/templates/.default/lib/spincrement.js/jquery.spincrement.min.js?14996860961329";s:6:"source";s:70:"/local/templates/.default/lib/spincrement.js/jquery.spincrement.min.js";s:3:"min";s:0:"";s:3:"map";s:0:"";}"*/
+!function(t){t.extend(t.easing,{spincrementEasing:function(t,e,a,n,r){return e===r?a+n:n*(-Math.pow(2,-10*e/r)+1)+a}}),t.fn.spincrement=function(e){function a(t,e){if(t=t.toFixed(e),e>0&&"."!==r.decimalPoint&&(t=t.replace(".",r.decimalPoint)),r.thousandSeparator)for(;o.test(t);)t=t.replace(o,"$1"+r.thousandSeparator+"$2");return t}var n={from:0,to:null,decimalPlaces:null,decimalPoint:".",thousandSeparator:",",duration:1e3,leeway:50,easing:"spincrementEasing",fade:!0,complete:null},r=t.extend(n,e),o=new RegExp(/^(-?[0-9]+)([0-9]{3})/);return this.each(function(){var e=t(this),n=r.from;e.attr("data-from")&&(n=parseFloat(e.attr("data-from")));var o;if(e.attr("data-to"))o=parseFloat(e.attr("data-to"));else if(null!==r.to)o=r.to;else{var i=new RegExp(r.thousandSeparator,"g");o=parseFloat(e.text().replace(i,""))}var l=r.duration;r.leeway&&(l+=Math.round(r.duration*(2*Math.random()-1)*r.leeway/100));var c;if(e.attr("data-dp"))c=parseInt(e.attr("data-dp"),10);else if(null!==r.decimalPlaces)c=r.decimalPlaces;else{var s=e.text().indexOf(r.decimalPoint);c=s>-1?e.text().length-(s+1):0}e.css("counter",n),r.fade&&e.css("opacity",0),e.animate({counter:o,opacity:1},{easing:r.easing,duration:l,step:function(t){e.html(a(t*o,c))},complete:function(){e.css("counter",null),e.html(a(o,c)),r.complete&&r.complete(e)}})})}}(jQuery);
+/* End */
+/* End */
+/* Start:"a:4:{s:4:"full";s:46:"/local/templates/home/js/all.js?14996860962655";s:6:"source";s:31:"/local/templates/home/js/all.js";s:3:"min";s:0:"";s:3:"map";s:0:"";}"*/
+
+  // MAP INTERACTIVE //
+  $('#vmap').vectorMap({
+    map: 'russia',
+    backgroundColor: null,
+    borderColor: '#000',
+    borderWidth: 1,
+    color: '#fff',
+    hoverColor: '#ed3c40',
+    enableZoom: false,
+    showTooltip: true,
+    selectedColor: '#ed3c40',
+    onRegionClick: function(element, code, region, e){
+        $('.map-popover').css('display', 'none');
+        popover = $('#popover-'+code);
+        if(popover.length > 0){
+            popover.css({
+                'top': e.pageY+'px',
+                'left': e.pageX+'px',
+                'display': 'block'
+            });
+        }
     }
-  }
+});
+  
+});
+
+
+$(document).ready(function() {
+  (function($) {
+    $.fn.bgscroll = function(options) {
+
+      var x = $.extend({
+        bgpositionx: 50,
+        direction: "bottom",
+        debug: !1,
+        min: 0,
+        max: 100
+      }, options);
+
+      var a = $(document).height() - $(window).height(),
+          b = a - (this.offset().top + this.height());
+
+      this.offset().top < a && (b = 0);
+
+      var c = (this.offset().top + this.height());
+
+      if ($(window).scrollTop() > b && $(window).scrollTop() < c) {
+        var d = ($(window).scrollTop() - b) / (c - b) * 100;
+
+        "top" == x.direction && (d = 100 - d),
+            d > x.max && (d = x.max),
+            d < x.min && (d = x.min);
+
+        if (x.debug){
+          console.log('Element background position: ' + d + ' %');
+        }
+      }
+
+      return this.css({
+        backgroundPosition: x.bgpositionx + '% ' + d + '%'
+      });
+    };
+  }(jQuery));
+  $(window).scroll(function(){
+    $('.bg-1').bgscroll({
+      direction: 'bottom', // направление bottom или top
+      bgpositionx: 50, // x позиция фонового изображения, от 0 до 100, размерность в %, 50 - означает по центру
+      debug: false, // Режим отладки
+      min:0, // минимальное положение (в %) на которое может смещаться фон
+      max:200 // максимальное положение (в %) на которое может смещаться фон
+    });
+    $('.bg-2').bgscroll({
+      direction: 'bottom',
+      min:0, // минимальное положение (в %) на которое может смещаться фон
+      max:100
+    });
+    $('.bg-3').bgscroll({
+      direction: 'bottom',
+      min:0, // минимальное положение (в %) на которое может смещаться фон
+      max:100
+    });
+    $('.bg-4').bgscroll({
+      direction: 'top',
+      min:0, // минимальное положение (в %) на которое может смещаться фон
+      max:100
+    });
+  })
+});
+
+//ефект увеличения числа
+$(document).ready(function() {
+    let flag = false;
+    $(document).scroll(function () {
+      s_top = $(window).scrollTop();
+      numOffsetTop = $(".section-3").offset().top;
+      numHeight = $(".section-3").height()
+      
+      if(s_top > numOffsetTop - numHeight / 2 && flag == false){
+        flag = true;
+        for(let i = 0; i < 3; i++){
+
+          var numb_end = $(".sec3-bot .num").eq(i).attr('data-num'); // Получаем конечное число
+          console.log(numb_end)
+          $({numberValue: 0}).animate({numberValue: numb_end}, {
+      
+            duration: 1500, // Продолжительность анимации, где 500 = 0,5 одной секунды, то есть 500 миллисекунд
+            easing: "linear",
+            
+            step: function(val) {
+            
+              $(".sec3-bot .num").eq(i).html(Math.ceil(val)); // Блок, где необходимо сделать анимацию
+              
+            }
+          });
+
+        }
+      }
+  });
+});
+
+//модалка
+$(document).ready(function() {
+  $('.myLinkModal').click( function(event){
+      event.preventDefault();
+      $('#myOverlay').fadeIn(297, function(){
+    $('#myModal') 
+    .css('display', 'block')
+    .animate({opacity: 1}, 198);
+      });
+  });
+
+  $('#myModal__close, #myOverlay').click( function(){
+      $('#myModal').animate({opacity: 0}, 198,
+    function(){
+      $(this).css('display', 'none');
+      $('#myOverlay').fadeOut(297);
+      });
+  });
+
+  $('.myLinkModal-map').click( function(event){
+    event.preventDefault();
+    $('#myOverlay').fadeIn(297, function(){
+    $('#myModal-map') 
+    .css('display', 'block')
+    .animate({opacity: 1}, 198);
+      });
+  });
+
+  $('#myModal__close, #myOverlay').click( function(){
+      $('#myModal-map').animate({opacity: 0}, 198,
+    function(){
+      $(this).css('display', 'none');
+      $('#myOverlay').fadeOut(297);
+      });
+  });
 });
