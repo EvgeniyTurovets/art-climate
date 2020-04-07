@@ -2460,6 +2460,21 @@ body {
 }
 
 @media (max-width: 424px) {
+    .work_obj_item {
+        width: 275px;
+    }
+
+    .work_obj_wrap {
+        -webkit-box-pack: center;
+        -webkit-justify-content: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+    }
+
+    .work_obj_item_sub {
+        bottom: -69%;
+    }
+
     .left-menu ul {
         padding-left: 0;
     }
