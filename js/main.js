@@ -3072,6 +3072,7 @@ $(document).ready(function() {
       $("#for-bissnes").fadeIn();
     }, 500);
   });
+  
   $(".lazy").slick({
     lazyLoad: "ondemand", // ondemand progressive anticipated
     infinite: true,
@@ -4743,4 +4744,12 @@ $(document).ready(function() {
       $("#myOverlay").fadeOut(297);
     });
   });
+});
+$('.slider_item').mouseenter(function(){
+    if($(this).find('.slider_item_content').css('opacity') == 1){
+        $(".slider-black-fon").addClass('active')
+    }
+})
+$( ".slider_item" ).mouseleave(function() {
+    $(".slider-black-fon").removeClass('active')
 });
