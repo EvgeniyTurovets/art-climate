@@ -1309,6 +1309,16 @@ body {
 .breadcrum ul li a {
     color: #939393;
     text-decoration: none;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
+.breadcrum ul li a:hover {
+    color: #ee3d40;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
 }
 
 .breadcrum ul li.last-child {
