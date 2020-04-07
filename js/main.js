@@ -3020,16 +3020,16 @@ $(document).ready(function() {
       .find(".nav-mobile")
       .toggleClass("active");
   });
-
-  // $(".scroll-to-form").click(function() {
-  //   $("html").animate(
-  //     {
-  //       scrollTop: $("#contact-form").offset().top // прокручиваем страницу к требуемому элементу
-  //     },
-  //     1500 // скорость прокрутки
-  //   );
-  // });
-
+  if($('.scroll-to-form').hasClass('scroll-to-form')){
+    $(".scroll-to-form").click(function() {
+        $("html").animate(
+        {
+            scrollTop: $("#contact-form").offset().top // прокручиваем страницу к требуемому элементу
+        },
+        1500 // скорость прокрутки
+        );
+    });
+  }
   $(".acordeon-item.active")
     .find(".acordeon-item-content")
     .slideDown(500);
