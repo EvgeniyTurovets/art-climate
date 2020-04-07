@@ -1621,6 +1621,7 @@ body {
         -webkit-flex-direction: column;
         -ms-flex-direction: column;
         flex-direction: column;
+        padding: 30px;
     }
 
     .footer .wrap div {
@@ -2352,11 +2353,12 @@ body {
     }
 
     .right-content img {
-        height: 182px;
+        height: 154px;
+        width: 100%;
     }
 
     .text-wrap {
-        min-height: 182px;
+        min-height: 154px;
         padding: 60px 30px 30px 30px;
     }
 
