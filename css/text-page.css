@@ -1735,6 +1735,8 @@ body {
 }
 
 .text-wrap {
+    min-height: 333px;
+    position: relative;
     border-top: 0.5px solid rgba(126, 131, 128, 0.6);
     border-bottom: 0.5px solid rgba(126, 131, 128, 0.6);
     padding: 60px 80px 30px 80px;
@@ -1754,8 +1756,13 @@ body {
 }
 
 .right-content img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    margin-left: 1px;
+    height: 100%;
 }
 
 .text-form {
