@@ -1219,15 +1219,16 @@ body {
     color: #ee3d40;
 }
 
-.fullpage-wrapper .footer {
-    height: 80px;
-    position: absolute;
-    bottom: 80px;
-    width: 100%;
-    z-index: 2;
-}
-
 .footer {
+    min-height: 90px;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
     border-top: 5px solid #ee3d40;
     background-color: #ffffff;
 }
@@ -1273,7 +1274,7 @@ body {
 
 .footer_logo {
     right: 0;
-    top: -14px;
+    top: -11px;
     width: 31px;
     height: 60px;
     background-color: #ee3d40;
@@ -1534,6 +1535,8 @@ body {
         -webkit-transition: 1s;
         -o-transition: 1s;
         transition: 1s;
+        -webkit-box-shadow: 1px 4px 10px #ccc;
+        box-shadow: 1px 4px 10px #ccc;
     }
 
     .burger-menu {
@@ -1597,7 +1600,11 @@ body {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+    .header {
+        height: 70px;
+    }
+
     .footer .wrap {
         -webkit-box-orient: vertical;
         -webkit-box-direction: normal;
