@@ -3089,6 +3089,7 @@ $(document).ready(function() {
     },
     arrows: false,
     infinite: true,
+    pauseOnDotsHover: true,
     variableWidth: true,
     speed: 1000,
     autoplay: true,
@@ -3136,7 +3137,18 @@ $(document).ready(function() {
     $(".slide-load").removeClass("active");
   });
 });
-
+$('.slider_item').mouseenter(function(){
+  if($(this).find('.slider_item_content').css('opacity') == 1){
+      $(".slider-black-fon").addClass('active')
+  }
+})
+$( ".slider_item" ).mouseleave(function() {
+if($(this).find('.slider_item_content').css('opacity') == 1){
+  $(".slider-black-fon").removeClass('active')
+  let indexSlide = $('.variable').slick('slickCurrentSlide');
+  $('.variable').slick('slickGoTo',indexSlide + 1);
+}
+});
 $(document).ready(function() {
   if ($(".map").hasClass("map")) {
     var VectorCanvas = function(t, e, i) {
@@ -4709,6 +4721,27 @@ $(document).ready(function() {
       }
     });
   }
+  if($(".numer-block").hasClass("numer-block")){
+    for (let i = 0; i < 2; i++) {
+      var numb_end = $(".numer-block .num")
+        .eq(i)
+        .attr("data-num"); // Получаем конечное число
+      console.log(numb_end);
+      $({ numberValue: 0 }).animate(
+        { numberValue: numb_end },
+        {
+          duration: 1500, // Продолжительность анимации, где 500 = 0,5 одной секунды, то есть 500 миллисекунд
+          easing: "linear",
+
+          step: function(val) {
+            $(".numer-block .num")
+              .eq(i)
+              .html(Math.ceil(val)); // Блок, где необходимо сделать анимацию
+          }
+        }
+      );
+    }
+  }
 });
 
 //модалка
@@ -4745,11 +4778,7 @@ $(document).ready(function() {
     });
   });
 });
-$('.slider_item').mouseenter(function(){
-    if($(this).find('.slider_item_content').css('opacity') == 1){
-        $(".slider-black-fon").addClass('active')
-    }
-})
-$( ".slider_item" ).mouseleave(function() {
-    $(".slider-black-fon").removeClass('active')
-});
+
+
+
+
