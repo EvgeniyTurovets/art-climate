@@ -2125,6 +2125,14 @@ body {
 }
 
 @media (max-width: 424px) {
+    .slider-fon-item {
+        height: 525px;
+    }
+
+    .slider-section {
+        min-height: 520px;
+    }
+
     .slider_item_tittle h1 {
         font-size: 27px;
         line-height: 12px;
