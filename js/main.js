@@ -6832,3 +6832,13 @@ $(document).ready(function() {
     nextEffect: 'fade'
 	});
 });
+
+$('#play').on('click', function(e) {
+  e.preventDefault();
+  var player = document.getElementById("player");
+  var player = player.getElementsByTagName("iframe")[0].contentWindow;
+	e.preventDefault();
+	player.postMessage('{"event": "command", "func": "playVideo", "args": ""}', "*");
+	$('#video-cover').hide();
+	$('#play').hide();
+})

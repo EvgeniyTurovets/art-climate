@@ -2121,6 +2121,38 @@ a.news_img:hover {
     outline-width: 0;
 }
 
+.thumb-wrap #video-cover {
+    position: relative;
+    width: 100%;
+    z-index: 2;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.play-btn {
+    height: 88px;
+    width: 88px;
+    -webkit-border-radius: 100%;
+    border-radius: 100%;
+    background-color: #ee3d40;
+    position: absolute;
+    z-index: 666;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    border: 0;
+}
+
+.play-btn:hover {
+    cursor: pointer;
+}
+
+.play-btn:focus {
+    outline: 0;
+}
+
 @media (max-width: 991px) {
     .news-wrap {
         width: 740px;
