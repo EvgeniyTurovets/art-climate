@@ -1636,7 +1636,7 @@ body {
 
 #myModal {
     width: 400px;
-    height: 500px;
+    height: 525px;
     margin: 0 auto;
     padding: 18px 9px;
     -webkit-border-radius: 4px;
@@ -1781,6 +1781,12 @@ body {
     color: #ffffff;
     line-height: 20px;
     max-width: 245px;
+}
+
+.contact-form .sucsess {
+    color: #ffffff;
+    text-align: left;
+    margin-bottom: 10px;
 }
 
 .item30 {
@@ -3321,5 +3327,13 @@ body {
 
     #myModal .contact-form .title {
         font-size: 18px;
+    }
+
+    .contact-form .sucsess {
+        text-align: center;
+    }
+
+    #myModal {
+        height: 475px;
     }
 }
