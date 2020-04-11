@@ -1253,6 +1253,7 @@ body {
 .footer_polici a {
     border-bottom: 1px solid #ee3d40;
     color: #ee3d40;
+    text-decoration: none;
 }
 
 .footer_polici a:hover {

@@ -1253,6 +1253,7 @@ body {
 .footer_polici a {
     border-bottom: 1px solid #ee3d40;
     color: #ee3d40;
+    text-decoration: none;
 }
 
 .footer_polici a:hover {
@@ -2213,6 +2214,10 @@ body {
     font-family: "Proxima Nova";
     font-weight: 700;
     font-size: 18px;
+}
+
+.acordeon-change div.active:hover {
+    cursor: default;
 }
 
 .acordeon-change div:hover {
