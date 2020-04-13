@@ -1219,6 +1219,13 @@ body {
     color: #ee3d40;
 }
 
+.header_info .phone a:hover {
+    color: #eb0408;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
 .footer {
     min-height: 90px;
     display: -webkit-box;
@@ -1258,6 +1265,10 @@ body {
 
 .footer_polici a:hover {
     text-decoration: none;
+    color: #eb0408;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
 }
 
 .footer_autor {

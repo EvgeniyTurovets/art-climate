@@ -5069,6 +5069,11 @@ $(document).ready(function() {
       $(this).addClass("active");
       setTimeout(openItem($(this)), 500);
     }
+    else{
+      $(this).find(".acordeon-item-content")
+      .slideUp(500);
+      $(this).removeClass('active')
+    }
   });
 
   $("#on-for-client").click(function() {

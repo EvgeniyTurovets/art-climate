@@ -1219,6 +1219,13 @@ body {
     color: #ee3d40;
 }
 
+.header_info .phone a:hover {
+    color: #eb0408;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
+}
+
 .footer {
     min-height: 90px;
     display: -webkit-box;
@@ -1258,6 +1265,10 @@ body {
 
 .footer_polici a:hover {
     text-decoration: none;
+    color: #eb0408;
+    -webkit-transition: 0.3s;
+    -o-transition: 0.3s;
+    transition: 0.3s;
 }
 
 .footer_autor {
@@ -2128,7 +2139,7 @@ body {
     margin-top: -2px;
 }
 
-.acordeon-item:hover .arrow-img {
+.acordeon-item:hover .arrow-img div {
     border-color: #ee3d40;
     -webkit-transition: 0.3s;
     -o-transition: 0.3s;
@@ -2141,6 +2152,10 @@ body {
 
 .acordeon-item.active .arrow-img {
     border-color: #333333;
+}
+
+.acordeon-item.active:hover .arrow-img div {
+    border-color: #ee3d40;
 }
 
 .acordeon-item:hover .arrow-img div {
@@ -2291,12 +2306,14 @@ body {
     font-size: 80px;
     color: #ffffff;
     margin-right: 25px;
+    width: 140px;
 }
 
 .sec3-bot .text {
     font-size: 14px;
     line-height: 20px;
     font-family: "Proxima Nova";
+    width: 300px;
     color: #ffffff;
 }
 
